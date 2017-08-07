@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+	*{
+		padding: 0;
+		margin: 0;
+	}
+	</style>
+</head>
+<body>
+<script type="text/javascript">
+	(function(){
+		var canvas = document.createElement("canvas"),
+			ctx = canvas.getContext("2d"),
+			baseWidth = window.innerWidth,
+			baseHeight = window.innerHeight - 3;
+		canvas.width = baseWidth;
+		canvas.height = baseHeight;
+		document.body.appendChild(canvas);
+		ctx.fillStyle = "#000";
+		ctx.fillRect(0,0,baseWidth,baseHeight);
+		ctx.translate(baseWidth / 2,baseHeight / 2);
+		ctx.fillStyle = "#fff";
+		var p = [];
+		for(var i = 0;i < 290;i++){
+			var pp = {};
+			pp.x = 0;
+			pp.y = 0;
+			pp.t = 0;
+			pp.type = parseInt(Math.random() * 4);
+			p[i] = pp;
+		}
+		function move(){
+			ctx.fillStyle = "#f26";
+			for(var i = 0;i < 290;i++){
+				switch(p[i].type){
+					case 0:
+						p[i].x--;
+						break;
+					case 1:
+						p[i].y++;
+						break;
+					case 2:
+						p[i].x++;
+						break;
+					case 3:
+						p[i].y--;
+						break;
+				}
+				p[i].t++;
+				ctx.beginPath();
+				ctx.arc(p[i].x,p[i].y,1,0,Math.PI * 2);
+				ctx.fill();
+				if(p[i].t%20 == 0){
+					p[i].type = parseInt(Math.random() * 4);
+				}
+				if(p[i].x >= 800){
+					p[i].type = 0;
+					console.log(p[i]);
+				}
+				if(p[i].x <= -800){
+					p[i].type = 2;
+					console.log(p[i]);
+				}
+				if(p[i].y >= 400){
+					p[i].type = 3;
+					console.log(p[i]);
+				}
+				if(p[i].y <= -400){
+					p[i].type = 1;
+					console.log(p[i]);
+				}
+			}
+			ctx.fillStyle = "rgba(0,0,0,0.01)";
+			ctx.fillRect(-baseWidth / 2,-baseHeight / 2,baseWidth,baseHeight);
+			setTimeout(move,1);
+		}
+		move();
+	})()
+</script>
+</body>
+</html>

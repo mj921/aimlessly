@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+	*{
+		margin: 0;
+		padding: 0;
+	}
+	div{
+		float: left;
+		background-image: url(t.jpg);
+	}
+	</style>
+</head>
+<body>
+<div style="background-size:960px;width:960px;height:600px;" id="aaa" data-width="960" data-height="600"></div>
+<span id="s">0</span>
+<script type="text/javascript">
+	(function(){
+		var divs = document.getElementById("aaa"),
+			s = 0,
+			ss = document.getElementById("s");
+		function divClick(){
+			for(var i = 0;i < 4;i++){
+				var div = document.createElement("div"),
+					baseWidth = parseFloat(this.getAttribute("data-width")) / 2,
+					baseHeight = parseFloat(this.getAttribute("data-height")) / 2;
+				div.style.backgroundSize = baseWidth + "px";
+				div.style.width = baseWidth + "px";
+				div.style.height = baseHeight + "px";
+				div.onclick = divClick;
+				div.setAttribute("data-width",baseWidth);
+				div.setAttribute("data-height",baseHeight);
+				this.appendChild(div);
+			}
+			ss.innerText = (s += 960 / baseWidth / 2); 
+			this.onclick = null;
+		}
+		divs.onclick = divClick;
+	})()
+</script>
+</body>
+</html>

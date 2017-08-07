@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>A*寻径算法</title>
+</head>
+<body>
+<canvas id="canvas" width="1900" height="900"></canvas>
+<script type="text/javascript">
+	(function(){
+		var canvas = document.getElementById("canvas"),
+			ctx = canvas.getContext("2d");
+
+		var Cell = function(x,y,f,g,h,parent,status,isPass,width,height){
+			this.x = x;//x坐标
+			this.y = y;//y坐标
+			this.f = f;//F值 F = G + H
+			this.g = g;//G值 沿着生成的路径,从开始节点A到指定区域的移动消耗.
+			this.h = h;//H值 估算从指定区域格子到目的地格子(B节点)的移动消耗
+			this.parent = parent;//父节点 Cell类型
+			this.status = status;//当前状态 "" 初始状态 open 可访问状态 close 已访问状态 start 起点 end 终点
+			this.isPass = isPass;//能否通过
+			this.width = width;
+			this.height = height;
+			this.BASE_G = 10;
+		}
+		Cell.prototype = {
+			constructor:Cell,
+			draw:function(color){
+				ctx.save();
+				if(color){
+					ctx.fillStyle = color;
+				}else if(!this.isPass){
+					ctx.fillStyle = "#333";
+				}else{
+					ctx.fillStyle = "#ccc";
+				}
+				ctx.fillRect(this.x * this.width,this.y * this.height,this.width,this.height);
+				ctx.restore();
+			},
+			//获取该格子到另一格子的g值
+			getG:function(cell){
+				return cell.g + Math.abs(this.x - cell.x) * this.BASE_G + Math.abs(this.y - cell.y) * this.BASE_G;
+			},
+			//获取该格子到另一格子的h值
+			getH:function(cell){
+				return Math.abs(this.x - cell.x) * this.BASE_G + Math.abs(this.y - cell.y) * this.BASE_G;
+			},
+			//判断能否变成可访问
+			isToOpen:function(){
+				return this.isPass && (this.status === "" || this.status === "end");
+			},
+			//判断能否访问或变成可访问
+			isAddRound:function() {
+				return !(this.isPass && (this.status === "" || this.status === "end" || this.status === "open"));
+			},
+			drawLine:function(cell,color){
+				ctx.save();
+				ctx.strokeStyle = color || "red";
+				ctx.beginPath();
+				ctx.moveTo(this.x * this.width,this.y * this.y);
+				ctx.lineTo(cell.x * cell.width,cell.y * cell.y);
+				ctx.stroke();
+				ctx.closePath();
+				ctx.restore();
+			}
+		}
+
+		Array.prototype.remove = function(i){
+			for(len = this.length - 1;i < len;i++){
+				this[i] = this[i + 1];
+			}
+			this.length -= 1;
+		}
+
+		var Panel = {
+			COL:90,
+			ROW:45,
+			BASE_WIDTH:20,
+			BASE_HEIGHT:20,
+			cells:[],
+			openCells:[],
+			closeCells:[],
+			optimalPath:[],
+			roundCells:[],
+			//初始化
+			init:function(){
+				var arr = []
+				for(var i = 5;i < 15;i++){
+					arr.push({x:i,y:5})
+				}
+				for(var i = 5;i < 15;i++){
+					arr.push({x:i,y:5})
+				}
+				this.createCells();
+				this.createObstacle({num:800});
+				var startFlag = this.createStartCell(),
+					endFlag = this.createEndCell();
+				 if(!startFlag){
+				 	startFlag = this.createStartCell();
+				 }
+				 if(!endFlag){
+				 	endFlag = this.createEndCell();
+				 }
+				 this.draw();
+			},
+			draw:function(){
+				for(var i = 0;i < this.COL;i++){
+					for(var j = 0;j < this.ROW;j++){
+						this.cells[i][j].draw();
+					}
+				}
+			},
+			//创建起点
+			createStartCell:function(x,y){
+				var x = x || Math.floor(Math.random() * this.COL),
+					y = y || Math.floor(Math.random() * this.ROW);
+				if(this.cells.length > 0){
+					if(this.cells[x][y].isPass){
+						this.startCell = this.cells[x][y];
+						this.cells[x][y].status = "start";
+						this.currentCell = this.startCell;
+						return true;
+					}else{
+						return false;
+					}
+				}
+			},
+			//创建终点
+			createEndCell:function(x,y){
+				var x = x || Math.floor(Math.random() * this.COL),
+					y = y || Math.floor(Math.random() * this.ROW);
+				if(this.cells.length > 0){
+					if(this.cells[x][y].isPass){
+						this.endCell = this.cells[x][y];
+						this.cells[x][y].status = "end";
+						return true;
+					}else{
+						return false;
+					}
+				}
+			},
+			//创建格子数组
+			createCells:function(){
+				var cells = [];
+				for(var i = 0;i < this.COL;i++){
+					var cellss = []
+					for(var j = 0;j < this.ROW;j++){
+						cellss[j] = new Cell(i,j,0,0,0,null,"",true,this.BASE_WIDTH,this.BASE_HEIGHT);
+					}
+					cells[i] = cellss;
+				}
+				this.cells = cells;
+			},
+			//创建障碍 opt{arr:坐标数组,num:障碍数} 如果arr存在 则根据数组创建 否则根据num创建
+			createObstacle:function(opt){
+				if(opt.arr){
+					for(var i = 0,len = arr.length;i < len;i++){
+						this.cells[arr[i].x][arr[i].y].isPass = false;
+					}
+				}else if(opt.num){
+					while(opt.num > 0){
+						var x = Math.floor(Math.random() * this.COL),
+							y = Math.floor(Math.random() * this.ROW);
+						if(this.cells[x][y].isPass){
+							this.cells[x][y].isPass = false;
+							opt.num --;
+						}
+					}
+				}
+			},
+			//将当前格子上下左右所有未访问的格子加入到可访问数组中
+			addOpen:function(){
+				var x = this.currentCell.x,
+					y = this.currentCell.y;
+				this.roundCells = [];
+				if(x > 0){
+					if(this.cells[x - 1][y].isToOpen()){
+						this.cells[x - 1][y].parent = this.currentCell;//设置currentCell为父节点
+						this.cells[x - 1][y].g = this.cells[x - 1][y].getG(this.currentCell);//设置G值
+						this.cells[x - 1][y].h = this.cells[x - 1][y].getH(this.endCell);
+						this.cells[x - 1][y].f = this.cells[x - 1][y].g + this.cells[x - 1][y].h;
+						if(this.cells[x - 1][y].status == "end"){
+							return false;
+						}
+						this.cells[x - 1][y].status = "open";
+						this.openCells.push({x:x - 1,y:y});
+					}
+					if(this.cells[x - 1][y].isAddRound){
+						this.roundCells.push({x:x - 1,y:y});
+					}
+				}
+				if(x < this.COL - 1){
+					if(this.cells[x + 1][y].isToOpen()){
+						this.cells[x + 1][y].parent = this.currentCell;
+						this.cells[x + 1][y].g = this.cells[x + 1][y].getG(this.currentCell);
+						this.cells[x + 1][y].h = this.cells[x + 1][y].getH(this.endCell);
+						this.cells[x + 1][y].f = this.cells[x + 1][y].g + this.cells[x + 1][y].h;
+						if(this.cells[x + 1][y].status == "end"){
+							return false;
+						}
+						this.cells[x + 1][y].status = "open";
+						this.openCells.push({x:x + 1,y:y});
+					}
+					if(this.cells[x + 1][y].isAddRound){
+						this.roundCells.push({x:x + 1,y:y});
+					}
+				}
+				if(y > 0){
+					if(this.cells[x][y - 1].isToOpen()){
+						this.cells[x][y - 1].parent = this.currentCell;
+						this.cells[x][y - 1].g = this.cells[x][y - 1].getG(this.currentCell);
+						this.cells[x][y - 1].h = this.cells[x][y - 1].getH(this.endCell);
+						this.cells[x][y - 1].f = this.cells[x][y - 1].g + this.cells[x][y - 1].h;
+						if(this.cells[x][y - 1].status == "end"){
+							return false;
+						}
+						this.cells[x][y - 1].status = "open";
+						this.openCells.push({x:x,y:y - 1});
+					}
+					if(this.cells[x][y - 1].isAddRound){
+						this.roundCells.push({x:x,y:y - 1});
+					}
+				}
+				if(y < this.ROW - 1 && this.cells[x][y + 1].isToOpen()){
+					if(this.cells[x][y + 1].isToOpen()){
+						this.cells[x][y + 1].parent = this.currentCell;
+						this.cells[x][y + 1].g = this.cells[x][y + 1].getG(this.currentCell);
+						this.cells[x][y + 1].h = this.cells[x][y + 1].getH(this.endCell);
+						this.cells[x][y + 1].f = this.cells[x][y + 1].g + this.cells[x][y + 1].h;
+						if(this.cells[x][y + 1].status == "end"){
+							return false;
+						}
+						this.cells[x][y + 1].status = "open";
+						this.openCells.push({x:x,y:y + 1});
+					}
+					if(this.cells[x][y + 1].isAddRound){
+						this.roundCells.push({x:x,y:y + 1});
+					}
+				}
+				return true;
+			},
+			//判断该格子是否有更优的路径
+			isHaveMinG:function(cell){
+				return cell.g > cell.getG(this.currentCell);
+			},
+			//设置下一个格子
+			setNext:function(){
+				if(this.openCells && this.openCells.length <= 0){
+					return false;
+				}
+				var f = this.cells[this.openCells[0].x][this.openCells[0].y].f,
+					currentI = 0;
+				for(var i = 1,len = this.openCells.length;i < len;i++){
+					if(this.cells[this.openCells[i].x][this.openCells[i].y].f <= f){
+						f = this.cells[this.openCells[i].x][this.openCells[i].y].f;
+						currentI = i;
+					}
+				}
+				this.currentCell = this.cells[this.openCells[currentI].x][this.openCells[currentI].y];
+				this.cells[this.openCells[currentI].x][this.openCells[currentI].y].status = "close";
+				this.openCells.remove(currentI);
+				return true;
+			},
+			//将所有可访问的格子移动消耗变为最低
+			setMinG:function(){
+				for(var i = 0,len = this.roundCells.length;i < len;i++){
+					var openCell = this.roundCells[i]
+					if(this.isHaveMinG(this.cells[openCell.x][openCell.y])){
+						this.cells[openCell.x][openCell.y].parent = this.currentCell;
+						this.cells[openCell.x][openCell.y].g = this.cells[openCell.x][openCell.y].getG(this.currentCell);
+						this.cells[openCell.x][openCell.y].f = this.cells[openCell.x][openCell.y].g + this.cells[openCell.x][openCell.y].h;
+					}
+				}
+			},
+			//寻找路径
+			getOptimalPath:function(){
+				var flag = true;
+				while(flag){
+					flag = this.addOpen();
+					this.setMinG();
+					if(flag){
+						if(!this.setNext()){
+							alert("无路可走");
+							return ;
+						}
+					}
+				}
+				var prev = this.endCell;
+				this.optimalPath[0] = this.endCell;
+				while(prev.parent){
+					this.optimalPath.push(prev.parent);
+					prev = prev.parent;
+				}
+				var i = this.optimalPath.length - 1;
+				setInterval(function(){
+					ctx.clearRect(0,0,Panel.COL * Panel.BASE_WIDTH,Panel.ROW * Panel.BASE_HEIGHT);
+					Panel.draw();
+					Panel.startCell.draw("yellow");
+					Panel.endCell.draw("blue");
+					Panel.optimalPath[i].draw("red");
+					if(i > 0){
+						i--;
+					}else{
+						i = Panel.optimalPath.length - 1;
+					}
+				},500)
+			}
+		}
+
+		Panel.init();
+		// Panel.draw();
+		Panel.getOptimalPath();
+	})()
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>贪吃蛇</title>
+    <style>
+        body,div,dl,dt{
+            padding: 0;
+            margin: 0;
+        }
+        #main{
+            margin: 0 auto;
+            width: 750px;
+        }
+        button{
+            display: block;
+            margin: 10px auto;
+            width: 80px;
+        }
+        #panel{
+            margin: 0 auto;
+            width: 500px;
+            zoom:1;
+        }
+        #panel:after{
+            content: "";
+            display: block;
+            clear: both;
+        }
+        #panel dl{
+            float: left;
+            width: 50px;
+            height: 50px;
+            box-sizing: border-box;
+            border:0.5px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <button onclick="panel.init()">重新开始</button>
+        <div id="panel"></div>
+    </div>
+    <script>
+        var Cell = function(x,y,ele){
+            this.x = x;
+            this.y = y;
+            this.ele = ele;
+            this.status = 0;// -1食物 0 空 1 蛇
+        }
+        //面板对象
+        var panel = {
+            snake:null,
+            cells:[],
+            obj:document.getElementById("panel"),
+            food:{},
+            rows:10,//行数
+            cols:10,
+            time:1000,//自动移动个间隔时间
+            sto:null,//移动定时器
+            dirStatus:true,//能否转向状态 (一次移动只能转一次)
+            //创建格子
+            createCells:function(){
+                this.cells = [];
+                for(var i = 0;i < this.rows;i++){
+                    var cs = [];
+                    for(var j = 0;j < this.cols;j++){
+                        var dl = document.createElement("dl");
+                        this.obj.appendChild(dl);
+                        cs[cs.length] = {x:j,y:i,ele:dl,status:0};
+                    }
+                    this.cells[this.cells.length] = cs;
+                }
+            },
+            //重置面板状态
+            resetStatus:function(){
+                for(var i = 0;i < this.rows;i++){
+                    for(var j = 0;j < this.cols;j++){
+                        this.cells[i][j].status = 0;
+                        this.cells[i][j].ele.style.backgroundColor = "#fff";
+                    }
+                }
+            },
+            //创建食物
+            createFood:function(){
+                var rd = ~~(Math.random() * this.cols * this.rows);
+                while(this.cells[~~(rd / this.cols)][rd % this.rows] === 0){
+                    rd = ~~(Math.random() * this.cols * this.rows);
+                }
+                var x = rd % this.rows,y = ~~(rd / this.cols);
+                this.food = {x:x,y:y};
+                this.cells[x,y].status = 2;
+            },
+            // 判断是否越界
+            isCrossTheBorder:function(){
+                var x = this.snake.head.x;
+                var y = this.snake.head.y;
+                return x < 0 || x > this.cols - 1 || y < 0 || y > this.rows - 1;
+            },
+            //判断蛇是撞到自己
+            isDeath:function(){
+                return this.cells[this.snake.head.x][this.snake.head.y].status > 1;
+            },
+            //自动移动
+            autoMove:function(self){
+                self.dirStatus = true;
+                for(var i = 0;i < self.snake.length;i++){
+                    self.cells[self.snake.body[i].y][self.snake.body[i].x].status = 0;
+                    self.cells[self.snake.body[i].y][self.snake.body[i].x].ele.style.backgroundColor = "#fff";
+                }
+                self.snake.move();
+                if(self.isCrossTheBorder()){
+                    alert("游戏结束");
+                    clearTimeout(self.sto);
+                    return;
+                }
+                if(self.snake.isEat(self.food)){
+                    self.cells[self.food.y][self.food.x].status = 0;
+                    self.cells[self.food.y][self.food.x].ele.style.backgroundColor = "#fff";
+                    self.snake.lengthen();
+                    for(var i = 0;i < self.snake.length;i++){
+                        self.cells[self.snake.body[i].y][self.snake.body[i].x].status++;
+                        self.cells[self.snake.body[i].y][self.snake.body[i].x].ele.style.backgroundColor = "#123456";
+                    }
+                    self.createFood();
+                }else{
+                    for(var i = 0;i < self.snake.length;i++){
+                        self.cells[self.snake.body[i].y][self.snake.body[i].x].status++;
+                        self.cells[self.snake.body[i].y][self.snake.body[i].x].ele.style.backgroundColor = "#123456";
+                    }
+                }
+                self.cells[self.food.y][self.food.x].status = -1;
+                self.cells[self.food.y][self.food.x].ele.style.backgroundColor = "#fe1234";
+                if(self.isDeath()){
+                    alert("游戏结束");
+                    clearTimeout(sto);
+                }else{
+                    self.sto = setTimeout(function(){self.autoMove(self)},self.time);
+                }
+            },
+            //开始键盘监听
+            startKeyLinster:function(){
+                var self = this;
+                document.onkeyup = function(e){
+                    if(e.keyCode >= 37 && e.keyCode <= 40 && self.dirStatus){
+                        self.dirStatus = !self.snake.turnTo(e.keyCode - 37);
+                    }
+                }
+            },
+            //初始化
+            init:function(){
+                this.obj.innerHTML = "";
+                this.snake = new Snake({x:~~this.cols / 2,y:~~this.rows / 2});
+                this.createCells();
+                this.createFood();
+                this.autoMove(this);
+                this.startKeyLinster();
+            }
+        }
+        //蛇
+        var Snake = function(head){
+            this.body = [head];
+            this.head = head;
+            this.node = [];
+            this.dx = -1;
+            this.dy = 0;
+            this.length = 1;
+        }
+        //判断是否吃到食物
+        Snake.prototype.isEat = function(food){
+            return this.head.x === food.x && this.head.y === food.y;
+        }
+        //蛇移动
+        Snake.prototype.move = function(){
+            if(this.node.length < 1){
+                for(var i = 0;i < this.length;i++){
+                    this.body[i].x += this.dx;
+                    this.body[i].y += this.dy;
+                }
+            }else{
+                var n = 0;
+                var dx = this.dx;
+                var dy = this.dy;
+                for(var i = 0;i < this.length;i++){
+                    this.body[i].x += dx;
+                    this.body[i].y += dy;
+                    if(n < this.node.length && i === this.node[n].index){
+                        this.node[n].index++;
+                        dx = this.node[n].dx;
+                        dy = this.node[n].dy;
+                        n++;
+                    }
+                }
+                if(this.node[this.node.length - 1].index === this.length - 1){
+                    this.node.pop();
+                }
+            }
+        }
+        //转向 return 是否返回成功
+        Snake.prototype.turnTo = function(d){
+            if(this.dy === 0 && d % 2 === 1 || (this.dx === 0 && d % 2 === 0)){
+                if(this.length > 1){
+                    this.node.unshift({index:0,dx:this.dx,dy:this.dy});
+                }
+                if(this.dy === 0){
+                    this.dx = 0;
+                    this.dy = d - 2;
+                }else{
+                    this.dy = 0;
+                    this.dx = d - 1;
+                }
+                return true;
+            }
+            return false;
+        }
+        //蛇增长
+        Snake.prototype.lengthen = function(){
+            if(this.node.length < 1){
+                this.body[this.length] = {x:this.body[this.length - 1].x - this.dx,y:this.body[this.length - 1].y - this.dy};
+            }else{
+                this.body[this.length] = {x:this.body[this.length - 1].x - this.node[this.node.length - 1].dx,y:this.body[this.length - 1].y - this.node[this.node.length - 1].dy};
+            }
+            this.length++;
+        }
+        //遍历蛇执行方法
+        Snake.prototype.forEach = function(callback){
+            for(var i = 0;i < this.length;i++){
+                callback(this.body[i]);
+            }
+        }
+
+        panel.init();
+    </script>
+</body>
+</html>

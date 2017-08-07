@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8" />
+	<style type="text/css">
+		div{
+			margin: 40px auto;
+			height:650px;
+			width:520px;
+			text-align:center;
+		}
+	</style>
+</head>
+<body>
+<div>
+<canvas id="els" width="500px" height="630px"></canvas></div>
+<span id="msg"></span>
+<script type="text/javascript">
+	var canvas = document.getElementById("els");
+	var ctx = canvas.getContext("2d");
+	var Scol=10;//列数
+	var Srow=20;//行数
+	var ScellSize=30;//格子大小
+
+
+	//点
+	var Point=function(x,y){
+		this.x=x;
+		this.y=y;
+	}
+
+	//七种图形
+	var Graph=function(type,x0,y0,state){ // 1  I  2 O  3  T  4 Z  5  反Z   6  L  7 反L 
+		this.type=type;//类型
+		this.points=new Array();
+		this.points[0]=new Point(x0,y0);//中心坐标
+		this.color="#000";
+		this.state=state;//旋转状态
+		this.init=function(){
+
+		};
+		switch(type){//生成各方块坐标
+			case 1:
+				this.points[1]=new Point(-1.5,-0.5);
+				this.points[2]=new Point(-0.5,-0.5);
+				this.points[3]=new Point(0.5,-0.5);
+				this.points[4]=new Point(1.5,-0.5);
+				this.color="#000";
+				break;
+			case 2:
+				this.points[1]=new Point(-0.5,-0.5);
+				this.points[2]=new Point(0.5,-0.5);
+				this.points[3]=new Point(0.5,0.5);
+				this.points[4]=new Point(-0.5,0.5);
+				this.color="#700";
+				break;
+			case 3:
+				this.points[1]=new Point(0.5,-0.5);
+				this.points[2]=new Point(-0.5,0.5);
+				this.points[3]=new Point(0.5,0.5);
+				this.points[4]=new Point(1.5,0.5);
+				this.color="#d00";
+				break;
+			case 4:
+				this.points[1]=new Point(0.5,-0.5);
+				this.points[2]=new Point(-0.5,0.5);
+				this.points[3]=new Point(0.5,0.5);
+				this.points[4]=new Point(-0.5,1.5);
+				this.color="#070";
+				break;
+			case 5:
+				this.points[1]=new Point(-0.5,-0.5);
+				this.points[2]=new Point(-0.5,0.5);
+				this.points[3]=new Point(0.5,0.5);
+				this.points[4]=new Point(0.5,1.5);
+				this.color="#0d0";
+				break;
+			case 6:
+				this.points[1]=new Point(0.5,-0.5);
+				this.points[2]=new Point(-0.5,0.5);
+				this.points[3]=new Point(0.5,0.5);
+				this.points[4]=new Point(-1.5,0.5);
+				this.color="#007";
+				break;
+			case 7:
+				this.points[1]=new Point(-0.5,-0.5);
+				this.points[2]=new Point(-0.5,0.5);
+				this.points[3]=new Point(0.5,0.5);
+				this.points[4]=new Point(1.5,0.5);
+				this.color="#00d";
+				break;
+		}
+		this.draw=function(){//绘制图形
+			for(var i=1;i<this.points.length;i++){
+				ctx.beginPath();
+				ctx.strokeStyle="#fff";
+				ctx.strokeRect(10+(this.points[i].x-0.5+this.points[0].x)*ScellSize,10+(this.points[i].y-0.5+this.points[0].y)*ScellSize,30,30);
+				ctx.strokeStyle="#000";
+				ctx.fillStyle=this.color;
+				ctx.fillRect(10+(this.points[i].x-0.5+this.points[0].x)*ScellSize,10+(this.points[i].y-0.5+this.points[0].y)*ScellSize,30,30);
+				ctx.fillStyle="#000";
+			}
+		}
+		this.clears=function(){//清除
+			for(var i=1;i<this.points.length;i++){
+				ctx.clearRect(10+(this.points[i].x-0.5+this.points[0].x)*ScellSize,10+(this.points[i].y-0.5+this.points[0].y)*ScellSize,30,30);
+			}
+		}
+		this.rotateL=function(){//逆时针旋转
+			for(var i=1;i<this.points.length;i++){
+				x=this.points[i].x;
+				y=this.points[i].y;
+				this.points[i].x=-1*y;
+				this.points[i].y=x;
+			}
+		}
+		this.rotateR=function(){//顺指针旋转
+			for(var i=1;i<this.points.length;i++){
+				x=this.points[i].x;
+				y=this.points[i].y;
+				this.points[i].x=y;
+				this.points[i].y=-1*x;
+			}
+		}
+		this.rotate0=function(){//旋转
+			if(this.type==1||this.type==4||this.type==5){
+				if(this.state==1||this.state==3){
+					this.rotateL();
+					this.state++;
+				}else{
+					this.rotateR();
+					if(this.state==4){
+						this.state=1;
+					}else{
+						this.state++;
+					}
+				}
+			}else{
+				this.rotateL();
+			}
+		}
+		this.rotate1=function(){//判断是否能旋转时 旋转
+			if(this.type==1||this.type==4||this.type==5){
+				if(this.state==1||this.state==3){
+					this.rotateL();
+				}else{
+					this.rotateR();
+				}
+			}else{
+				this.rotateL();
+			}
+		}
+		this.rotate2=function(){//判断是否能旋转时 回转
+			if(this.type==1||this.type==4||this.type==5){
+				if(this.state==1||this.state==3){
+					this.rotateR();
+
+				}else{
+					this.rotateL();
+				}
+			}else{
+				this.rotateR();
+			}
+		}
+		this.rotate=function(){//旋转
+			this.clears();
+			this.rotate0();
+			this.draw();
+		}
+		this.drop=function(){//下落
+			this.clears();
+			this.points[0].y++;
+			this.draw();
+		}
+		this.moveleft=function(){//左移
+			this.clears();
+			this.points[0].x--;
+			this.draw();
+		}
+		this.moveright=function(){//右移
+			this.clears();
+			this.points[0].x++;
+			this.draw();
+		}
+		for(var i=1;i<this.state;i++){
+			this.rotate();
+		}
+	}
+
+	//面板
+	var panel = {
+		col:Scol,//列数
+		row:Srow,//行数
+		score:0,//分数
+		cellSize:ScellSize,//格子大小
+		cells:new Array(),//格子状态集合
+		draw:function(){//绘制主体面板
+			ctx.beginPath();
+			ctx.lineWidth=3;
+			ctx.strokeRect(8,8,(this.col+6)*this.cellSize,this.row*this.cellSize);
+			ctx.lineWidth=2;
+			ctx.beginPath();
+			ctx.lineTo(11+this.col*this.cellSize,10);
+			ctx.lineTo(11+this.col*this.cellSize,10+this.row*this.cellSize);
+			ctx.stroke();
+			ctx.lineWidth=1;
+		},
+		drawScore:function(){//绘制分数
+			ctx.clearRect(10+(this.col+1)*this.cellSize,20,120,30);
+			ctx.font="16px 楷书";
+			ctx.fillText("分数：",10+(this.col+1)*this.cellSize,10+this.cellSize);
+			ctx.fillStyle="#f00";
+			ctx.fillText(this.score,10+(this.col+2.5)*this.cellSize,10+this.cellSize);
+			ctx.fillStyle="#000";
+		},
+		getCells:function(){//获取面板格子状态
+			var ccs = new  Array();
+			for(var i=0;i<this.col;i++){
+				var cs = new Array();
+				for(var j=0;j<this.row;j++){
+					cs[j]=false;
+				}
+				ccs[i]=cs;
+			}
+			return ccs;
+		},
+		drawNext:function(){//绘制下一个图形
+			ctx.clearRect(10+(this.col+1)*this.cellSize,10+2*this.cellSize,120,120);
+			type=Math.floor(Math.random()*7)+1;
+			var g=new Graph(type,13,3,1);
+			g.draw();
+			return g;
+		},
+		drawNow:function(){//绘制当前图形
+			type=Math.floor(Math.random()*7)+1;
+			var g=new Graph(type,5,2,1);
+			g.draw();
+			return g;
+		},
+		isDrop:function(){//判断面板内图形是否能下移
+			x=this.nowG.points[0].x;
+			y=this.nowG.points[0].y+1;
+			for(var i=1;i<5;i++){
+				if(this.nowG.points[i].y+y>this.row){
+					return false;
+				}else if(this.cells[this.nowG.points[i].x+x-0.5][this.nowG.points[i].y+y+0.5]){
+					return false;
+				}
+			}
+			return true;
+		},
+		isMoveleft:function(){//判断面板内图形是否能左移
+			x=this.nowG.points[0].x-1;
+			y=this.nowG.points[0].y;
+			// document.getElementById("msg").innerHTML +=(this.nowG.points[1].x+x-0.5)+","+(this.nowG.points[1].y+y-0.5)+","+this.cells[this.nowG.points[1].x+x-0.5][this.nowG.points[1].y+y-0.5];
+			for(var i=1;i<5;i++){
+				if(this.nowG.points[i].x+x<0){
+					return false;
+				}else if(this.cells[this.nowG.points[i].x+x-0.5][this.nowG.points[i].y+y-0.5]){
+					return false;
+				}
+			}
+			return true;
+		},
+		isMoveright:function(){//判断面板内图形是否能右移
+			x=this.nowG.points[0].x+1;
+			y=this.nowG.points[0].y;
+			// document.getElementById("msg").innerHTML += (this.nowG.points[1].x+x-1.5)+","+(this.nowG.points[1].y+y-0.5)+"-----";
+			for(var i=1;i<5;i++){
+				if(this.nowG.points[i].x+x>this.col){
+					return false;
+				}else if(this.cells[this.nowG.points[i].x+x-0.5][this.nowG.points[i].y+y-0.5]){
+					return false;
+				}
+			}
+			return true;
+		},
+		isrotate:function(){//判断面板内图形是否能旋转
+			var ggg=this.nowG;
+			ggg.rotate1();
+			x=ggg.points[0].x;
+			y=ggg.points[0].y;
+			for(var i=1;i<5;i++){
+				if(this.cells[ggg.points[i].x+x-0.5][ggg.points[i].y+y-0.5]){
+					ggg.rotate2();
+					return false;
+				}
+			}
+			ggg.rotate2();
+			return true;
+		},
+		land:function(){//面板内图形着陆
+			for(var i=1;i<5;i++){
+				this.cells[this.nowG.points[i].x+x-0.5-1][this.nowG.points[i].y+y-0.5-1]=true;
+				// alert(1);
+				// alert((this.nowG.points[i].x+x-0.5-1)+","+(this.nowG.points[i].y+y-0.5-1));
+			}
+		},
+		rotate:function(){//面板内图形旋转
+			if(this.isrotate()){
+				this.nowG.rotate();
+			}
+		},
+		moveleft:function(){//面板内图形左移
+			if(this.isMoveleft()){
+				this.nowG.moveleft();
+			}
+		},
+		moveright:function(){//面板内图形右移
+			if(this.isMoveright()){
+				this.nowG.moveright();
+			}
+		},
+		drop:function(){//面板内图形下落
+				if(this.isDrop()){
+					this.nowG.drop();
+				}else{
+					this.land();
+					this.nowG=this.nextG;
+					this.nowG.points[0].x=5;
+					this.nowG.points[0].y=2;
+					this.nowG.draw();
+					this.nextG=this.drawNext();
+				}
+		},
+		init:function(){//面板初始化
+			this.cells=this.getCells();//格子状态初始化
+			this.draw();//绘制面板
+			this.drawScore();//绘制初始化分数
+			this.nowG=this.drawNow();//当前图形
+			this.nextG=this.drawNext();//下一个图形
+		}
+	}
+	panel.init();
+	document.onkeydown=function(e){
+		switch(e.keyCode){
+			case 37:
+				panel.moveleft();
+				break;
+			case 38:
+				panel.rotate();
+				break;
+			case 39:
+				panel.moveright();
+				break;
+			case 40:
+				panel.drop();
+				break;
+		}
+	}
+	setInterval(function(){//自动下落
+		panel.drop();
+	},1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style type="text/css">
+		.alert-div{
+			position: absolute;
+			width: 100px;
+			height:30px;
+			left: 50%;
+			top: 20%;
+			margin-left:-50px;
+			background-color: red;
+			text-align: center;
+			line-height: 30px;
+			border-radius: 5px;
+			opacity: 0;
+			transition:opacity 1s linear;	
+		}
+	</style>
+</head>
+<body>
+<canvas id="canvas" width="1500px" height="730px"></canvas>
+<div class="alert-div" id="btn">中了</div>
+<div class="alert-div" id="btn1">没中</div>
+<script type="text/javascript">
+	var canvas = document.getElementById("canvas");
+	var ctx = canvas.getContext("2d");
+
+	var img1 = new Image();
+	img1.src = "bk.png";
+	img1.onload = function(){
+		ctx.drawImage(img1,470,0);
+	}
+	var img2 = new Image();
+	img2.src = "sz.png";
+	img2.onload = function(){
+		ctx.drawImage(img2,0,380);
+	}
+	x=0;
+	state=true;
+	speed=5;
+	y=380;
+	function moves(){
+		clearTimeout(cha);
+		ctx.clearRect(0,0,1500,740);
+		ctx.drawImage(img1,470,0);
+		ctx.drawImage(img2,x,380);
+		if(state){
+			x+=speed;
+		}else{
+			x-=speed;
+		}
+		if(x>=1092){
+			state=false;
+		}
+		if(x<=0){
+			state=true;
+		}
+	}
+	function start(){
+		x=0;
+		state=true;
+		speed=5;
+		y=380;
+		move=setInterval(function(){
+			moves();
+		},1);
+	}
+	start();
+	n=0;
+	canvas.onclick=function(){
+		if(n%2==0){
+			clearTimeout(move);
+			cha=setInterval(function(){
+				ctx.clearRect(0,0,1500,740);
+				ctx.drawImage(img1,470,0);
+				ctx.drawImage(img2,x,y);
+				y-=2;
+				if(y<=188){
+					clearTimeout(cha);
+					if(x>515&&x<535||x<675&&x>655){
+						document.getElementById("btn").style.opacity=1;
+						setTimeout(function(){
+							document.getElementById("btn").style.opacity=0;
+						},1000);
+					}else{
+						document.getElementById("btn1").style.opacity=1;
+						setTimeout(function(){
+							document.getElementById("btn1").style.opacity=0;
+						},1000);
+					}
+				}
+			},1);
+		}else{
+			start();
+		}
+		n++;
+	}
+</script>
+</body>
+</html>

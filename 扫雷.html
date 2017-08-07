@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <style>
+        body,div,dl,dt{
+            padding: 0;
+            margin: 0;
+        }
+        body{
+            text-align: center;
+        }
+        #main{
+            display: inline-block;
+            border:10px solid #c0c0c0;
+        }
+
+        #panel{
+            margin: 0 auto;
+            padding: 1px;
+            border-left:3px solid #808080;
+            border-top:3px solid #808080;
+            border-right:1px solid #fff;
+            border-bottom:1px solid #fff;
+            width: 500px;
+            zoom:1;
+            background-color: #fff;
+        }
+        #panel:after{
+            content: "";
+            display: block;
+            clear: both;
+        }
+        #panel dl{
+            float: left;
+            margin: 0 1px 1px 0;
+            width: 19px;
+            height: 19px;
+            line-height: 18px;
+            text-align: center;
+            box-sizing: border-box;
+            border-left:1px solid #fff;
+            border-top:1px solid #fff;
+            border-right:2px solid #808080;
+            border-bottom:2px solid #808080;
+            background-color: #c0c0c0;
+            cursor: pointer;
+        }
+        #panel dl.open{
+            border-right:0px solid #808080;
+            border-bottom:0px solid #808080;
+            cursor: default;
+            color: #427edb;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        #panel dl.mark{
+            border-left:1px solid #fff;
+            border-top:1px solid #fff;
+            border-right:2px solid #808080;
+            border-bottom:2px solid #808080;
+            cursor: default;
+            color: #427edb;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        #panel dl.mark:before{
+            display: block;
+            content: "√";
+            color:green;
+        }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <div id="panel"></div>
+    </div>
+    <script>
+        var Cell = function(x,y,ele,status){
+            this.x = x;
+            this.y = y;
+            this.ele = ele;
+            this.status = status;// -1炸弹 0 空 1-8 周围炸弹数
+            this.type = type || 0;//是否标记 0 否 1 是
+        }
+        //面板对象
+        var panel = {
+            cells:[],
+            obj:document.getElementById("panel"),
+            rows:10,//行数
+            cols:10,
+            nums:20,//炸弹数
+            buttons:0,//鼠标按下状态 1 左键 2 右键 3左右键
+            remaining:0,//剩余格子数
+            types:0,//标技数
+            //创建格子
+            createCells:function(){
+                this.cells = [];
+                var self = this;
+                for(var i = 0;i < this.cols;i++){
+                    var cs = [];
+                    for(var j = 0;j < this.rows;j++){
+                        var dl = document.createElement("dl");
+                        dl.onmousedown = this.mouseDownFun;
+                        dl.onmouseup = (function(self,i,j){
+                            return function(e){self.mouseUpFun(e,self,i,j)};
+                        })(self,i,j)
+                        cs[cs.length] = {x:i,y:j,ele:dl,status:0,type:0};
+                    }
+                    this.cells[this.cells.length] = cs;
+                }
+                for(var i = 0;i < this.rows;i++){
+                    for(var j = 0;j < this.cols;j++){
+                        this.obj.appendChild(this.cells[j][i].ele);
+                    }
+                }
+                var arr = [];
+                var r = 0;
+                var flag = true;
+                arr[0] = ~~(Math.random() * this.rows * this.cols);
+                this.cells[arr[0] % this.cols][~~(arr[0] / this.cols)].status = -1;
+                while(arr.length < this.nums){
+                    flag = true;
+                    r = ~~(Math.random() * this.rows * this.cols);
+                    for(var i = 0,len = arr.length;i < len;i++){
+                        if(arr[i] === r){
+                            flag = false;
+                        }
+                    }
+                    if(flag){
+                        this.cells[r % this.cols][~~(r / this.cols)].status = -1;
+                        arr[arr.length] = r;
+                    }
+                }
+                var n = 0;
+                for(var i = 0;i < this.cols;i++){
+                    if(i > 0 && i < this.cols - 1){
+                        for(var j = 0;j < this.rows;j++){
+                            if(this.cells[i][j].status !== -1){
+                                n = 0;
+                                if(j !== 0){
+                                    this.cells[i - 1][j - 1].status === -1 ? n++ : null;
+                                    this.cells[i][j - 1].status === -1 ? n++ : null;
+                                    this.cells[i + 1][j - 1].status === -1 ? n++ : null;
+                                }
+                                if(j !== this.rows - 1){
+                                    this.cells[i - 1][j + 1].status === -1 ? n++ : null;
+                                    this.cells[i][j + 1].status === -1 ? n++ : null;
+                                    this.cells[i + 1][j + 1].status === -1 ? n++ : null;
+                                }
+                                this.cells[i - 1][j].status === -1 ? n++ : null;
+                                this.cells[i + 1][j].status === -1 ? n++ : null;
+                                this.cells[i][j].status = n;
+                            }
+                        }
+                    }else if(i === 0){
+                        for(var j = 0;j < this.rows;j++){
+                            if(this.cells[i][j].status !== -1){
+                                n = 0;
+                                if(j !== 0){
+                                    this.cells[i][j - 1].status === -1 ? n++ : null;
+                                    this.cells[i + 1][j - 1].status === -1 ? n++ : null;
+                                }
+                                if(j !== this.rows - 1){
+                                    this.cells[i][j + 1].status === -1 ? n++ : null;
+                                    this.cells[i + 1][j + 1].status === -1 ? n++ : null;
+                                }
+                                this.cells[i + 1][j].status === -1 ? n++ : null;
+                                this.cells[i][j].status = n;
+                            }
+                        }
+                    }else{
+                        for(var j = 0;j < this.rows;j++){
+                            if(this.cells[i][j].status !== -1){
+                                n = 0;
+                                if(j !== 0){
+                                    this.cells[i - 1][j - 1].status === -1 ? n++ : null;
+                                    this.cells[i][j - 1].status === -1 ? n++ : null;
+                                }
+                                if(j !== this.rows - 1){
+                                    this.cells[i - 1][j + 1].status === -1 ? n++ : null;
+                                    this.cells[i][j + 1].status === -1 ? n++ : null;
+                                }
+                                this.cells[i - 1][j].status === -1 ? n++ : null;
+                                this.cells[i][j].status = n;
+                            }
+                        }
+                    }
+                }
+            },
+            //鼠标左键操作
+            leftMouse:function(obj,self,x,y){
+                if(obj.className !== "open" && self.cells[x][y].type === 0){
+                    obj.className = "open";
+                    self.remaining--;
+                    if(self.cells[x][y].status === -1){
+                        obj.innerText = "X";
+                        alert("gameover");
+                        self.init();
+                    }else if(self.cells[x][y].status === 0){
+                        var arr = [self.cells[x][y]];
+                        while(arr.length > 0){
+                            var c = arr.pop();
+                            x = c.x;
+                            y = c.y;
+                            if(y !== 0){
+                                self.cells[x][y - 1].ele.className !== "open" && self.cells[x][y - 1].type === 0 ? (self.cells[x][y - 1].status === 0 ? arr[arr.length] = self.cells[x][y - 1] : self.cells[x][y - 1].ele.innerText = self.cells[x][y - 1].status) : null;
+                                if(self.cells[x][y - 1].ele.className !== "open" && self.cells[x][y - 1].type === 0){
+                                    self.cells[x][y - 1].ele.className = "open";
+                                    self.remaining--;
+                                }
+                            }
+                            if(y !== self.rows - 1){
+                                self.cells[x][y + 1].ele.className !== "open" && self.cells[x][y + 1].type === 0 ? (self.cells[x][y + 1].status === 0 ? arr[arr.length] = self.cells[x][y + 1] : self.cells[x][y + 1].ele.innerText = self.cells[x][y + 1].status) : null;
+                                if(self.cells[x][y + 1].ele.className !== "open" && self.cells[x][y + 1].type === 0){
+                                    self.cells[x][y + 1].ele.className = "open";
+                                    self.remaining--;
+                                }
+                            }
+                            if(x !== 0){
+                                self.cells[x - 1][y].ele.className !== "open" && self.cells[x - 1][y].type === 0 ? (self.cells[x - 1][y].status === 0 ? arr[arr.length] = self.cells[x - 1][y] : self.cells[x - 1][y].ele.innerText = self.cells[x - 1][y].status) : null;
+                                if(self.cells[x - 1][y].ele.className !== "open" && self.cells[x - 1][y].type === 0){
+                                    self.cells[x - 1][y].ele.className = "open";
+                                    self.remaining--;
+                                }
+                            }
+                            if(x !== self.cols - 1){
+                                self.cells[x + 1][y].ele.className !== "open" && self.cells[x + 1][y].type === 0 ? (self.cells[x + 1][y].status === 0 ? arr[arr.length] = self.cells[x + 1][y] : self.cells[x + 1][y].ele.innerText = self.cells[x + 1][y].status) : null;
+                                if(self.cells[x + 1][y].ele.className !== "open" && self.cells[x + 1][y].type === 0){
+                                    self.cells[x + 1][y].ele.className = "open";
+                                    self.remaining--;
+                                }
+                            }
+                            if(x !== 0 && y !== 0){
+                                self.cells[x - 1][y - 1].ele.className !== "open" && self.cells[x - 1][y - 1].type === 0 ? (self.cells[x - 1][y - 1].status === 0 ? arr[arr.length] = self.cells[x - 1][y - 1] : self.cells[x - 1][y - 1].ele.innerText = self.cells[x - 1][y - 1].status) : null;
+                                if(self.cells[x - 1][y - 1].ele.className !== "open" && self.cells[x - 1][y - 1].type === 0){
+                                    self.cells[x - 1][y - 1].ele.className = "open";
+                                    self.remaining--;
+                                }
+                            }
+                            if(x !== 0 && y !== self.rows - 1){
+                                self.cells[x - 1][y + 1].ele.className !== "open" && self.cells[x - 1][y + 1].type === 0 ? (self.cells[x - 1][y + 1].status === 0 ? arr[arr.length] = self.cells[x - 1][y + 1] : self.cells[x - 1][y + 1].ele.innerText = self.cells[x - 1][y + 1].status) : null;
+                                if(self.cells[x - 1][y + 1].ele.className !== "open" && self.cells[x - 1][y + 1].type === 0){
+                                    self.cells[x - 1][y + 1].ele.className = "open";
+                                    self.remaining--;
+                                }
+                            }
+                            if(x !== self.cols - 1 && y !== 0){
+                                self.cells[x + 1][y - 1].ele.className !== "open" && self.cells[x + 1][y - 1].type === 0 ? (self.cells[x + 1][y - 1].status === 0 ? arr[arr.length] = self.cells[x + 1][y - 1] : self.cells[x + 1][y - 1].ele.innerText = self.cells[x + 1][y - 1].status) : null;
+                                if(self.cells[x + 1][y - 1].ele.className !== "open" && self.cells[x + 1][y - 1].type === 0){
+                                    self.cells[x + 1][y - 1].ele.className = "open";
+                                    self.remaining--;
+                                }
+                            }
+                            if(x !== self.cols - 1 && y !== self.rows - 1){
+                                self.cells[x + 1][y + 1].ele.className !== "open" && self.cells[x + 1][y + 1].type === 0 ? (self.cells[x + 1][y + 1].status === 0 ? arr[arr.length] = self.cells[x + 1][y + 1] : self.cells[x + 1][y + 1].ele.innerText = self.cells[x + 1][y + 1].status) : null;
+                                if(self.cells[x + 1][y + 1].ele.className !== "open" && self.cells[x + 1][y + 1].type === 0){
+                                    self.cells[x + 1][y + 1].ele.className = "open";
+                                    self.remaining--;
+                                }
+                            }
+                        }
+                    }else{
+                        obj.innerText = self.cells[x][y].status;
+                    }
+                }
+            },
+            //鼠标右键操作
+            rightMouse:function(obj,self,x,y){
+                if(obj.className !== "open"){
+                    if(obj.className === "mark"){
+                        obj.className = "";
+                        self.cells[x][y].type = 0;
+                        this.types--;
+                    }else{
+                        obj.className = "mark";
+                        self.cells[x][y].type = 1;
+                        this.types++;
+                    }
+                }
+            },
+            //鼠标左右键操作
+            allMouse:function(obj,self,x,y){
+                if(obj.className === "open"){
+                    var arr = [self.cells[x][y]];
+                    while(arr.length > 0){
+                        var c = arr.pop();
+                        var brr = [];
+                        var flag = true;
+                        x = c.x;
+                        y = c.y;
+                        if(x !== 0){
+                            if(self.cells[x - 1][y].ele.className !== "open" && self.cells[x - 1][y].type === 0){
+                                if(self.cells[x - 1][y].status === -1){
+                                    flag = false;
+                                }else{
+                                    brr[brr.length] = self.cells[x - 1][y];
+                                }
+                            }
+                        }
+                        if(y !== 0){
+                            if(self.cells[x][y - 1].ele.className !== "open" && self.cells[x][y - 1].type === 0){
+                                if(self.cells[x][y - 1].status === -1){
+                                    flag = false;
+                                }else{
+                                    brr[brr.length] = self.cells[x][y - 1];
+                                }
+                            }
+                        }
+                        if(x !== self.cols - 1){
+                            if(self.cells[x + 1][y].ele.className !== "open" && self.cells[x + 1][y].type === 0){
+                                if(self.cells[x + 1][y].status === -1){
+                                    flag = false;
+                                }else{
+                                    brr[brr.length] = self.cells[x + 1][y];
+                                }
+                            }
+                        }
+                        if(y !== self.rows - 1){
+                            if(self.cells[x][y + 1].ele.className !== "open" && self.cells[x][y + 1].type === 0){
+                                if(self.cells[x][y + 1].status === -1){
+                                    flag = false;
+                                }else{
+                                    brr[brr.length] = self.cells[x][y + 1];
+                                }
+                            }
+                        }
+                        if(x !== 0 && y !== 0){
+                            if(self.cells[x - 1][y - 1].ele.className !== "open" && self.cells[x - 1][y - 1].type === 0){
+                                if(self.cells[x - 1][y - 1].status === -1){
+                                    flag = false;
+                                }else{
+                                    brr[brr.length] = self.cells[x - 1][y - 1];
+                                }
+                            }
+                        }
+                        if(x !== 0 && y !== self.rows - 1){
+                            if(self.cells[x - 1][y + 1].ele.className !== "open" && self.cells[x - 1][y + 1].type === 0){
+                                if(self.cells[x - 1][y + 1].status === -1){
+                                    flag = false;
+                                }else{
+                                    brr[brr.length] = self.cells[x - 1][y + 1];
+                                }
+                            }
+                        }
+                        if(x !== self.cols - 1 && y !== 0){
+                            if(self.cells[x + 1][y - 1].ele.className !== "open" && self.cells[x + 1][y - 1].type === 0){
+                                if(self.cells[x + 1][y - 1].status === -1){
+                                    flag = false;
+                                }else{
+                                    brr[brr.length] = self.cells[x + 1][y - 1];
+                                }
+                            }
+                        }
+                        if(x !== self.cols - 1 && y !== self.rows - 1){
+                            if(self.cells[x + 1][y + 1].ele.className !== "open" && self.cells[x + 1][y + 1].type === 0){
+                                if(self.cells[x + 1][y + 1].status === -1){
+                                    flag = false;
+                                }else{
+                                    brr[brr.length] = self.cells[x + 1][y + 1];
+                                }
+                            }
+                        }
+                        if(flag){
+                            for(var i = 0,len = brr.length;i < len;i++){
+                                brr[i].ele.className = "open";
+                                self.remaining--;
+                                if(brr[i].status === 0){
+                                    arr[arr.length] = brr[i];
+                                }else{
+                                    brr[i].ele.innerText = brr[i].status
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            //鼠标按下事件
+            mouseDownFun:function(e){
+                e.preventDefault();
+                panel.buttons = e.buttons;
+            },
+            //鼠标松开事件
+            mouseUpFun:function(e,self,x,y){
+                e.preventDefault();
+                if(panel.buttons === 1){
+                    panel.leftMouse(e.target,self,x,y);
+                }else if(panel.buttons === 2){
+                    panel.rightMouse(e.target,self,x,y);
+                }else if(panel.buttons === 3){
+                    panel.allMouse(e.target,self,x,y);
+                }
+                panel.buttons = 0;
+                if(self.remaining === self.nums){
+                    alert("完成")
+                }
+            },
+            //重置面板状态
+            resetStatus:function(){
+
+            },
+            init:function(){
+                this.obj.innerHTML = "";
+                this.obj.style.width = this.cols * 20 + "px";
+                this.createCells();
+                this.remaining = this.rows * this.cols;
+                this.types = 0;
+            }
+        }
+        panel.init();
+        document.oncontextmenu = function(){return false;}
+    </script>
+</body>
+</html>

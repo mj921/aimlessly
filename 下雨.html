@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+	body{
+		margin: 0;
+		padding: 0;
+	}
+	</style>
+</head>
+<body>
+	<script type="text/javascript">
+		(function(){
+			var canvas = document.createElement("canvas"),
+				ctx = canvas.getContext("2d"),
+				screenWidth = canvas.width = window.innerWidth,
+				screenHeight = canvas.height = window.innerHeight - 3;
+			document.body.appendChild(canvas);
+
+			ctx.fillRect(0,0,screenWidth,screenHeight);
+			ctx.scale(1, 0.4);
+
+			var Raindrop = function(x,y,r,status){
+				this.x = x;
+				this.y = y;
+				this.r = r;
+				this.t = Math.floor(y / 1250 * 400) + 200;
+				this.status = status;
+			}
+			Raindrop.prototype = {
+				constructor:Raindrop,
+				transform:function(){
+					if(this.status == 0){
+						this.y += 4;
+					}else if(this.status == 1){
+						if(this.t <= 560){
+							this.r += 0.9;
+						}else if(this.t <= 580){
+							this.r += 0.8;
+						}else if(this.t <= 600){
+							this.r += 0.7;
+						}else if(this.t <= 620){
+							this.r += 0.6;
+						}else if(this.t <= 640){
+							this.r += 0.5;
+						}else if(this.t <= 660){
+							this.r += 0.4;
+						}else if(this.t <= 680){
+							this.r += 0.3;
+						}else if(this.t <= 690){
+							this.r += 0.2;
+						}else{
+							this.r += 0.1;
+						}
+					}else{
+						this.t = 100;
+						this.status = 0;
+						this.x = Math.floor(100 + Math.random() * 1600);
+						this.y = Math.floor(80 + Math.random() * 160) - 400;
+						this.r = 2;
+					}
+					this.t += Math.random() * 0.5 + 0.5;
+					if(this.t >= 700){
+						this.status = 2;
+					}else if(this.t >= 500){
+						this.status = 1;
+					}
+				},
+				draw:function(){
+					if(this.status == 0){
+						ctx.fillStyle = "rgb(0,223,223)";
+						ctx.beginPath();
+						ctx.arc(this.x,this.y,this.r,0,Math.PI * 2);
+						ctx.fill();
+						ctx.closePath();
+					}else if(this.status == 1){
+						ctx.save();
+						ctx.strokeStyle = "rgb(0,223,223)";
+						ctx.beginPath();
+						ctx.arc(this.x,this.y,this.r,0,Math.PI * 2);
+						ctx.stroke();
+						ctx.closePath();
+						ctx.restore();
+					}
+				}
+			}
+			var rainds = [];
+			for(var i = 0;i < 69;i++){
+				rainds[i] = new Raindrop(Math.floor(100 + Math.random() * 1600),Math.floor(Math.random() * 1250 - 1250),2,0);
+			}
+			function foo(){
+				ctx.fillStyle = "rgba(0,0,0,0.05)";
+				ctx.fillRect(0,0,screenWidth,screenHeight * 2.5);
+				for(var i = 0,len = rainds.length;i < len;i++){
+					rainds[i].transform();
+					rainds[i].draw();
+				}
+				requestAnimationFrame(foo);
+			}
+			foo();
+		})()
+	</script>
+</body>
+</html>

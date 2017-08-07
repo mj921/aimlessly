@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style type="text/css">
+		#canvas{
+			position: absolute;
+			left: 50%;
+			top: 100px;
+			margin-left: -200px;
+			margin-bottom: 100px;
+		}
+	</style>
+</head>
+<body>
+	格子数(n*n):<input type="number" id="num" /> 
+	大小:<input type="number" id="size" /> 
+	<button id="create">生成</button>
+	<span id="nnn">0</span>
+	<canvas id="canvas" width="400" height="400"></canvas>
+	<script type="text/javascript">
+		(function(){
+			var canvas = document.getElementById("canvas"),
+				ctx = canvas.getContext("2d");
+
+			//格子
+			var Cell = function (x,y){
+				this.x = x;
+				this.y = y;
+				this.wall = [0,0,0,0];
+				this.state = 1;
+			}
+			Cell.prototype = {
+				toString:function(){
+					return "x=" + this.x + " ,y=" + this.y + " ,wall=[" + this.wall + "] ,state=" + this.state;
+				}
+			}
+
+			//画板
+			var Panel = function(row,col,pSize){
+				this.row = row || 4;
+				this.col = col || 4;
+				this.executeNum = this.row * this.col;
+				this.pSize = pSize || 400;
+				this.size = this.pSize/this.row;
+				this.cells = function(row,col){
+					var cells = new Array();
+					for(var i = 0;i < col;i++){
+						var cellRow = new Array();
+						for(var j = 0;j < row;j++){
+							cellRow.push(new Cell(i,j));
+						}
+						cells.push(cellRow);
+					}
+					return cells;
+				}(this.row,this.col);
+			};
+			Panel.prototype = {
+				drawBg:function(){
+					ctx.clearRect(0,0,this.pSize,this.pSize);
+					for(var i = 0;i < this.row + 1;i++){
+						ctx.beginPath();
+						ctx.moveTo(0 , i * this.size);
+						ctx.lineTo(this.pSize , i * this.size);
+						ctx.stroke();
+						ctx.closePath();
+					}
+					for(var i = 0;i < this.col + 1;i++){
+						ctx.beginPath();
+						ctx.moveTo(i * this.size , 0);
+						ctx.lineTo(i * this.size , this.pSize);
+						ctx.stroke();
+						ctx.closePath();
+					}
+					ctx.clearRect(1,0,this.size-2,2);
+					ctx.clearRect(this.pSize+1-this.size,this.pSize-1,this.size-2,2);
+				},
+				drawWall:function(){
+					var cell = this.cells[Math.floor(Math.random() * this.row)][Math.floor(Math.random() * this.col)];//随机选取一个格子
+					cell.state = 0;
+					this.executeNum--;
+					var nnn = document.getElementById("nnn");
+					var createTime;
+					//function clearWall
+					function clearWall(cell,panel){
+						nnn.innerHTML = parseInt(nnn.innerHTML) + 1;
+						var x = cell.x;
+						var y = cell.y;
+						var wall = cell.wall;
+						var isExistence = new Array();//这个格子四周格子存在情况 1 上 2 右 3 下 4 左
+						//判断这个格子上下左右格子的存在情况
+						if(x == 0 && y == 0){
+							isExistence = [2,3];
+						}else if(x == 0 && y > 0 && y < panel.col - 1){
+							isExistence = [1,2,3];
+						}else if(x == 0 && y == panel.col - 1){
+							isExistence = [1,2];
+						}else if(x > 0 && x < panel.row - 1 && y == 0){
+							isExistence = [2,3,4];
+						}else if(x > 0 && x < panel.row - 1 && y == panel.col - 1){
+							isExistence = [1,2,4];
+						}else if(x == panel.row - 1 && y == 0){
+							isExistence = [3,4];
+						}else if(x == panel.row - 1 && y > 0 && y < panel.col - 1){
+							isExistence = [1,3,4];
+						}else if(x == panel.row - 1 && y == panel.col - 1){
+							isExistence = [1,4];
+						}else{
+							isExistence = [1,2,3,4];
+						}
+						var isVisit = new Array();//可访问的格子数组
+						var lines = new Array();//可去除的线条
+						//判断所有存在的格子是否可访问
+						for(var i = 0;i < isExistence.length;i++){
+							switch(isExistence[i]){
+								case 1:
+									if(panel.cells[x][y - 1].state == 1){//判断格子是否以访问
+										isVisit.push(panel.cells[x][y - 1]);//存入可访问格子数组
+										lines.push({
+											x:x * panel.size+1,
+											y:y * panel.size-1,
+											w:panel.size-2,
+											h:3,
+											type:0
+										});//存入可去除线条数组
+									}
+									break;
+								case 2:
+									if(panel.cells[x + 1][y].state == 1){
+										isVisit.push(panel.cells[x + 1][y]);
+										lines.push({
+											x:(x + 1) * panel.size-1,
+											y:y * panel.size+1,
+											w:3,
+											h:panel.size-2,
+											type:1
+										});
+									}
+									break;
+								case 3:
+									if(panel.cells[x][y + 1].state == 1){
+										isVisit.push(panel.cells[x][y + 1]);
+										lines.push({
+											x:x * panel.size+1,
+											y:(y + 1) * panel.size-1,
+											w:panel.size-2,
+											h:3,
+											type:2
+										});
+									}
+									break;
+								case 4:
+									if(panel.cells[x - 1][y].state == 1){
+										isVisit.push(panel.cells[x - 1][y]);
+										lines.push({
+											x:x * panel.size-1,
+											y:y * panel.size+1,
+											w:3,
+											h:panel.size-2,
+											type:3
+										});
+									}
+									break;
+							}
+						}
+						//判断是否存在可访问格子 存在则从数组中随机选取一个格子 否则从所有存在的的格子中随机选取一个
+						if(isVisit.length == 0){
+							var isWall = new Array();
+							for(var i = 0;i < isExistence.length;i++){
+								switch(isExistence[i]){
+									case 1:
+										isVisit.push(panel.cells[x][y - 1]);//存入存在格子数组
+										lines.push({
+											x:x * panel.size+1,
+											y:y * panel.size-1,
+											w:panel.size-2,
+											h:3,
+											type:0
+										});//存入可去除线条数组
+										if(wall[0] > 0){
+											if(isWall[wall[0]] == undefined){
+												isWall[wall[0]] = [i];
+											}else{
+												try{
+													isWall[wall[0]] = isWall[wall[0]].push(i);
+												}catch(e){
+													// console.log(e);
+												}
+											}
+										}
+										break;
+									case 2:
+										isVisit.push(panel.cells[x + 1][y]);
+										lines.push({
+											x:(x + 1) * panel.size-1,
+											y:y * panel.size+1,
+											w:3,
+											h:panel.size-2,
+											type:1
+										});
+										if(wall[1] > 0){
+											if(isWall[wall[1]] == undefined){
+												isWall[wall[1]] = [i];
+											}else{
+												try{
+													isWall[wall[1]] = isWall[wall[1]].push(i);
+												}catch(e){
+													// console.log(e);
+												}
+											}
+										}
+										break;
+									case 3:
+										isVisit.push(panel.cells[x][y + 1]);
+										lines.push({
+											x:x * panel.size+1,
+											y:(y + 1) * panel.size-1,
+											w:panel.size-2,
+											h:3,
+											type:2
+										});
+										if(wall[2] > 0){
+											if(isWall[wall[2]] == undefined){
+												isWall[wall[2]] = [i];
+											}else{
+												try{
+													isWall[wall[2]] = isWall[wall[2]].push(i);
+												}catch(e){
+													// console.log(e);
+												}
+											}
+										}
+										break;
+									case 4:
+										isVisit.push(panel.cells[x - 1][y]);
+										lines.push({
+											x:x * panel.size-1,
+											y:y * panel.size+1,
+											w:3,
+											h:panel.size-2,
+											type:3
+										});
+										if(wall[3] > 0){
+											if(isWall[wall[3]] == undefined){
+												isWall[wall[3]] = [i];
+											}else{
+												try{
+													isWall[wall[3]] = isWall[wall[3]].push(i);
+												}catch(e){
+													console.log(e);
+												}
+											}
+										}
+										break;
+								}
+							}
+							if(isWall.length > 0){
+								for(var i = 0;i < isWall.length;i++){
+									if(isWall[i] != undefined){
+										var walls = isWall[i];
+										break;
+									}
+								}
+								var randomNum = walls[Math.floor(Math.random() * walls.length)];
+							}else{
+								var randomNum = Math.floor(Math.random() * isVisit.length);
+							}
+						}else{
+							panel.executeNum--;
+							var randomNum = Math.floor(Math.random() * isVisit.length);
+						}
+						var nextCell =  panel.cells[isVisit[randomNum].x][isVisit[randomNum].y];//选出格子
+						//把选出的格子设为已访问
+						nextCell.state = 0;
+						//改变格子墙状态
+						var typeNum = lines[randomNum].type;
+						panel.cells[cell.x][cell.y].wall[typeNum] ++;
+						panel.cells[nextCell.x][nextCell.y].wall[typeNum%2==0?2-typeNum:4-typeNum] ++;
+						//去除两个格子间线条
+						ctx.clearRect(lines[randomNum].x,lines[randomNum].y,lines[randomNum].w,lines[randomNum].h);
+						if(panel.executeNum > 0){
+							clearWall(panel.cells[isVisit[randomNum].x][isVisit[randomNum].y],panel);
+							// createTime = setTimeout(function(){
+							// 	clearWall(panel.cells[isVisit[randomNum].x][isVisit[randomNum].y],panel);
+							// },50);
+						}else{
+							canvas.style.display = "block";
+						}
+					}
+					//function clearWall
+					if(this.executeNum > 0){
+						clearTimeout(createTime);
+
+						clearWall(cell,this);
+					}else{
+						canvas.style.display = "block";
+					}
+				}
+			}
+
+			var num = document.getElementById("num");
+			var create = document.getElementById("create");
+			var pSObj = document.getElementById("size");
+
+			create.onclick = function(){
+				document.getElementById("nnn").innerHTML = 0;
+				var n = parseInt(num.value);
+				if(n < 1 || n > 79){
+					alert("请输入1~79之间数字");
+					var panel = new Panel();
+					canvas.setAttribute("width",panel.pSize);
+					canvas.setAttribute("height",panel.pSize);
+					canvas.style.marginLeft = -1 * panel.pSize / 2 + "px";
+					panel.drawBg();
+					panel.drawWall();
+				}else{
+					var panel = new Panel(n,n,parseInt(pSObj.value)||800);
+					canvas.setAttribute("width",panel.pSize);
+					canvas.setAttribute("height",panel.pSize);
+					canvas.style.marginLeft = -1 * panel.pSize / 2 + "px";
+					panel.drawBg();
+					panel.drawWall();
+				}
+			}
+		})()
+	</script>
+</body>
+</html>

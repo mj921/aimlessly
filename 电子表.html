@@ -1,0 +1,328 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>无标题文档</title>
+
+<script>
+
+</script>
+</head>
+
+<body>
+<canvas id="canvas" width="1600px" height="650px"></canvas>
+<script type="text/javascript">
+	var canvas = document.getElementById("canvas");
+	var ctx = canvas.getContext("2d");
+	function drawNum(x,y,l,a,n){//x 左边距 y 上边距 l数字大小 a线条粗细 n数字（0-9）
+		ctx.lineWidth=a;
+		switch(n%10){
+			case 0:
+				ctx.beginPath();
+				ctx.moveTo(x+a/2,y+a);
+				ctx.lineTo(x+a/2,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a/2,y+2*a+l);
+				ctx.lineTo(x+a/2,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a/2);
+				ctx.lineTo(x+a+l,y+a/2);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+2.5*a+2*l);
+				ctx.lineTo(x+a+l,y+2.5*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+a);
+				ctx.lineTo(x+l+a*1.5,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+2*a+l);
+				ctx.lineTo(x+l+a*1.5,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				break;
+			case 1:
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+a);
+				ctx.lineTo(x+l+a*1.5,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+2*a+l);
+				ctx.lineTo(x+l+a*1.5,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				break;
+			case 2:
+				ctx.beginPath();
+				ctx.moveTo(x+a/2,y+2*a+l);
+				ctx.lineTo(x+a/2,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a/2);
+				ctx.lineTo(x+a+l,y+a/2);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a*1.5+l);
+				ctx.lineTo(x+a+l,y+a*1.5+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+2.5*a+2*l);
+				ctx.lineTo(x+a+l,y+2.5*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+a);
+				ctx.lineTo(x+l+a*1.5,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				break;
+			case 3:
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a/2);
+				ctx.lineTo(x+a+l,y+a/2);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a*1.5+l);
+				ctx.lineTo(x+a+l,y+a*1.5+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+2.5*a+2*l);
+				ctx.lineTo(x+a+l,y+2.5*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+a);
+				ctx.lineTo(x+l+a*1.5,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+2*a+l);
+				ctx.lineTo(x+l+a*1.5,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				break;
+			case 4:
+				ctx.beginPath();
+				ctx.moveTo(x+a/2,y+a);
+				ctx.lineTo(x+a/2,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a*1.5+l);
+				ctx.lineTo(x+a+l,y+a*1.5+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+a);
+				ctx.lineTo(x+l+a*1.5,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+2*a+l);
+				ctx.lineTo(x+l+a*1.5,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				break;
+			case 5:
+				ctx.beginPath();
+				ctx.moveTo(x+a/2,y+a);
+				ctx.lineTo(x+a/2,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a/2);
+				ctx.lineTo(x+a+l,y+a/2);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a*1.5+l);
+				ctx.lineTo(x+a+l,y+a*1.5+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+2.5*a+2*l);
+				ctx.lineTo(x+a+l,y+2.5*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+2*a+l);
+				ctx.lineTo(x+l+a*1.5,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				break;
+			case 6:
+				ctx.beginPath();
+				ctx.moveTo(x+a/2,y+a);
+				ctx.lineTo(x+a/2,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a/2,y+2*a+l);
+				ctx.lineTo(x+a/2,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a/2);
+				ctx.lineTo(x+a+l,y+a/2);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a*1.5+l);
+				ctx.lineTo(x+a+l,y+a*1.5+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+2.5*a+2*l);
+				ctx.lineTo(x+a+l,y+2.5*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+2*a+l);
+				ctx.lineTo(x+l+a*1.5,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				break;
+			case 7:
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a/2);
+				ctx.lineTo(x+a+l,y+a/2);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+a);
+				ctx.lineTo(x+l+a*1.5,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+2*a+l);
+				ctx.lineTo(x+l+a*1.5,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				break;
+			case 8:
+				ctx.beginPath();
+				ctx.moveTo(x+a/2,y+a);
+				ctx.lineTo(x+a/2,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a/2,y+2*a+l);
+				ctx.lineTo(x+a/2,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a/2);
+				ctx.lineTo(x+a+l,y+a/2);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a*1.5+l);
+				ctx.lineTo(x+a+l,y+a*1.5+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+2.5*a+2*l);
+				ctx.lineTo(x+a+l,y+2.5*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+a);
+				ctx.lineTo(x+l+a*1.5,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+2*a+l);
+				ctx.lineTo(x+l+a*1.5,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				break;
+			case 9:
+				ctx.beginPath();
+				ctx.moveTo(x+a/2,y+a);
+				ctx.lineTo(x+a/2,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a/2);
+				ctx.lineTo(x+a+l,y+a/2);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+a*1.5+l);
+				ctx.lineTo(x+a+l,y+a*1.5+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+a,y+2.5*a+2*l);
+				ctx.lineTo(x+a+l,y+2.5*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+a);
+				ctx.lineTo(x+l+a*1.5,y+a+l);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x+l+a*1.5,y+2*a+l);
+				ctx.lineTo(x+l+a*1.5,y+2*a+2*l);
+				ctx.closePath();
+				ctx.stroke();
+				break;
+		}
+	}
+	x=250;
+	y=200;
+	size=50;
+	ctx.lineWidth=0.1*size;
+	ctx.beginPath();
+	ctx.strokeRect(x,y,14.6*size,3.8*size);
+	ctx.closePath();
+	function change(){
+		ctx.clearRect(x+1,y+1,14.6*size-2,3.8*size-2);
+		var date = new Date();
+		var hour = date.getHours();
+		var minute = date.getMinutes();
+		var second = date.getSeconds();
+		drawNum(x+0.5*size,y+0.5*size,size,0.2*size,Math.floor(hour/10));
+		drawNum(x+2.5*size,y+0.5*size,size,0.2*size,hour%10);
+		drawNum(x+5.5*size,y+0.5*size,size,0.2*size,Math.floor(minute/10));
+		drawNum(x+7.5*size,y+0.5*size,size,0.2*size,minute%10);
+		drawNum(x+10.5*size,y+0.5*size,size,0.2*size,Math.floor(second/10));
+		drawNum(x+12.5*size,y+0.5*size,size,0.2*size,second%10);
+		ctx.beginPath();
+		ctx.arc(x+4.6*size,y+1.5*size,0.15*size,0,Math.PI*2);
+		ctx.fill();
+		ctx.closePath();
+		ctx.beginPath();
+		ctx.arc(x+4.6*size,y+2.5*size,0.15*size,0,Math.PI*2);
+		ctx.fill();
+		ctx.closePath();
+		ctx.beginPath();
+		ctx.arc(x+9.6*size,y+1.5*size,0.15*size,0,Math.PI*2);
+		ctx.fill();
+		ctx.closePath();
+		ctx.beginPath();
+		ctx.arc(x+9.6*size,y+2.5*size,0.15*size,0,Math.PI*2);
+		ctx.fill();
+		ctx.closePath();
+	}
+	change();
+	setInterval(change,1000);
+</script>
+</body>
+</html>

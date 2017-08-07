@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style type="text/css">
+	canvas{
+		border: 1px solid #999;
+	}
+	</style>
+</head>
+<body>
+<canvas id="canvas" width="1580px" height="740px;"></canvas>
+<span id="ttt"></span>
+<script type="text/javascript">
+	var canvas = document.getElementById("canvas");
+	var ctx = canvas.getContext("2d");
+
+	var Color = function(r,g,b,o){
+		this.createColor = function(){
+			this.r = Math.floor(Math.random()*256);
+			this.g = Math.floor(Math.random()*256);
+			this.b = Math.floor(Math.random()*256);
+			this.o = Math.random();
+			return "rgba("+this.r+","+this.g+","+this.b+","+this.o+")";
+		};
+		if(r==undefined){
+			this.createColor();
+		}else{
+			this.r = r;
+			this.g = g;
+			this.b = b;
+			this.o = o;
+		}
+		this.getRgba = function(){
+			return "rgba("+this.r+","+this.g+","+this.b+","+this.o+")";
+		};
+		this.getRgb = function(){
+			return "rgba("+this.r+","+this.g+","+this.b+",1)";
+		};
+		this.setOpacity = function(opacity){
+			this.o = opacity;
+			return this;
+		};
+	}
+	var Rect = function(x,y,width,height,color){
+		this.x = x;
+		this.y = y;
+		this.height = height;
+		this.width = width;
+		this.color = color;
+		this.draw = function(){
+			ctx.beginPath();
+			ctx.fillStyle = color.getRgb();
+			ctx.fillRect(this.x,this.y,this.width,this.height);
+		}
+		this.clearR = function(){
+			ctx.clearRect(this.x,this.y,this.width,this.height);
+		}
+	}
+	var panel = {
+		rects:null,
+		speedBx:1,
+		speedBy:-1,
+		speedM:50,
+		moveRect:null,
+		ball:{
+			x:790,
+			y:715,
+			r:10
+		},
+		isover:function(){
+			if((this.ball.y-this.ball.r)>=740){
+				return true;
+			}
+		},
+		changeBallx:function(){
+			for(var i=0;i<10;i++){
+				for(var j=0;j<10;j++){
+					if((rects[i][j].y==(this.ball.y-this.ball.r))||((rects[i][j].y+rects[i][j].height)==(this.ball.y-this.ball.r))&&(rects[i][j].x<=this.ball.x-this.ball.r)&&((rects[i][j].x+rects[i][j].width)>=this.ball.x+this.ball.r)){
+						isShows[i][j] = false;
+						this.speedBy*=-1;
+					}
+					if((rects[i][j].x==(this.ball.x-this.ball.r))||((rects[i][j].x+rects[i][j].width)==(this.ball.x-this.ball.r))&&(rects[i][j].y<=this.ball.y-this.ball.r)&&((rects[i][j].y+rects[i][j].height)>=this.ball.y+this.ball.r)){
+						isShows[i][j] = false;
+						this.speedBx*=-1;
+					}
+					if((moveRect.y==(this.ball.y-this.ball.r))&&(moveRect.x<=this.ball.x-this.ball.r)&&((moveRect.x+moveRect.width)>=this.ball.x+this.ball.r)){
+						this.speedBy*=-1;
+					}
+					if((this.ball.x-this.ball.r)<=0||(this.ball.x+this.ball.r)>=1580){
+						this.speedBx*=-1;
+					}
+					if((this.ball.y-this.ball.r)<=0){
+						this.speedBy*=-1;
+					}
+				}
+			}
+		},
+		drawBall:function(){
+			ctx.beginPath();
+			ctx.fillStyle="#000";
+			ctx.arc(this.ball.x,this.ball.y,this.ball.r,0,Math.PI*2);
+			ctx.fill();
+		},
+		ballMove:function(){
+			ctx.beginPath();
+			ctx.fillStyle="#fff";
+			ctx.strokeStyle="#fff";
+			ctx.arc(this.ball.x,this.ball.y,this.ball.r,0,Math.PI*2);
+			ctx.fill();
+			ctx.stroke();
+			this.ball.x+=this.speedBx;
+			this.ball.y+=this.speedBy;
+			this.drawBall();
+		},
+		rectLeft:function(){
+			this.moveRect.clearR();
+			moveRect.x-=this.speedM;
+			this.moveRect.draw();
+		},
+		rectRight:function(){
+			this.moveRect.clearR();
+			moveRect.x+=this.speedM;
+			this.moveRect.draw();
+		},
+		drawRects:function(){
+			for(var i=0;i<10;i++){
+				for(var j=0;j<10;j++){
+					if(this.isShows[i][j]){
+						rects[i][j].draw();
+					}
+				}
+			}
+
+		},
+		init:function(){
+			rects = new Array();
+			isShows = new Array();
+			moveRect = new Rect(750,725,80,10,new Color(0,0,0));
+			for(var i=0;i<10;i++){
+				rectr = new	Array();
+				isShow = new Array();
+				for(var j=0;j<10;j++){
+					color = new Color();
+					isShow[j] = true;
+					rectr[j] = new Rect((250+j*105),(100+i*25),100,20,color);
+					rectr[j].draw();
+				}
+				isShows[i] = isShow;
+				rects[i] = rectr;
+			}
+			moveRect.draw();
+			this.drawBall();
+		}
+	}
+	panel.init();
+	document.onkeydown = function(e){
+		switch(e.keyCode){
+			case 37:
+				panel.rectLeft();
+				break;
+			case 39:
+				panel.rectRight();
+				break;
+		}
+	}
+	move = setInterval(function(){
+		if(panel.isover()){
+			clearTimeout(move);
+			alert("游戏结束！");
+		}
+		panel.changeBallx();
+		panel.ballMove();
+	},1);
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>cssLoading</title>
+    <style>
+        div,dl{
+            padding: 0;
+            margin: 0;
+        }
+        .loading1{
+            position: relative;
+            width: 72px;
+            height: 72px;
+        }
+        .loading1 dl{
+            position: absolute;
+            left: 38px;
+            top: 0;
+            width: 5px;
+            height: 48px;
+            border-top: 24px solid rgb(26,188,156);
+            opacity: 0.3
+            -webkit-animation: loading1 0.8s  infinite;
+            animation: loading1 0.8s linear infinite;
+        }
+        .loading1 dl:nth-child(1){
+        }
+        .loading1 dl:nth-child(2){
+            transform: rotate(45deg);
+            -webkit-animation-delay: 0.1s;
+            animation-delay: 0.1s;
+        }
+        .loading1 dl:nth-child(3){
+            transform: rotate(90deg);
+            -webkit-animation-delay: 0.2s;
+            animation-delay: 0.2s;
+        }
+        .loading1 dl:nth-child(4){
+            transform: rotate(135deg);
+            -webkit-animation-delay: 0.3s;
+            animation-delay: 0.3s;
+        }
+        .loading1 dl:nth-child(5){
+            transform: rotate(180deg);
+            -webkit-animation-delay: 0.4s;
+            animation-delay: 0.4s;
+        }
+        .loading1 dl:nth-child(6){
+            transform: rotate(225deg);
+            -webkit-animation-delay: 0.5s;
+            animation-delay: 0.5s;
+        }
+        .loading1 dl:nth-child(7){
+            transform: rotate(270deg);
+            -webkit-animation-delay: 0.6s;
+            animation-delay: 0.6s;
+        }
+        .loading1 dl:nth-child(8){
+            transform: rotate(315deg);
+            -webkit-animation-delay: 0.7s
+            animation-delay: 0.7s;
+        }
+        @-webkit-keyframes loading1{
+            0%{
+                opacity: 0.3
+            }
+            100%{
+                opacity: 1
+            }
+        }
+        @keyframes loading1{
+            0%{
+                opacity: 0.3
+            }
+            100%{
+                opacity: 1
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="loading1">
+        <dl></dl>
+        <dl></dl>
+        <dl></dl>
+        <dl></dl>
+        <dl></dl>
+        <dl></dl>
+        <dl></dl>
+        <dl></dl>
+    </div>
+</body>
+</html>

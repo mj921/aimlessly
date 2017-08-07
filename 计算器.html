@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+    <style>
+        #main{
+            position: relative;
+            margin: 0 auto;
+            width: 300px;
+        }
+        #ipt{
+            width: 100%;
+            height: 84px;
+            line-height: 84px;
+            text-align: right;
+            background-color: #e6e8d3;
+            font-size: 50px;
+            font-weight: bold;
+        }
+        #show{
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 21px;
+            line-height: 21px;
+            font-size: 14px;
+            text-align: right;
+        }
+        ul{
+            padding: 0;
+            margin: 0;
+            background-color: #1d1d1d;
+            zoom:1;
+        }
+        ul:after{
+            content: "";
+            display: block;
+            clear: both;
+        }
+        ul li{
+            padding: 0;
+            margin: 8px 6px;
+            float: left;
+            width: 63px;
+            height: 41px;
+            background-image: url("btn.png");
+            list-style: none;
+            line-height: 41px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: #fff;
+            cursor: pointer;
+        }
+        ul li.btn1{
+            background-position: -0px -41px;
+        }
+        ul li.btn1:hover{
+            background-position: -63px -41px;
+        }
+        ul li.btn2:hover{
+            background-position: -63px 0;
+        }
+        ul li.btn3{
+            float: right;
+            height: 99px;
+            line-height: 99px;
+            background-position: -0px -164px;
+        }
+        ul li.btn3:hover{
+            background-position: -63px -164px;
+        }
+        ul li.btn4{
+            width: 137px;
+            background-position: -0px -82px;
+        }
+        ul li.btn4:hover{
+            background-position: -0px -123px;
+        }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <div id="ipt">0</div>
+        <div id="show"></div>
+        <ul>
+            <li class="btn1" onclick="clearFun()">C</li>
+            <li class="btn1" onclick="click1('%')">%</li>
+            <li class="btn1" onclick="click1('÷')">÷</li>
+            <li class="btn1" onclick="click1('×')">×</li>
+            <li class="btn2" onclick="click2('7')">7</li>
+            <li class="btn2" onclick="click2('8')">8</li>
+            <li class="btn2" onclick="click2('9')">9</li>
+            <li class="btn1" onclick="click1('-')">-</li>
+            <li class="btn2" onclick="click2('4')">4</li>
+            <li class="btn2" onclick="click2('5')">5</li>
+            <li class="btn2" onclick="click2('6')">6</li>
+            <li class="btn1" onclick="click1('+')">+</li>
+            <li class="btn2" onclick="click2('1')">1</li>
+            <li class="btn2" onclick="click2('2')">2</li>
+            <li class="btn2" onclick="click2('3')">3</li>
+            <li class="btn3" onclick="getResult()">=</li>
+            <li class="btn4" onclick="click2('0')">0</li>
+            <li class="btn2" onclick="click3('.')">.</li>
+        </ul>
+    </div>
+    <script>
+        var iptStr = "0";
+        var showStr = "";
+        var status = 0;
+        var ipt = document.getElementById("ipt");
+        var show = document.getElementById("show");
+        var clearFun = function(){
+            iptStr = "0";
+            showStr = "";
+            ipt.innerText = iptStr;
+            show.innerText = showStr;
+        }
+        var click1 = function(value){
+            status = 0;
+            if(/^\d*\.?\d*$/.test(iptStr)){
+                showStr += (iptStr + value);
+                iptStr = value;
+            }else{
+                showStr = showStr.substr(0,showStr.length - 1) + value;
+                iptStr = value;
+            }
+            ipt.innerText = iptStr;
+            show.innerText = showStr;
+        }
+        var click2 = function(value){
+            if(status == 1){
+                iptStr = "0";
+                showStr = "";
+                status = 0;
+            }
+            if(/^\d*\.?\d*$/.test(iptStr)){
+                iptStr = iptStr === "0" ? value : iptStr + value;
+            }else{
+                iptStr = value;
+            }
+            ipt.innerText = iptStr;
+            show.innerText = showStr;
+        }
+        var click3 = function(value){
+            if(status == 1){
+                iptStr = "0";
+                showStr = "";
+                status = 0;
+            }
+            if(/^\d*$/.test(iptStr)){
+                iptStr += value;
+            }
+            ipt.innerText = iptStr;
+            show.innerText = showStr;
+        }
+        var getResult = function(){
+            if(status == 0){
+                show.innerText = showStr + iptStr;;
+                var evStr = (showStr + iptStr).replace(/×/g,'*').replace(/÷/g,'/');
+                ipt.innerText = eval(evStr)
+                showStr = eval(evStr) + "";
+                iptStr = "";
+                status = 1;
+            }
+        }
+    </script>
+</body>
+</html>

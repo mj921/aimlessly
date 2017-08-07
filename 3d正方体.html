@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style type="text/css">
+		/*@keyframes rotate{
+			0%{
+				transform:rotateX(0deg) rotateY(0deg);
+			}
+			100%{
+				transform:rotateX(360deg) rotateY(360deg);
+			}
+		}*/
+		*{
+			cursor: default;
+		}
+		.wrap{
+			margin-top: 200px;
+			perspective:1000px;
+		}
+		.cube{
+			margin: 0 auto;
+			width: 200px;
+			height: 200px;
+			position: relative;
+			transform-style:preserve-3d;
+			animation:rotate 20s infinite linear;
+			cursor: pointer;
+		}
+		.cube>div{
+			position: absolute;
+			width: 200px;
+			height: 200px;
+			opacity: 0.6;
+			line-height: 200px;
+			text-align: center;
+			background-color: #333;
+			border: 1px solid #000;
+			font-size: 36px;
+			color: #fff;
+		}
+		.out-front{
+			transform:translateZ(100px);
+		}
+		.out-back{
+			transform:translateZ(-100px) rotateY(180deg);
+		}
+		.out-left{
+			transform:translateX(-100px) rotateY(-90deg);
+		}
+		.out-right{
+			transform:translateX(100px) rotateY(90deg);
+		}
+		.out-top{
+			transform:translateY(-100px) rotateX(90deg);
+		}
+		.out-bottom{
+			transform:translateY(100px) rotateX(-90deg);
+		}
+	</style>
+</head>
+<body>
+	 <div class="wrap">
+        <div class="cube" id="cube">
+            <div class="out-front">前面</div>
+            <div class="out-back">后面</div>
+            <div class="out-left">左面</div>
+            <div class="out-right">右面</div>
+            <div class="out-top">上面</div>
+            <div class="out-bottom">下面</div>
+            
+            <span class="in-front"></span>
+            <span class="in-back"></span>
+            <span class="in-left"></span>
+            <span class="in-right"></span>
+            <span class="in-top"></span>
+            <span class="in-bottom"></span>
+        </div>
+    </div>
+    <script type="text/javascript">
+    	(function(){
+    		var cube = document.getElementById("cube"),
+    			xR = 0,
+    			yR = 0;
+    		cube.onmousedown = function(e){
+    			var x = e.layerX;
+    				y = e.layerY;
+    			document.onmousemove = function(e){
+    				xR += (e.layerX - x);
+    				yR += (e.layerY - y);
+    				cube.style.transform = "rotateY(" + x + "deg)";
+    				x = e.layerX;
+    				y = e.layerY;
+    			}
+    		}
+    		document.onmouseup = function(){
+    			document.onmousemove = null;
+    		}
+    	})()
+    </script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+</head>
+<body onload="load()">
+<div class="user-info">
+	HP:<span class="hp"></span>
+	ACT:<span class="act"></span>
+	DEF:<span class="def"></span>
+</div>
+<div class="enemy-info">
+	HP:<span class="hp"></span>
+	ACT:<span class="act"></span>
+	DEF:<span class="def"></span>
+</div>
+<table>
+	<thead><td width="50px">id</td><td width="50px">hp</td><td width="50px">act</td><td width="50px">def</td><td width="50px"></td></thead>
+	<tbody class="tbody">
+		
+	</tbody>
+</table>
+<input type="button" value="创建人物" onclick="createUser()">
+<input type="button" value="创建敌人" onclick="createEnemy()">
+<input type="button" value="战斗" onclick="fight(1)">
+<script type="text/javascript" src="jquery-1.8.0.min.js"></script>
+<script type="text/javascript">
+
+	var User = function(id,hp,act,def){
+		this.id = id;
+		this.hp = hp;
+		this.act = act;
+		this.def = def;
+		this.setHp = function(hp){
+			this.hp = hp;
+		}
+	} 
+	var Enemy = function(id,hp,act,def){
+		this.id = id;
+		this.hp = hp;
+		this.act = act;
+		this.def = def;
+		this.setHp = function(hp){
+			this.hp = hp;
+		}
+	} 
+	var db = openDatabase("userdb","","user",2048000);
+		// db.transaction(function(tx){
+		// 	tx.executeSql("drop table user1");
+			// tx.executeSql("drop table enemy");
+		// });
+	function load(){
+		db.transaction(function(tx){
+			tx.executeSql("create table if not exists user(id integer primary key AutoIncrement,hp integer(11),act integer(11),def integer(11))",[]);
+			tx.executeSql("create table if not exists enemy(id integer primary key AutoIncrement,hp integer(11),act integer(11),def integer(11))",[]);
+		});
+		showUser();
+		showAllEnemy();
+	}
+	function showUser(){
+		db.transaction(function(tx){
+			tx.executeSql("select * from user",[],function(tx,rs){
+				if(rs.rows.length>0){
+					var row = rs.rows.item(0);
+					$(".user-info .hp").text(row.hp);
+					$(".user-info .act").text(row.act);
+					$(".user-info .def").text(row.def);
+				}
+			})
+		});
+	}
+	function showEnemy(){
+		db.transaction(function(tx){
+			tx.executeSql("select * from enemy",[],function(tx,rs){
+				if(rs.rows.length>0){
+					var row = rs.rows.item(rs.rows.length-1);
+					$(".enemy-info .hp").text(row.hp);
+					$(".enemy-info .act").text(row.act);
+					$(".enemy-info .def").text(row.def);
+					$(".tbody").html($(".tbody").html()+"<tr><td>"+row.id+"</td><td>"+row.hp+"</td><td>"+row.act+"</td><td>"+row.def+"</td><td><input type='button' value='战斗' onclick='fight("+row.id+")'></td></tr>");
+				}
+			})
+		});
+
+	}
+	function showAllEnemy(){
+		db.transaction(function(tx){
+			tx.executeSql("select * from enemy",[],function(tx,rs){
+				result="";
+				if(rs.rows.length>0){
+					for(var i=0;i<rs.rows.length;i++){
+						var row = rs.rows.item(i);
+						result+="<tr><td>"+row.id+"</td><td>"+row.hp+"</td><td>"+row.act+"</td><td>"+row.def+"</td><td><input type='button' value='战斗' onclick='fight("+row.id+")'></td></tr>"
+					}
+					$(".tbody").html(result);
+				}
+			});
+		});
+	}
+	function createUser(){
+		var hp = 100+Math.floor(Math.random()*40-20);
+		var act = 20+Math.floor(Math.random()*10-5);
+		var def = 10+Math.floor(Math.random()*4-2);
+		db.transaction(function(tx){
+			tx.executeSql("delete from user");
+			tx.executeSql("insert into user(hp,act,def) values(?,?,?)",[hp,act,def]);
+		});
+		showUser();
+	}
+	function createEnemy(){
+		var hp = 70+Math.floor(Math.random()*30-15);
+		var act = 14+Math.floor(Math.random()*4-4);
+		var def = 7+Math.floor(Math.random()*2-1);
+		db.transaction(function(tx){
+			tx.executeSql("insert into enemy(hp,act,def) values(?,?,?)",[hp,act,def]);
+		});
+		showEnemy();
+	}
+	var user = null;
+	var enemy = null;
+	function getResult(){
+		while(user.hp>0&&enemy.hp>0){
+			if(user.act>enemy.def){
+				enemy.setHp(enemy.hp+enemy.def-user.act);
+			}
+			if(enemy.act>user.def&&enemy.hp>0){
+				user.setHp(user.hp+user.def-enemy.act);
+			}
+		}
+		db.transaction(function(tx){
+			tx.executeSql("update user set hp = ?",[user.hp]);
+		});
+	}
+	function fight(id){
+		db.transaction(function(tx){
+			tx.executeSql("select * from user",[],function(tx,rs){
+				if(rs.rows.length>0){
+					var	row = rs.rows.item(0);
+					user = new User(row.id,row.hp,row.act,row.def);
+				}
+			});
+			tx.executeSql("select * from enemy where id="+id,[],function(tx,rs){
+				if(rs.rows.length>0){ 
+					var	row =  rs.rows.item(0);
+					enemy = new Enemy(row.id,row.hp,row.act,row.def);
+				}
+			});
+		});
+		setTimeout(function(){
+			getResult();
+			showUser();
+		},20);
+	}
+</script>
+</body>
+</html>

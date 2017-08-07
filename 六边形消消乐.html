@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+	*{
+		margin: 0;
+		padding: 0;
+	}
+	#content{
+		position: relative;
+		margin: 0 auto;
+		width: 640px;
+		background-color: #000;
+	}
+	canvas{
+		position: absolute;
+	}
+	#main{
+		top: 145px;
+		left: 0;
+	}
+	#quan{
+		top: 700px;
+		left: 0;
+	}
+	#current{
+		top: 740px;
+		left: 225px;
+	}
+	#move{
+		left: 0;
+		top: 0;
+	}
+	</style>
+</head>
+<body>
+<div id="content">
+	<canvas id="main" width="640" height="420"></canvas>
+	<canvas id="quan" width="640" height="230"></canvas>
+	<canvas id="current" width="190" height="190"></canvas>
+	<canvas id="move" width="640"></canvas>
+</div>
+
+<script type="text/javascript">
+	(function(){
+		var mainCanvas = document.getElementById("main"),
+			quanCanvas = document.getElementById("quan"),
+			currentCanvas = document.getElementById("current"),
+			moveCanvas = document.getElementById("move"),
+			mainCtx = mainCanvas.getContext("2d"),
+			quanCtx = quanCanvas.getContext("2d"),
+			currentCtx = currentCanvas.getContext("2d"),
+			moveCtx = moveCanvas.getContext("2d"),
+			baseHeight = window.innerHeight;
+
+		document.getElementById("content").style.height = baseHeight + "px";
+		moveCanvas.setAttribute("height",baseHeight);
+
+
+		var cells = [],
+			isCell = [],
+			index = 0,
+			score = 0,
+			curr = null,
+			moveFlag = false,
+			mouseStatus = 1;//1 不可放置 2 可放置
+
+		// 绘制六边形
+		function drawSix(x,y,ctx,type){
+			switch(type){
+				case 1:
+					ctx.fillStyle = "#f0514d";
+					break;
+				case 2:
+					ctx.fillStyle = "#9f83f6";
+					break;
+				case 3:
+					ctx.fillStyle = "#fcce25";
+					break;
+				case 4:
+					ctx.fillStyle = "#5de569";
+					break;
+				case 5:
+					ctx.fillStyle = "#f984ae";
+					break;
+				case 6:
+					ctx.fillStyle = "#41bfd3";
+					break;
+				case 7:
+					ctx.fillStyle = "#fff";
+					break;
+				default:
+					ctx.fillStyle = "#333";
+					break;
+			}
+			ctx.lineJoin="round";
+			//六个点
+			ctx.beginPath();
+			ctx.moveTo(x,y - 32);
+			ctx.lineTo(x + 16 * Math.sqrt(3),y - 16);
+			ctx.lineTo(x + 16 * Math.sqrt(3),y + 16);
+			ctx.lineTo(x,y + 32);
+			ctx.lineTo(x - 16 * Math.sqrt(3),y + 16);
+			ctx.lineTo(x - 16 * Math.sqrt(3),y - 16);
+			ctx.lineTo(x,y - 32);
+			ctx.fill();
+			switch(type){
+				case 1:
+					ctx.fillStyle = "#d63431";
+					ctx.beginPath();
+					ctx.arc(x,y,10,0,Math.PI * 2);
+					ctx.fill();
+					break;
+				case 2:
+					ctx.fillStyle = "#7e44d7";
+					ctx.beginPath();
+					ctx.arc(x - 10,y,7,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x + 10,y,7,0,Math.PI * 2);
+					ctx.fill();
+					break;
+				case 3:
+					ctx.fillStyle = "#fa9011";
+					ctx.beginPath();
+					ctx.arc(x,y,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x + 8,y - 12,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x - 8,y + 12,6,0,Math.PI * 2);
+					ctx.fill();
+					break;
+				case 4:
+					ctx.fillStyle = "#39c83b";
+					ctx.beginPath();
+					ctx.arc(x - 10,y - 10,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x + 10,y - 10,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x - 10,y + 10,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x + 10,y + 10,6,0,Math.PI * 2);
+					ctx.fill();
+					break;
+				case 5:
+					ctx.fillStyle = "#eb548b";
+					ctx.beginPath();
+					ctx.arc(x,y,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x - 10,y - 10,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x + 10,y - 10,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x - 10,y + 10,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x + 10,y + 10,6,0,Math.PI * 2);
+					ctx.fill();
+					break;
+				case 6:
+					ctx.fillStyle = "#2995a8";
+					ctx.beginPath();
+					ctx.arc(x - 9,y,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x + 9,y,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x - 9,y - 15,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x + 9,y - 15,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x - 9,y + 15,6,0,Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(x + 9,y + 15,6,0,Math.PI * 2);
+					ctx.fill();
+					break;
+				case 7:
+					ctx.fillStyle = "#f85f43";
+					ctx.beginPath();
+					ctx.moveTo(x,y - 15);
+					ctx.lineTo(x + Math.sin(1 / 5 * Math.PI) * 15,y + Math.cos(1 / 5 * Math.PI) * 15);
+					ctx.lineTo(x - Math.cos(1 / 10 * Math.PI) * 15 ,y - Math.sin(1 / 10 * Math.PI) * 15);
+					ctx.lineTo(x + Math.cos(1 / 10 * Math.PI) * 15 ,y - Math.sin(1 / 10 * Math.PI) * 15);
+					ctx.lineTo(x - Math.sin(1 / 5 * Math.PI) * 15,y + Math.cos(1 / 5 * Math.PI) * 15);
+					ctx.lineTo(x,y - 15);
+					ctx.fill();
+					break;
+				default:
+					ctx.fillStyle = "#333";
+					break;
+			}
+		}
+		//生成底盘
+		function drawChassis(){
+			cells = [];
+			isCell = [];
+			index = 0;
+			for(var i = 4,x = 224,y = 36;i < 8;i++){
+				for(var j = 0;j < i;j++){
+					cells.push({x:x + j * 64,y:y,r:i - 4,c:j,t:0,i:index});
+					isCell.push(false);
+					drawSix(x + j * 64,y,mainCtx);
+					index++;
+				}
+				x -= 32;
+				y += 58;
+			}
+			for(var i = 6,x = 160,y = 268;i > 3;i--){
+				for(var j = 0;j < i;j++){
+					cells.push({x:x + j * 64,y:y,r:10 - i,c:j,t:0,i:index});
+					isCell.push(false);
+					drawSix(x + j * 64,y,mainCtx);
+					index++;
+				}
+				x += 32;
+				y += 58;
+			}
+		}
+
+		quanCtx.fillStyle = "#fff";
+		quanCtx.font = "36px Agency FB";
+		quanCtx.textAlign = "center";
+		// 绘制分数
+		function drawScore(){
+			quanCtx.clearRect(0,0,640,36);
+			quanCtx.fillText(score,320,36);
+		}
+
+		quanCtx.strokeStyle = "#999";
+		quanCtx.lineCap = "round";
+		quanCtx.lineWidth = 6;
+
+		//旋转的圆环
+		var baseR = 0,
+			drawQuanSTO = null;
+		function drawQuan(){
+			var br =  baseR * Math.PI / 180;
+			quanCtx.clearRect(0,40,640,180);
+			for(var i = 0;i < 4;i++){
+				quanCtx.beginPath();
+				quanCtx.arc(320,130,82,Math.PI  * (i * 6 + 1) / 36 + br,Math.PI * (i * 6 + 5) / 36 + br);
+				quanCtx.stroke();
+			}
+			for(var i = 0;i < 4;i++){
+				quanCtx.beginPath();
+				quanCtx.arc(320,130,82,Math.PI  * (i * 6 + 37) / 36 + br,Math.PI * (i * 6 + 41) / 36 + br);
+				quanCtx.stroke();
+			}
+			if(baseR < 360){
+				baseR++;
+			}else{
+				baseR = 1;
+			}
+			drawQuanSTO = setTimeout(drawQuan,16);
+		}
+		drawQuan();
+
+		currentCtx.fillStyle = "#333";
+		//4种类型的方块
+		function drawCell(x,y,type,c1,c2,ctx){
+			switch(type){
+				case 0:
+					drawSix(x - 32,y,ctx,c1);
+					drawSix(x + 32,y,ctx,c2);
+					break;
+				case 1:
+					drawSix(x - 16,y - 29,ctx,c1);
+					drawSix(x  + 16,y + 29,ctx,c2);
+					break;
+				case 2:
+					drawSix(x - 16,y + 29,ctx,c1);
+					drawSix(x  + 16,y - 29,ctx,c2);
+					break;
+				case 3:
+					drawSix(x,y,ctx,c1);
+					break;
+			}
+		}
+		//修改当前方块旋转中心
+		currentCtx.translate(95,90);
+		//绘制当前方块
+		function drawNext(type,c1,c2){
+			drawCell(0,0,type,c1,c2,currentCtx);
+		}
+		//获取所有可以放入的方块
+		function getEmptyCells(){
+			var emptys = [];
+			for(var i = 0,len = cells.length;i < len;i++){
+				if(cells[i].t == 0){
+					emptys.push(cells[i]);
+				}
+			}
+			return emptys;
+		}
+		//随机生成方块
+		var maxNum = 2;//最大可生成的方块点数
+		function createCell(){
+			var max = 0;
+			for(var i = 0,len = cells.length;i < len;i++){
+				if(max < cells[i].t){
+					max = cells[i].t;
+				}
+			}
+			maxNum = max < 2 ? 2 : max;
+			var emptys = getEmptyCells(),
+				types = [];
+			if(emptys.length <= 0){
+				alert("Game Over!");
+			}else{
+				types.push(3);
+				for(var i = 0,len = emptys.length - 1;i < len;i++){
+					if(emptys[i].r == emptys[i + 1].r && emptys[i + 1].c - emptys[i].c == 1){
+						types.push(0);
+						break;
+					}
+				}
+				var leftFlag = false,
+					rightFlag = false;
+				for(var i = 0,len = emptys.length - 1;i < len;i++){
+					for(var j = i + 1,len1 = emptys.length;j < len1;j++){
+						if(emptys[i].r < 3 && emptys[i].c == emptys[j].c && emptys[j].r - emptys[i].r == 1 || (emptys[i].r > 2 && emptys[i].c == emptys[j].c + 1 && emptys[j].r - emptys[i].r == 1)){
+							leftFlag = true;
+						}
+						if(leftFlag){
+							break;
+						}
+					}
+					if(leftFlag){
+						break;
+					}
+				}
+				for(var i = 0,len = emptys.length - 1;i < len;i++){
+					for(var j = i + 1,len1 = emptys.length;j < len1;j++){
+						if(emptys[i].r < 3 && emptys[i].c == emptys[j].c - 1 && emptys[j].r - emptys[i].r == 1 || (emptys[i].r > 2 && emptys[i].c == emptys[j].c && emptys[j].r - emptys[i].r == 1)){
+							rightFlag = true;
+						}
+						if(rightFlag){
+							break;
+						}
+					}
+					if(rightFlag){
+						break;
+					}
+				}
+				if(leftFlag){
+					types.push(2);
+				}
+				if(rightFlag){
+					types.push(1);
+				}
+			}
+			var curr = {};
+			curr.type = types[Math.floor(Math.random() * types.length)];
+			if(curr.type == 3){
+				curr.c1 = Math.floor(Math.random() * maxNum) + 1;
+			}else{
+				curr.c1 = Math.floor(Math.random() * maxNum) + 1;
+				curr.c2 = Math.floor(Math.random() * maxNum) + 1;
+			}
+			return curr;
+		}
+		var rrr = 0,
+			sto = null,
+			rcFun = null;
+		//旋转方块
+		function rotateCell(fun){
+			rcFun = fun || rcFun;
+			rrr++;
+			currentCtx.rotate(Math.PI / 18);
+			currentCtx.clearRect(-95,-90,190,190);
+			drawNext(curr.type,curr.c1,curr.c2);
+			if(rrr >= 18 ){
+				rrr = 0;
+				clearTimeout(sto);
+				rcFun();
+			}else{
+				sto = setTimeout(rotateCell,16);
+			}
+		}
+
+		// 绘制预显示格子
+		function drawColor(x,y,type){
+			switch(type){
+				case 1:
+					moveCtx.fillStyle = "rgba(240,81,77,0.4";
+					break;
+				case 2:
+					moveCtx.fillStyle = "rgba(159,131,246,0.4)";
+					break;
+				case 3:
+					moveCtx.fillStyle = "rgba(252,206,37,0.4)";
+					break;
+				case 4:
+					moveCtx.fillStyle = "rgba(93,229,105,0.4)";
+					break;
+				case 5:
+					moveCtx.fillStyle = "rgba(249,132,174,0.4)";
+					break;
+				case 6:
+					moveCtx.fillStyle = "rgba(65,191,211,0.4)";
+					break;
+				case 7:
+					moveCtx.fillStyle = "rgba(255,255,255,0.4)";
+					break;
+				default:
+					moveCtx.fillStyle = "#333";
+					break;
+			}
+			y += 145;
+			moveCtx.beginPath();
+			moveCtx.moveTo(x,y - 32);
+			moveCtx.lineTo(x + 16 * Math.sqrt(3),y - 16);
+			moveCtx.lineTo(x + 16 * Math.sqrt(3),y + 16);
+			moveCtx.lineTo(x,y + 32);
+			moveCtx.lineTo(x - 16 * Math.sqrt(3),y + 16);
+			moveCtx.lineTo(x - 16 * Math.sqrt(3),y - 16);
+			moveCtx.lineTo(x,y - 32);
+			moveCtx.fill();
+		}
+
+		//移动时在底盘上预显示
+		function checkMoving(x,y){
+			y -= 145;
+			switch(curr.type){
+				case 0:
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x - 32 - cells[i].x),2) + Math.pow((y - cells[i].y),2) <= 729 && !isCell[i]){
+							drawColor(cells[i].x,cells[i].y,curr.c1);
+						}
+					}
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x + 32 - cells[i].x),2) + Math.pow((y - cells[i].y),2) <= 729 && !isCell[i]){
+							drawColor(cells[i].x,cells[i].y,curr.c2);
+						}
+					}
+					break;
+				case 1:
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x - 16 - cells[i].x),2) + Math.pow((y - 29 - cells[i].y),2) <= 729 && !isCell[i]){
+							drawColor(cells[i].x,cells[i].y,curr.c1);
+						}
+					}
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x + 16 - cells[i].x),2) + Math.pow((y + 29 - cells[i].y),2) <= 729 && !isCell[i]){
+							drawColor(cells[i].x,cells[i].y,curr.c2);
+						}
+					}
+					break;
+				case 2:
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x - 16 - cells[i].x),2) + Math.pow((y + 29 - cells[i].y),2) <= 729 && !isCell[i]){
+							drawColor(cells[i].x,cells[i].y,curr.c1);
+						}
+					}
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x + 16- cells[i].x),2) + Math.pow((y - 29 - cells[i].y),2) <= 729 && !isCell[i]){
+							drawColor(cells[i].x,cells[i].y,curr.c2);
+						}
+					}
+					break;
+				case 3:
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x - cells[i].x),2) + Math.pow((y - cells[i].y),2) <= 729 && !isCell[i]){
+							drawColor(cells[i].x,cells[i].y,curr.c1);
+						}
+					}
+					break;
+			}
+		}
+		//放格子
+		function dropCell(x,y){
+			y -= 145;
+			var succNum = 0,
+				succCells = [];
+			switch(curr.type){
+				case 0:
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x - 32 - cells[i].x),2) + Math.pow((y - cells[i].y),2) <= 729 && !isCell[i]){
+							succNum++;
+							succCells.push({i:i,c:curr.c1});
+						}
+					}
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x + 32 - cells[i].x),2) + Math.pow((y - cells[i].y),2) <= 729 && !isCell[i]){
+							succNum++;
+							succCells.push({i:i,c:curr.c2});
+						}
+					}
+					break;
+				case 1:
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x - 16 - cells[i].x),2) + Math.pow((y - 29 - cells[i].y),2) <= 729 && !isCell[i]){
+							succNum++;
+							succCells.push({i:i,c:curr.c1});
+						}
+					}
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x + 16 - cells[i].x),2) + Math.pow((y + 29 - cells[i].y),2) <= 729 && !isCell[i]){
+							succNum++;
+							succCells.push({i:i,c:curr.c2});
+						}
+					}
+					break;
+				case 2:
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x - 16 - cells[i].x),2) + Math.pow((y + 29 - cells[i].y),2) <= 729 && !isCell[i]){
+							succNum++;
+							succCells.push({i:i,c:curr.c1});
+						}
+					}
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x + 16- cells[i].x),2) + Math.pow((y - 29 - cells[i].y),2) <= 729 && !isCell[i]){
+							succNum++;
+							succCells.push({i:i,c:curr.c2});
+						}
+					}
+					break;
+				case 3:
+					for(var i = 0,len = cells.length;i < len;i++){
+						if(Math.pow((x - cells[i].x),2) + Math.pow((y - cells[i].y),2) <= 729 && !isCell[i]){
+							succNum = 2;
+							succCells.push({i:i,c:curr.c1});
+						}
+					}
+					break;
+			}
+			if(succNum == 2){
+				return succCells;
+			}else{
+				return false;
+			}
+		}
+
+		//将格子移到另一个坐标 t移动时间
+		function moveCell(cell,x,y,t){
+			var n = Math.floor(t / 16),
+				x1 = (cell.x - x) / n,
+				y1 = (cell.y - y) / n;
+			function _moveCell(){
+				moveCtx.clearRect(0,0,640,baseHeight);
+				drawSix(x + n * x1,y + n * y1,moveCtx,cell.t);
+				n--;
+				if(n > 0){
+					setTimeout(_moveCell,16);
+				}
+			}
+			_moveCell();
+		}
+		// moveCell({x:0,y:0,t:3},100,100,1000);
+
+		// 根据下标从数组中移除元素
+		Array.prototype.remove = function(i) {
+			for(var j = i,len = this.length;j < len;j++){
+				this[j] = this[j + 1];
+			}
+			this.length--;
+		}
+		//获得要消除的格子
+		function _getRemoveCells(check,cell){
+			var same = [],
+				check1 = [],//下次要判断的数组
+				change = [];
+			//遍历取得所有与check类型相同的元素
+			for(var i = 0,len = cells.length;i < len;i++){
+				if(cell.t == cells[i].t){
+					same.push(cells[i]);
+				}
+			}
+			if(same.length > 0){
+				while(check.length > 0){
+					for(var i = 0,len = check.length;i < len;i++){
+						for(var j = 0;j < same.length;j++){
+							// 判断两个格子是否相邻
+							if(Math.pow(same[j].x - check[i].x,2) + Math.pow(same[j].y - check[i].y,2) <= 4900 && Math.pow(same[j].x - check[i].x,2) + Math.pow(same[j].y - check[i].y,2) != 0){
+								check1.push(same[j]);
+								same.remove(j);//把相邻的从同类型数组中删除
+								j--;//序号回到上一个
+							}
+						}
+						change.push(check[i]);//将当前检查的数组放入要消除的数组中
+					}
+					check = check1;//把下次要检查的赋给当前检察的数组
+					check1 = [];//清空下次要检查的数组
+				}
+			}
+			return change;
+		}
+		//消除要消除的格子
+		function changeMain(change){
+			for(var i = 1,len = change.length;i < len;i++){
+				cells[change[i].i].t = 0;
+				isCell[change[i].i] = false;
+			}
+			score += change[0].t * change.length;
+			if(change[0].t == 7){
+				cells[change[0].i].t = 0;
+				isCell[change[0].i] = false;
+				//清除周围6个格子
+				for(var i = 0,len = cells.length;i < len;i++){
+					if(Math.pow(change[0].x - cells[i].x,2) + Math.pow(change[0].y - cells[i].y,2) <= 4900 && Math.pow(change[0].x - cells[i].x,2) + Math.pow(change[0].y - cells[i].y,2) != 0){
+						score += cells[i].t;
+						cells[i].t = 0;
+						isCell[i] = false;
+					}
+				}
+				return false;
+			}else{
+				isCell[change[0].i] = true;
+				return {i:change[0].i,c:change[0].t + 1};
+			}
+		}
+		//重绘底盘
+		function redrawMain(){
+			mainCtx.clearRect(0,0,640,420);
+			for(var i = 0,len = cells.length;i < len;i++){
+				drawSix(cells[i].x,cells[i].y,mainCtx,cells[i].t);
+			}
+		}
+
+		//放置完后判断能否消除
+		function checkRemove(dropSucc){
+			var change = [],
+				flag = false;
+
+			if(dropSucc.length == 1){
+				var type = 0;
+			}else if(dropSucc[0].c == dropSucc[1].c){
+				var type = 1;
+			}else if(dropSucc[0].c < dropSucc[1].c){
+				var type = 2;
+			}else{
+				var type = 2,
+					ccc = dropSucc[0];
+				dropSucc[0] = dropSucc[1];
+				dropSucc[1] = ccc;
+			}
+			while(type != 3){
+				switch(type){
+					case 0:
+						cell = cells[dropSucc[0].i];
+						cell = {x:cell.x,y:cell.y,t:dropSucc[0].c,i:cell.i};
+						check = [cell];
+						change = _getRemoveCells(check,cell);
+						if(change.length >= 3){
+							flag = true;
+							var newD = changeMain(change);
+							if(newD){
+								dropSucc[0] = newD;
+							}else{
+								type = 3;
+							}
+						}else{
+							type = 3;
+							cells[dropSucc[0].i].t = dropSucc[0].c;
+						}
+						break;
+					case 1:
+						cell = cells[dropSucc[0].i];
+						cell = {x:cell.x,y:cell.y,t:dropSucc[0].c,i:cell.i};
+						cell1 = cells[dropSucc[1].i];
+						cell1 = {x:cell1.x,y:cell1.y,t:dropSucc[1].c,i:cell1.i};
+						check = [cell,cell1];
+						change = _getRemoveCells(check,cell);
+						if(change.length >= 3){
+							flag = true;
+							var newD = changeMain(change);
+							if(newD){
+								type = 0;
+								dropSucc[0] = newD;
+							}else{
+								type = 3;
+							}
+						}else{
+							type = 3;
+						}
+						break;
+					case 2:
+						cell = cells[dropSucc[0].i];
+						cell = {x:cell.x,y:cell.y,t:dropSucc[0].c,i:cell.i};
+						check = [cell];
+						change = _getRemoveCells(check,cell);
+						if(change.length >= 3){
+							flag = true;
+							var newD1 = changeMain(change);
+						}else{
+							cells[dropSucc[0].i].t = dropSucc[0].c;
+							var newD1 = false;
+						}
+						cell = cells[dropSucc[1].i];
+						cell = {x:cell.x,y:cell.y,t:dropSucc[1].c,i:cell.i};
+						check = [cell];
+						change = _getRemoveCells(check,cell);
+						if(change.length >= 3){
+							flag = true;
+							var newD2 = changeMain(change);
+						}else{
+							cells[dropSucc[1].i].t = dropSucc[1].c;
+							var newD2 = false;
+						}
+						if(newD1 && newD2){
+							type = 2;
+							dropSucc[0] = newD1;
+							dropSucc[1] = newD2;
+						}else if(newD1){
+							type = 0;
+							dropSucc[0] = newD1; 
+						}else if(newD2){
+							type = 0;
+							dropSucc[0] = newD2;
+						}else{
+							type = 3;
+						}
+						break;
+				}
+			}
+			if(flag){
+				redrawMain();
+				drawScore()
+			}else{
+				for(var i = 0,len = dropSucc.length;i < len;i++){
+					isCell[dropSucc[i].i] = true;//将底盘上的格子设为已放置
+					cells[dropSucc[i].i].t = dropSucc[i].c;//修改底盘上的格子类型
+					drawSix(cells[dropSucc[i].i].x,cells[dropSucc[i].i].y,mainCtx,dropSucc[i].c);
+				}
+			}
+		}
+		moveCanvas.onmousedown = function(e){
+			if(e.layerY >= 740 && e.layerY <= 930 && e.layerX >= 220 && e.layerX <= 420){
+				mouseStatus = 2;
+				moveCanvas.onmousemove = function(e){
+					if(!moveFlag){
+						currentCtx.clearRect(-95,-90,190,190);
+					}
+					moveFlag = true;
+					moveCtx.clearRect(0,0,640,baseHeight);
+					checkMoving(e.layerX,e.layerY);
+					drawCell(e.layerX,e.layerY,curr.type,curr.c1,curr.c2,moveCtx);
+				}
+			}
+		}
+
+		document.body.onmouseup = function(e){
+			if(mouseStatus == 2){
+				mouseStatus = 1;
+				if(!moveFlag && e.layerY >= 740 && e.layerY <= 930 && e.layerX >= 220 && e.layerX < 420){
+					currentCtx.clearRect(-95,-90,190,190);
+					currentCtx.save();
+					rotateCell(function(){
+						currentCtx.restore();
+						if(curr.type != 3){
+							curr.c1 = curr.c1 + curr.c2;
+							curr.c2 = curr.c1 - curr.c2;
+							curr.c1 = curr.c1 - curr.c2;
+						}
+					});
+				}
+				moveFlag = false;
+				var dropSucc = dropCell(e.layerX,e.layerY);
+				if(dropSucc){
+					checkRemove(dropSucc);
+					curr = createCell();
+					drawNext(curr.type,curr.c1,curr.c2,currentCtx);
+				}else{
+					drawNext(curr.type,curr.c1,curr.c2,currentCtx);
+				}
+				moveCtx.clearRect(0,0,640,baseHeight);
+				moveCanvas.onmousemove = null;
+			}
+		}
+
+		//初始化
+		function init(){
+			score = 0;//分数
+			drawScore();
+			drawChassis();
+			curr = createCell();
+			moveFlag = false;
+			drawNext(curr.type,curr.c1,curr.c2);
+		}
+		init();
+	})()
+</script>
+</body>
+</html>
