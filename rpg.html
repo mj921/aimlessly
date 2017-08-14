@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+</head>
+<body>
+    <div id="app">
+        <div>Lv:{{l}}</div>
+        <div>MaxLv:{{maxl}}</div>
+        <div>maxa:{{maxa}}----maxm:{{maxm}}----hp:{{maxhp}}----mp:{{maxmp}}</div>
+        <div>a:{{play.a}}----m:{{play.m}}----hp:{{play.hp}}----mp:{{play.mp}}----s:{{play.s}}----d:{{play.d}}---mn:{{play.mn}}</div>
+        <div>a:{{enemy.a}}----m:{{enemy.m}}----hp:{{enemy.hp}}----mp:{{enemy.mp}}----s:{{enemy.s}}----d:{{enemy.d}}</div>
+    </div>
+    <script src="http://cdn.bootcss.com/vue/2.4.2/vue.js"></script>
+    <script>
+        var People = function(a,m,hp,mp,s,d,mf,mn){
+            this.a = a;
+            this.m = m;
+            this.hp = hp;
+            this.mp = mp;
+            this.s = s;
+            this.d = d;
+            this.mf = mf || 0;
+            this.mn = mn || 0;
+        }
+        People.prototype.attack = function(p){
+            if(this.mf >= 20 && this.mn > 0){
+                this.mf -= 6;
+                this.mn--;
+                p.hp -= this.m * 1.5;
+            }else{
+                if(Math.random() * 100 > p.s){
+                    p.hp -= this.a - p.d;
+                }
+                if(Math.random() * 100 > this.s){
+                    this.hp -= p.a - this.d;
+                }
+                
+            }
+            return p;
+        }
+        var createEnemy = function(l){
+            return new People(Math.round(Math.random() * l) + l,Math.round(Math.random() * l) + l,(Math.round(Math.random() * l) + l) * 10,(Math.round(Math.random() * l) + l) * 10,(Math.random() * 100).toFixed(2),0);
+        }
+        var app = new Vue({
+            el:"#app",
+            data:{
+                play:{},
+                enemy:{},
+                l:0,
+                maxl:0,
+                maxa:0,
+                maxm:0,
+                maxhp:0,
+                maxmp:0,
+                basea:10,
+                basem:10,
+                basehp:100,
+                basemp:100,
+                bases:0,
+                based:0,
+                money:0
+            },
+            methods:{
+                createEnemy:function(){
+                    return new People(Math.round(Math.random() * this.l) + this.l,Math.round(Math.random() * this.l) + this.l,(Math.round(Math.random() * this.l) + this.l) * 10,(Math.round(Math.random() * this.l) + this.l) * 10,(Math.random() * 100).toFixed(2),0,Math.random());
+                },
+                attack:function(){
+                    if(this.play.mf >= 6 && this.play.mn > 0){
+                        this.play.mf -= 6;
+                        this.play.mn--;
+                        this.enemy.hp -= this.play.m * (1 + this.l / 10);
+                    }else{
+                        if(Math.random() * 100 > this.enemy.s){
+                            this.enemy.hp -= this.play.a - this.enemy.d;
+                        }
+                        if(Math.random() * 100 > this.play.s){
+                            this.play.hp -= this.enemy.a - this.play.d;
+                        }
+                        
+                    }
+                },
+                atkEn:function(){
+                    while(this.enemy.hp > 0 && this.play.hp > 0){
+                        // this.enemy = this.play.attack(this.enemy);
+                        this.attack();
+                    }
+                    this.play = new People(this.play.a,this.play.m,this.play.hp,this.play.mp,this.play.s,this.play.d);
+                    if(Math.random() > (this.l / (this.l + 100))){
+                        this.l++;
+                    }
+                    if(this.play.hp > 0){
+                        if(Math.random() > this.enemy.mf){
+                            this.play.mn++;
+                        }
+                        this.play.a += Math.round(Math.random() * this.l) + 1;
+                        this.play.m += Math.round(Math.random() * this.l) + 1;
+                        this.play.hp += Math.round(Math.random() * this.l * 10) + 10;
+                        this.play.mp += Math.round(Math.random() * this.l * 10) + 10;
+                        this.enemy = createEnemy(this.l);
+                        if(this.play.a > this.maxa){
+                            localStorage.setItem("maxa",this.play.a);
+                        }
+                        if(this.play.m > this.maxm){
+                            localStorage.setItem("maxm",this.play.m);
+                        }
+                        if(this.play.hp > this.maxhp){
+                            localStorage.setItem("maxhp",this.play.hp);
+                        }
+                        if(this.play.mp > this.maxmp){
+                            localStorage.setItem("maxmp",this.play.mp);
+                        }
+                        this.money +=  Math.round(Math.random() * this.l * 2);
+                        if(this.money >= 15){
+                            this.play.mn++;
+                            this.money -= 15;
+                        }
+                        var self = this;
+                        setTimeout(function(){
+                            self.atkEn();
+                        },1)
+                    }else{
+                        if(this.l > this.maxl){
+                            localStorage.setItem("maxl",this.l);
+                        }
+                        // this.money +=  this.l;
+                        // if(this.money >= 100000){
+                        //     this.money -= 100000;
+                        //     var arr = ["basea","basem","basehp","basemp","bases","based"];
+                        //     var name = arr[Math.round(Math.random() * 6)];
+                        //     switch(name){
+                        //         case "basea":
+                        //             localStorage.getItem(name,this[name] + 1);
+                        //             break;
+                        //         case "basem":
+                        //             localStorage.getItem(name,this[name] + 1);
+                        //             break;
+                        //         case "basehp":
+                        //             localStorage.getItem(name,this[name] + Math.round(Math.random() * 11));
+                        //             break;
+                        //         case "basemp":
+                        //             localStorage.getItem(name,this[name] + Math.round(Math.random() * 11));
+                        //             break;
+                        //         case "bases":
+                        //             if(this[name] < 50){
+                        //                 localStorage.getItem(name,this[name] + 1);
+                        //             }
+                        //             break;
+                        //         case "based":
+                        //             localStorage.getItem(name,this[name] + 1);
+                        //             break;
+                        //     }
+                            
+                        // }
+                        // localStorage.setItem("money",this.money);
+                        this.reset();
+                    }
+                },
+                reset:function(){
+                    this.l = 0;
+                    this.basea = localStorage.getItem("basea") || 10;
+                    this.basem = localStorage.getItem("basem") || 10;
+                    this.basehp = localStorage.getItem("basehp") || 100;
+                    this.basemp = localStorage.getItem("basemp") || 100;
+                    this.bases = localStorage.getItem("bases") || 0;
+                    this.based = localStorage.getItem("based") || 0;
+                    // this.money = localStorage.getItem("money") || 0;
+                    this.money = 0;
+                    // this.play = new People(this.basea,this.basem,this.basehp,this.basemp,this.bases,this.based);
+                    this.play = new People(10,10,100,100,0,0);
+                    this.enemy = createEnemy(this.l);
+                    this.maxl = localStorage.getItem("maxl") || 0;
+                    this.maxa = localStorage.getItem("maxa") || 0;
+                    this.maxm = localStorage.getItem("maxm") || 0;
+                    this.maxhp = localStorage.getItem("maxhp") || 0;
+                    this.maxmp = localStorage.getItem("maxmp") || 0;
+                    this.atkEn();
+                }
+            },
+            created:function(){
+                this.reset();
+            },
+        });
+    </script>
+</body>
+</html>

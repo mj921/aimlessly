@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+</head>
+<body>
+    <div id="app">
+        <button @click="ck">抽</button> <button @click="levelUp">升</button> 钱：{{money}} 次数：{{n}} lv：{{level}} 
+        <ul>
+            <li>SSR:{{SSR}} <button @click="sale('SSR')">卖</button></li>
+            <li>SS:{{SS}} <button @click="sale('SS')">卖</button> <button @click="toBetter('SS')">合</button></li>
+            <li>S:{{S}} <button @click="sale('S')">卖</button> <button @click="toBetter('S')">合</button></li>
+            <li>A:{{A}} <button @click="sale('A')">卖</button> <button @click="toBetter('A')">合</button></li>
+            <li>B:{{B}} <button @click="sale('B')">卖</button> <button @click="toBetter('B')">合</button></li>
+            <li>C:{{C}} <button @click="sale('C')">卖</button> <button @click="toBetter('C')">合</button></li>
+            <li>D:{{D}} <button @click="sale('D')">卖</button> <button @click="toBetter('D')">合</button></li>
+            <li>E:{{E}} <button @click="sale('E')">卖</button> <button @click="toBetter('E')">合</button></li>
+            <li>F:{{F}} <button @click="sale('F')">卖</button> <button @click="toBetter('F')">合</button></li>
+        </ul>
+    </div>
+    <script src="http://cdn.bootcss.com/vue/2.4.2/vue.js"></script>
+    <script>
+        var app = new Vue({
+            el:"#app",
+            data:{
+                SSR:0,
+                SS:0,
+                S:0,
+                A:0,
+                B:0,
+                C:0,
+                D:0,
+                E:0,
+                F:0,
+                level:0,
+                money:100,
+                n:0
+            },
+            methods:{
+                ck:function() {
+                    if(this.money >= 10){
+                        this.money -= 10;
+                        this.n++;
+                        var r = Math.random() * 100000;
+                        var lv = this.level;
+                        if(r < lv + lv * Math.pow(1.0000001,lv)){
+                            this.SSR++;
+                        }else if(r < lv + 5 * lv + lv * Math.pow(1.000001,lv)){
+                            this.SS++;
+                        }else if(r < lv + 10 * lv + lv * Math.pow(1.000005,lv)){
+                            this.S++;
+                        }else if(r < lv + 16 * lv + lv * Math.pow(1.00001,lv)){
+                            this.A++;
+                        }else if(r < lv + 23 * lv + lv * Math.pow(1.00005,lv)){
+                            this.B++;
+                        }else if(r < lv + 31 * lv + lv * Math.pow(1.0001,lv)){
+                            this.C++;
+                        }else if(r < lv + 40 * lv + lv * Math.pow(1.0005,lv)){
+                            this.SS++;
+                        }else if(r < lv + 50 * lv + lv * Math.pow(1.001,lv)){
+                            this.D++;
+                        }else if(r < 30000){
+                            this.E++;
+                        }else{
+                            this.F++;
+                        }
+                    }else{
+                        // alert("金币不足")
+                        return false;
+                    }
+                },
+                levelUp:function(){
+                    var lv = this.level + 1;
+                    if(Math.round(lv / 20) + 1 > this.F || Math.round(lv / 30) > this.E || Math.round(lv / 40) > this.D || Math.round(lv / 50) > this.C || Math.round(lv / 60) > this.B || Math.round(lv / 70) > this.A || Math.round(lv / 80) > this.S || Math.round(lv / 90) > this.SS || Math.round(lv / 100) > this.SSR){
+                        // alert("卡片不足")
+                        return false;
+                    }else{
+                        this.F -= Math.round(lv / 20) + 1;
+                        this.E -= Math.round(lv / 30);
+                        this.D -= Math.round(lv / 40);
+                        this.C -= Math.round(lv / 50);
+                        this.B -= Math.round(lv / 60);
+                        this.A -= Math.round(lv / 70);
+                        this.S -= Math.round(lv / 80);
+                        this.SS -= Math.round(lv / 90);
+                        this.SSR -= Math.round(lv / 100);
+                        this.level++;
+                        return true;
+                    }
+                },
+                sale:function(type){
+                    switch(type){
+                        case "F":
+                            if(this.F > 0){
+                                this.F--;
+                                this.money += 8;
+                            }
+                            break;
+                        case "E":
+                            if(this.E > 0){
+                                this.E--;
+                                this.money += 16;
+                            }
+                            break;
+                        case "D":
+                            if(this.D > 0){
+                                this.D--;
+                                this.money += 32;
+                            }
+                            break;
+                        case "C":
+                            if(this.C > 0){
+                                this.C--;
+                                this.money += 64;
+                            }
+                            break;
+                        case "B":
+                            if(this.B > 0){
+                                this.B--;
+                                this.money += 128;
+                            }
+                            break;
+                        case "A":
+                            if(this.A > 0){
+                                this.A--;
+                                this.money += 256;
+                            }
+                            break;
+                        case "S":
+                            if(this.S > 0){
+                                this.S--;
+                                this.money += 512;
+                            }
+                            break;
+                        case "SS":
+                            if(this.SS > 0){
+                                this.SS--;
+                                this.money += 1024;
+                            }
+                            break;
+                        case "SSR":
+                            if(this.SSR > 0){
+                                this.SSR--;
+                                this.money += 2048;
+                            }
+                            break;
+                    }
+                },
+                toBetter:function(type){
+                    switch(type){
+                        case "F":
+                            if(this.F > 0){
+                                this.F -= 3;
+                                this.E += 1;
+                            }
+                            break;
+                        case "E":
+                            if(this.E > 0){
+                                this.E -= 3;
+                                this.D += 1;
+                            }
+                            break;
+                        case "D":
+                            if(this.D > 0){
+                                this.D -= 3;
+                                this.C += 1;
+                            }
+                            break;
+                        case "C":
+                            if(this.C > 0){
+                                this.C -= 3;
+                                this.B += 1;
+                            }
+                            break;
+                        case "B":
+                            if(this.B > 0){
+                                this.B -= 3;
+                                this.A += 1;
+                            }
+                            break;
+                        case "A":
+                            if(this.A > 0){
+                                this.A -= 3;
+                                this.S += 1;
+                            }
+                            break;
+                        case "S":
+                            if(this.S > 0){
+                                this.S -= 3;
+                                this.SS += 1;
+                            }
+                            break;
+                        case "SS":
+                            if(this.SS > 0){
+                                this.SS -= 3;
+                                this.SSr += 1;
+                            }
+                            break;
+                    }
+                },
+                fff:function(){
+                    var self = this;
+                    while(this.money > 10){
+                        this.ck();
+                    }
+                    while(this.levelUp()){}
+                    while(self.F > 0){
+                        self.sale("F");
+                    }
+                    while(self.E > 0){
+                        self.sale("E");
+                    }
+                    while(self.D > 0){
+                        self.sale("D");
+                    }
+                    while(self.C > 0){
+                        self.sale("C");
+                    }
+                    while(self.B > 0){
+                        self.sale("B");
+                    }
+                    while(self.A > 0){
+                        self.sale("A");
+                    }
+                    while(self.S > 0){
+                        self.sale("S");
+                    }
+                    while(self.SS > 0){
+                        self.sale("SS");
+                    }
+                    while(self.SSR > 0){
+                        self.sale("SSR");
+                    }
+                    setTimeout(function(){
+                        self.fff();
+                    },100)
+                }
+            },
+            mounted:function(){
+                this.fff();
+            }
+        });
+    </script>
+</body>
+</html>

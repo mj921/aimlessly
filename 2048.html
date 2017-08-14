@@ -382,9 +382,9 @@
                         }
                         self.createCell();
                         self.status = false;
-                        var ms = +(sessionStorage.getItem("maxScore") || 0);
+                        var ms = +(localStorage.getItem("maxScore") || 0);
                         self.maxScore = ms > self.score ? ms : self.score;
-                        sessionStorage.setItem("maxScore",self.maxScore);
+                        localStorage.setItem("maxScore",self.maxScore);
                         max.innerText = "最高分:" + self.maxScore;
                         curr.innerText = "当前分数:" + self.score;
                         if(self.isDeath()){
@@ -400,7 +400,7 @@
             init:function(){
                 this.status = true,
                 this.score = 0;
-                this.maxScore = +(sessionStorage.getItem("maxScore") || 0);
+                this.maxScore = +(localStorage.getItem("maxScore") || 0);
                 max.innerText = "最高分:" + this.maxScore;
                 this.obj.innerHTML = "";
                 this.obj.style.width = this.rows * this.size + "px";
