@@ -8,17 +8,28 @@
 </head>
 <body>
     <div id="app">
-        <button @click="ck">抽</button> <button @click="levelUp">升</button> 钱：{{money}} 次数：{{n}} lv：{{level}} 
+        <button @click="ck">抽</button> <button @click="levelUp">升</button> 钱：{{money}} 次数：{{n}} lv：{{level}} <button @click="moreCkSale(10)">抽卖10</button> <button @click="moreCk(+lc)">{{lc}}连抽</button> <input v-model="lc" /> <button @click="saleAll()">全卖</button> <button @click="levelUpAll()">一键升级</button>
         <ul>
-            <li>SSR:{{SSR}} <button @click="sale('SSR')">卖</button></li>
-            <li>SS:{{SS}} <button @click="sale('SS')">卖</button> <button @click="toBetter('SS')">合</button></li>
-            <li>S:{{S}} <button @click="sale('S')">卖</button> <button @click="toBetter('S')">合</button></li>
-            <li>A:{{A}} <button @click="sale('A')">卖</button> <button @click="toBetter('A')">合</button></li>
-            <li>B:{{B}} <button @click="sale('B')">卖</button> <button @click="toBetter('B')">合</button></li>
-            <li>C:{{C}} <button @click="sale('C')">卖</button> <button @click="toBetter('C')">合</button></li>
-            <li>D:{{D}} <button @click="sale('D')">卖</button> <button @click="toBetter('D')">合</button></li>
-            <li>E:{{E}} <button @click="sale('E')">卖</button> <button @click="toBetter('E')">合</button></li>
-            <li>F:{{F}} <button @click="sale('F')">卖</button> <button @click="toBetter('F')">合</button></li>
+            <li>SSR:{{SSR}} <button @click="sale('SSR')">卖</button> <button @click="saleAllOne('SSR')">全卖</button></li>
+            <li>SS:{{SS}} <button @click="sale('SS')">卖</button> <button @click="toBetter('SS')">合</button> <button @click="saleAllOne('SS')">全卖</button></li>
+            <li>S:{{S}} <button @click="sale('S')">卖</button> <button @click="toBetter('S')">合</button> <button @click="saleAllOne('S')">全卖</button></li>
+            <li>A:{{A}} <button @click="sale('A')">卖</button> <button @click="toBetter('A')">合</button> <button @click="saleAllOne('A')">全卖</button></li>
+            <li>B:{{B}} <button @click="sale('B')">卖</button> <button @click="toBetter('B')">合</button> <button @click="saleAllOne('B')">全卖</button></li>
+            <li>C:{{C}} <button @click="sale('C')">卖</button> <button @click="toBetter('C')">合</button> <button @click="saleAllOne('C')">全卖</button></li>
+            <li>D:{{D}} <button @click="sale('D')">卖</button> <button @click="toBetter('D')">合</button> <button @click="saleAllOne('D')">全卖</button></li>
+            <li>E:{{E}} <button @click="sale('E')">卖</button> <button @click="toBetter('E')">合</button> <button @click="saleAllOne('E')">全卖</button></li>
+            <li>F:{{F}} <button @click="sale('F')">卖</button> <button @click="toBetter('F')">合</button> <button @click="saleAllOne('F')">全卖</button></li>
+        </ul>
+        <ul>
+            <li>SSR:{{SSR1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (SSR1 / n * 100).toFixed(2) : 0}}%</li>
+            <li>SS:{{SS1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (SS1 / n * 100).toFixed(2) : 0}}%</li>
+            <li>S:{{S1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (S1 / n * 100).toFixed(2) : 0}}%</li>
+            <li>A:{{A1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (A1 / n * 100).toFixed(2) : 0}}%</li>
+            <li>B:{{B1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (B1 / n * 100).toFixed(2) : 0}}%</li>
+            <li>C:{{C1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (C1 / n * 100).toFixed(2) : 0}}%</li>
+            <li>D:{{D1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (D1 / n * 100).toFixed(2) : 0}}%</li>
+            <li>E:{{E1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (E1 / n * 100).toFixed(2) : 0}}%</li>
+            <li>F:{{F1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (F1 / n * 100).toFixed(2) : 0}}%</li>
         </ul>
     </div>
     <script src="http://cdn.bootcss.com/vue/2.4.2/vue.js"></script>
@@ -37,36 +48,54 @@
                 F:0,
                 level:0,
                 money:100,
-                n:0
+                n:0,
+                lc:10,
+                SSR1:0,
+                SS1:0,
+                S1:0,
+                A1:0,
+                B1:0,
+                C1:0,
+                D1:0,
+                E1:0,
+                F1:0,
             },
             methods:{
                 ck:function() {
                     if(this.money >= 10){
                         this.money -= 10;
                         this.n++;
-                        var r = Math.random() * 100000;
+                        var r = Math.random() * 1000000;
                         var lv = this.level;
-                        if(r < lv + lv * Math.pow(1.0000001,lv)){
+                        if(r < lv){
                             this.SSR++;
-                        }else if(r < lv + 5 * lv + lv * Math.pow(1.000001,lv)){
+                            this.SSR1++;
+                        }else if(r < 5 * lv){
                             this.SS++;
-                        }else if(r < lv + 10 * lv + lv * Math.pow(1.000005,lv)){
+                            this.SS1++;
+                        }else if(r < 10 * lv){
                             this.S++;
-                        }else if(r < lv + 16 * lv + lv * Math.pow(1.00001,lv)){
+                            this.S1++;
+                        }else if(r < 16 * lv){
                             this.A++;
-                        }else if(r < lv + 23 * lv + lv * Math.pow(1.00005,lv)){
+                            this.A1++;
+                        }else if(r < 23 * lv){
                             this.B++;
-                        }else if(r < lv + 31 * lv + lv * Math.pow(1.0001,lv)){
+                            this.B1++;
+                        }else if(r < 31 * lv){
                             this.C++;
-                        }else if(r < lv + 40 * lv + lv * Math.pow(1.0005,lv)){
-                            this.SS++;
-                        }else if(r < lv + 50 * lv + lv * Math.pow(1.001,lv)){
+                            this.C1++;
+                        }else if(r < 40 * lv){
                             this.D++;
-                        }else if(r < 30000){
+                            this.D1++;
+                        }else if(r < 300000){
                             this.E++;
+                            this.E1++;
                         }else{
                             this.F++;
+                            this.F1++;
                         }
+                        return true;
                     }else{
                         // alert("金币不足")
                         return false;
@@ -91,63 +120,27 @@
                         return true;
                     }
                 },
+                saleAllOne:function(type){
+                    var arr = {"F":8,"E":16,"D":32,"C":64,"B":128,"A":256,"S":512,"SS":1024,"SSR":2048};
+                    this.money += arr[type] * this[type];
+                    this[type] = 0;
+                },
                 sale:function(type){
-                    switch(type){
-                        case "F":
-                            if(this.F > 0){
-                                this.F--;
-                                this.money += 8;
-                            }
-                            break;
-                        case "E":
-                            if(this.E > 0){
-                                this.E--;
-                                this.money += 16;
-                            }
-                            break;
-                        case "D":
-                            if(this.D > 0){
-                                this.D--;
-                                this.money += 32;
-                            }
-                            break;
-                        case "C":
-                            if(this.C > 0){
-                                this.C--;
-                                this.money += 64;
-                            }
-                            break;
-                        case "B":
-                            if(this.B > 0){
-                                this.B--;
-                                this.money += 128;
-                            }
-                            break;
-                        case "A":
-                            if(this.A > 0){
-                                this.A--;
-                                this.money += 256;
-                            }
-                            break;
-                        case "S":
-                            if(this.S > 0){
-                                this.S--;
-                                this.money += 512;
-                            }
-                            break;
-                        case "SS":
-                            if(this.SS > 0){
-                                this.SS--;
-                                this.money += 1024;
-                            }
-                            break;
-                        case "SSR":
-                            if(this.SSR > 0){
-                                this.SSR--;
-                                this.money += 2048;
-                            }
-                            break;
+                    var arr = {"F":8,"E":16,"D":32,"C":64,"B":128,"A":256,"S":512,"SS":1024,"SSR":2048};
+                    if(this[type] > 0){
+                        this.money += arr[type];
+                        this[type]--;
                     }
+                },
+                saleAll:function(){
+                    var arr = ["F","E","D","C","B","A","S","SS","SSR"];
+                    for(var i = 0;i < 9;i++){
+                        this.saleAllOne(arr[i]);
+                    }
+
+                },
+                levelUpAll:function(){
+                    while(this.levelUp()){}
                 },
                 toBetter:function(type){
                     switch(type){
@@ -201,46 +194,30 @@
                             break;
                     }
                 },
-                fff:function(){
+                moreCk:function(n){
+                    if(n > 1000000){
+                        this.moreCk(1000000);
+                        this.moreCk(n - 1000000);
+                    }else{
+                        while(n-- > 0 && this.ck()){}
+                    }
+                },
+                moreCkSale:function(n){
                     var self = this;
                     while(this.money > 10){
                         this.ck();
                     }
-                    while(this.levelUp()){}
-                    while(self.F > 0){
-                        self.sale("F");
+                    this.saleAll();
+                    if(n > 0){
+                        n--;
+                        setTimeout(function(){
+                            self.moreCkSale(n);
+                        },10);
                     }
-                    while(self.E > 0){
-                        self.sale("E");
-                    }
-                    while(self.D > 0){
-                        self.sale("D");
-                    }
-                    while(self.C > 0){
-                        self.sale("C");
-                    }
-                    while(self.B > 0){
-                        self.sale("B");
-                    }
-                    while(self.A > 0){
-                        self.sale("A");
-                    }
-                    while(self.S > 0){
-                        self.sale("S");
-                    }
-                    while(self.SS > 0){
-                        self.sale("SS");
-                    }
-                    while(self.SSR > 0){
-                        self.sale("SSR");
-                    }
-                    setTimeout(function(){
-                        self.fff();
-                    },100)
                 }
             },
             mounted:function(){
-                this.fff();
+
             }
         });
     </script>
