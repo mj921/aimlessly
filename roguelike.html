@@ -5,8 +5,84 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title></title>
     <link rel="stylesheet" href="">
+    <style>
+        body,div,dt,dl,ul,li,ol,span{
+            margin: 0;
+            padding: 0;
+            vertical-align: top;
+        }
+        body{
+            text-align: center;
+        }
+        #app{
+            display: inline-block;
+            width: 780px;
+            height:780px;
+        }
+        .map{
+            width: 100%;
+            height: 100%;
+        }
+        .floor{
+            float:left;
+            margin: 1px;
+            width: 128px;
+            height: 128px;
+            background-image: url("rgl-bg.png");
+            /*background-image: url("https://mj921.github.io/game/rgl-bg.png");*/
+        }
+        .grass{
+            background-position: -337px -352px;
+        }
+        .land{
+            background-position: -207px -486px;
+        }
+    </style>
 </head>
 <body>
-    <div id="app"></div>
+    <div id="app">
+        <div ref="map" class="map">
+            <div v-for="item in floorList" :class="'floor ' + (item.isOpen ? item.type : 'grass')" @click="open(item.index)"></div>
+        </div>
+    </div>
+    <script src="http://cdn.bootcss.com/vue/2.4.2/vue.js"></script>
+    <script>
+        var app = new Vue({
+            el:"#app",
+            data:{
+                atk:1,
+                magic:1,
+                hp:100,
+                mp:100,
+                floorList:[]
+            },
+            methods:{
+                createMap:function() {
+                    this.floorList = [];
+                    for(var i = 0;i < 36;i++){
+                        this.floorList[i] = {index:i,type:"land",isOpen:false};
+                    }
+                },
+                open:function(i){
+                    this.floorList[i].isOpen = true;
+                    this.floorList = this.objCopy(this.floorList);
+                },
+                objCopy:function(obj){
+                    var o = Object.prototype.toString.call(obj) === '[object Array]' ? [] : {};
+                    for(var key in obj){
+                        if(typeof obj[key] == "object"){
+                            o[key] = arguments.callee(obj[key]);
+                        }else{
+                            o[key] = obj[key];
+                        }
+                    }
+                    return o;
+                }
+            },
+            created:function(){
+                this.createMap();
+            }
+        });
+    </script>
 </body>
 </html>

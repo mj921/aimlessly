@@ -54,8 +54,8 @@
 			moveCtx = moveCanvas.getContext("2d"),
 			baseHeight = window.innerHeight;
 
-		document.getElementById("content").style.height = baseHeight + "px";
-		moveCanvas.setAttribute("height",baseHeight);
+		document.getElementById("content").style.height = baseHeight >= 930 ? baseHeight : 930  + "px";
+		moveCanvas.setAttribute("height",baseHeight >= 930 ? baseHeight : 930);
 
 
 		var cells = [],
