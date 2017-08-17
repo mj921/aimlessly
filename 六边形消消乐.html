@@ -52,7 +52,7 @@
 			quanCtx = quanCanvas.getContext("2d"),
 			currentCtx = currentCanvas.getContext("2d"),
 			moveCtx = moveCanvas.getContext("2d"),
-			baseHeight = window.innerHeight;
+			baseHeight = window.innerHeight >= 930 ? window.innerHeight : 930;
 
 		document.getElementById("content").style.height = baseHeight >= 930 ? baseHeight : 930  + "px";
 		moveCanvas.setAttribute("height",baseHeight >= 930 ? baseHeight : 930);
@@ -550,7 +550,7 @@
 				x1 = (cell.x - x) / n,
 				y1 = (cell.y - y) / n;
 			function _moveCell(){
-				moveCtx.clearRect(0,0,640,baseHeight);
+				moveCtx.clearRect(0,0,640,baseHeight >= 930 ? baseHeight : 930);
 				drawSix(x + n * x1,y + n * y1,moveCtx,cell.t);
 				n--;
 				if(n > 0){
@@ -745,7 +745,7 @@
 						currentCtx.clearRect(-95,-90,190,190);
 					}
 					moveFlag = true;
-					moveCtx.clearRect(0,0,640,baseHeight);
+					moveCtx.clearRect(0,0,640,baseHeight >= 930 ? baseHeight : 930);
 					checkMoving(e.layerX,e.layerY);
 					drawCell(e.layerX,e.layerY,curr.type,curr.c1,curr.c2,moveCtx);
 				}
@@ -776,7 +776,7 @@
 				}else{
 					drawNext(curr.type,curr.c1,curr.c2,currentCtx);
 				}
-				moveCtx.clearRect(0,0,640,baseHeight);
+				moveCtx.clearRect(0,0,640,baseHeight >= 930 ? baseHeight : 930);
 				moveCanvas.onmousemove = null;
 			}
 		}
