@@ -16,13 +16,26 @@
         }
         #app{
             display: inline-block;
-            width: 576px;
-            height:576px;
         }
         .map{
-            width: 100%;
-            height: 100%;
+            position: absolute;
+            left: 50%;
+            top: 0;
+            margin-left: -288px;
+            width: 576px;
+            height: 576px;
             background-image: url("floor-bg.png");
+        }
+        .playArea{
+            position: absolute;
+            left: 50%;
+            margin-left: 288px;
+            top: 0;
+            width: 288px;
+            height: 576px;
+            box-sizing: border-box;
+            border: 5px solid #999;
+            border-left: 0;
         }
         .floor{
             position: relative;
@@ -36,15 +49,27 @@
             height: 100%;
             background-position: 0 -32px;
         }
-        .grass{
+        .floor>div.grass{
             background-image: url("grass.png");
         }
-        .pit{
+        .floor>div.pit{
             background-image: url("pit.png");
         }
-        .shadow{
+        .floor>div.shadow{
             position: absolute;
             background-color: rgba(0,0,0,0.3);
+        }
+        .floor>div.door-lock{
+            background-color: rgb(12,34,255);
+        }
+        .floor>div.door-open{
+            background-color: rgb(12,34,56);
+        }
+        .floor>div.kulou{
+            background-image: url("kulou.png");
+            background-size: auto 72px;
+            background-position: center;
+            background-repeat: no-repeat;
         }
     </style>
 </head>
@@ -52,43 +77,112 @@
     <div id="app">
         <div ref="map" class="map">
             <div v-for="item in floorList" class="floor">
-                <div v-if="item.isOpen && item.isPit" class="pit"></div>
-                <div v-if="!item.isClick && !item.isOpen" class="shadow"></div>
-                <div v-if="!item.isOpen" class="grass" @click="open(item.index)"></div>
+                <div v-if="item.isOpen && item.type === 3" class="pit"></div>
+                <div v-if="!item.isClick && !item.isOpen && item.type !== 1" class="shadow"></div>
+                <div v-if="!item.isClick && !item.isOpen && item.type !== 1" class="grass"></div>
+                <div v-if="!item.isOpen && item.isClick && item.type !== 1" class="grass" @click="open(item.index)"></div>
+                <div v-if="!item.isOpen && item.type === 1" class="door-lock"></div>
+                <div v-if="item.isOpen && item.type === 1" class="door-open"></div>
+                <div v-if="item.isOpen && item.type === 2" :class="item.enemtyType" @mouseUp="enemtyMouseFun(item.index)" oncontextmenu="return false;">
+                    <dl></dl><dl></dl><dl></dl><dl></dl>
+                </div>
             </div>
+        </div>
+        <div class="playArea">
+            <dl>楼层：{{floor}}</dl>
+            <dl>攻击：{{play.atk}}</dl>
+            <dl>魔力：{{play.magic}}</dl>
+            <dl>生命值：{{play.hp}}</dl>
+            <dl>魔法值：{{play.mp}}</dl>
         </div>
     </div>
     <script src="http://cdn.bootcss.com/vue/2.4.2/vue.js"></script>
     <script>
-        var Cell = function(index,type,isOpen,isPit,isClick,isDoor){
-            this.index = index;
-            this.type = type;
-            this.isOpen = isOpen;
-            this.isPit = isPit;
-            this.isClick = isClick;
-            this.isDoor = isDoor;
+        var Cell = function(index,type,isOpen,isClick,enemtyNo,enemtyType){
+            this.index = index;//序号
+            this.type = type;//类型 0 空 1 门 2 怪物 3 坑
+            this.isOpen = isOpen;//是否打开
+            this.isClick = isClick;//是否可点击
+            this.enemtyNo = enemtyNo;//怪物编号
+            this.enemtyType = enemtyType;//怪物类型
+        }
+        var People = function(atk,magic,hp,mp,dodge,redAct,hit,phyDef,magDef){
+            this.atk = atk;//攻击
+            this.magic = magic;//魔力
+            this.hp = hp;//生命值
+            this.mp = mp;//魔法值
+            this.dodge = dodge;//闪避
+            this.redAct = redAct;//降低攻击
+            this.hit = hit;//命中
+            this.phyDef = phyDef;//物抗
+            this.magDef = magDef;//魔抗
         }
         var app = new Vue({
             el:"#app",
             data:{
-                atk:1,
-                magic:1,
-                hp:100,
-                mp:100,
-                row:6,
-                floorList:[]
+                play:null,//玩家
+                row:6,//格子行列数
+                floorList:[],//地板列表
+                enemties:[],//怪物列表
+                floor:1,//楼层数
+                floorNoList:[]
             },
             methods:{
                 createMap:function() {
                     this.floorList = [];
+                    this.enemties = [];
                     for(var i = 0;i < this.row * this.row;i++){
-                        var r = ~~(Math.random() * this.row * this.row + 1);
-                        var y = ~~(Math.random() * r + 1)
-                        this.floorList[i] = {index:i,type:"grass",isOpen:false,isPit:i % r === y,isClick:i % 2 === 1};
+                        this.floorNoList[i] = i;
+                    }
+                    var enemtyArr = this.createFloorNo((this.floor % 3 === 0 || this.floor % 5 === 0) ? 6 : 5);
+                    var enemtyIndex = 0;
+                    var pitArr = this.createFloorNo((this.floor % 3 === 0 || this.floor % 5 === 0) ? 1 : 2);
+                    var pitIndex = 0;
+                    var doorNo = this.createDoor();
+                    for(var i = 0;i < this.row * this.row;i++){
+                        if(pitIndex <= pitArr.length && pitArr[pitIndex] === i){//判断是否为坑
+                            this.floorList[i] = new Cell(i,3,false,false,-1,"");
+                            pitIndex++;
+                        }else if(enemtyIndex <= enemtyArr.length && enemtyArr[enemtyIndex] === i){//判断是否为怪物
+                            this.createEnemty(enemtyIndex);
+                            this.floorList[i] = new Cell(i,2,false,false,enemtyIndex,"kulou");
+                            enemtyIndex++;
+                        }else if(i === doorNo){//判断是否为门
+                            this.floorList[i] = new Cell(i,1,false,false,-1,"");
+                        }else{
+                            this.floorList[i] = new Cell(i,0,false,false,-1,"");
+                        }
+                    }
+                    //将门上下左右设为可点击
+                    if(doorNo - this.row >= 0){
+                        this.floorList[doorNo - this.row].isClick = true;
+                    }
+                    if(doorNo - 1 >= 0 && (doorNo - 1) % this.row !== 5){
+                        this.floorList[doorNo - 1].isClick = true;
+                    }
+                    if(doorNo + this.row < this.row * this.row){
+                        this.floorList[doorNo + this.row].isClick = true;
+                    }
+                    if(doorNo + 1 < this.row * this.row && (doorNo + 1) % this.row !== 0){
+                        this.floorList[doorNo + 1].isClick = true;
                     }
                 },
                 open:function(i){
                     this.floorList[i].isOpen = true;
+                    if(this.floorList[i].type !== 3 && this.floorList[i].type !== 2){
+                        if(i - this.row >= 0){
+                            this.floorList[i - this.row].isClick = true;
+                        }
+                        if(i - 1 >= 0 && (i - 1) % this.row !== 5){
+                            this.floorList[i - 1].isClick = true;
+                        }
+                        if(i + this.row < this.row * this.row){
+                            this.floorList[i + this.row].isClick = true;
+                        }
+                        if(i + 1 < this.row * this.row && (i + 1) % this.row !== 0){
+                            this.floorList[i + 1].isClick = true;
+                        }
+                    }
                     this.floorList = this.objCopy(this.floorList);
                 },
                 objCopy:function(obj){
@@ -101,9 +195,38 @@
                         }
                     }
                     return o;
+                },
+                enemtyMouseFun:function(i){
+                    return function(e){
+                        if(e.button === 0){
+
+                        }else if(e.button === 2){
+
+                        }
+                    }
+                },
+                createEnemty:function(){
+
+                },
+                createDoor:function(){
+                    var j = ~~(Math.random() * this.floorNoList.length);
+                    var n = this.floorNoList[j];
+                    this.floorNoList.splice(j,1);
+                    return n;
+                },
+                createFloorNo:function(n){
+                    var nos = [];
+                    while(n > 0){
+                        var j = ~~(Math.random() * this.floorNoList.length);
+                        nos.push(this.floorNoList[j]);
+                        this.floorNoList.splice(j,1);
+                        n--;
+                    }
+                    return nos.sort();
                 }
             },
             created:function(){
+                this.play = new People(1,1,100,100,0,0,100,0,0);
                 this.createMap();
             }
         });

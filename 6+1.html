@@ -53,14 +53,15 @@
 			}
 			function getResult(){
 				var arr = [];
-				for(var i = 0,len = lis.length;i < len;i++){
-					var numNow = parseInt(Math.floor(Math.random() * 33 + 1));
-					while(arr.some(function(parame){return parame == numNow})){
-						numNow = parseInt(Math.floor(Math.random() * 33 + 1))
-					}
-					lis[i].innerText = numNow;
-					arr.push(numNow);
+				for(var i = 1;i < 34;i++){
+					arr[i - 1] = i;
 				}
+				for(var i = 0;i < 6;i++){
+					var a = arr.splice(~~(Math.random() * arr.length),1);
+					console.log(a,arr.length)
+					lis[i].innerText = a[0];
+				}
+				lis[6].innerText = ~~(Math.random() * 16 + 1);
 			}
 			function changes(){
 				setNums();
