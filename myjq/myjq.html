@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <style>
+        .a{
+            background-color: red;
+        }
+        .b{
+            background-color: blue;
+        }
+        .d{
+            background-color: yellow;
+        }
+    </style>
+</head>
+<body>
+    <div id="a">afaf</div>
+    <div class="a">
+        <div class="b">afafa</div>
+    </div>
+    <div class="a c">
+        <div class="b">
+            <div class="c">afagfa</div>
+        </div>
+    </div>
+    <div class="a cc">afaf</div>
+    <!-- <script src="jquery-1.8.0.min.js"></script> -->
+    <script src="myjq.js"></script>
+    <script>
+        $(function(){
+            var a = $(".a");
+            var sss = "   1   1        ";
+            sss.trim()
+            console.log(sss)
+            // a.click(function(){
+            //     console.log($(this))
+            // });
+            console.log($(".a").eq("0"));
+            console.log(a.hasClass("c"))
+            var arr = [1,2,3];
+            console.log(arr.map(function(item){
+                return item + 1;
+            }))
+            console.log(Promise)
+            var p = new Promise(function(resolve,reject){
+                if(Math.random() > 0.5){
+                    resolve();
+                }else{
+                    reject();
+                }
+            }).then(function(){
+                console.log("111")
+            }).catch(function(){
+                console.log("444")
+            });
+            p.then(function(){
+                console.log(999);
+            });
+            var div = $( "<div class='a'>agaf</div>" );
+            console.log(div)
+        });
+    </script>
+</body>
+</html>

@@ -281,10 +281,79 @@
                     }
                 }
             },
+            //判断周围8个是否有没标记的地雷
+            hasLandmines:function(x,y){
+                var flag = true;
+                var n = 0;
+                if(x !== 0){
+                    if(this.cells[x - 1][y].type === 0 && this.cells[x - 1][y].status === -1){
+                        flag = false;
+                    }else if(this.cells[x - 1][y].ele.className !== "open" && this.cells[x - 1][y].type === 1){
+                        n++;
+                    }
+                }
+                if(y !== 0){
+                    if(this.cells[x][y - 1].type === 0 && this.cells[x][y - 1].status === -1){
+                        flag = false;
+                    }else if(this.cells[x][y - 1].ele.className !== "open" && this.cells[x][y - 1].type === 1){
+                        n++;
+                    }
+                }
+                if(x !== this.cols - 1){
+                    if(this.cells[x + 1][y].type === 0 && this.cells[x + 1][y].status === -1){
+                        flag = false;
+                    }else if(this.cells[x + 1][y].ele.className !== "open" && this.cells[x + 1][y].type === 1){
+                        n++;
+                    }
+                }
+                if(y !== this.rows - 1){
+                    if(this.cells[x][y + 1].type === 0 && this.cells[x][y + 1].status === -1){
+                        flag = false;
+                    }else if(this.cells[x][y + 1].ele.className !== "open" && this.cells[x][y + 1].type === 1){
+                        n++;
+                    }
+                }
+                if(x !== 0 && y !== 0){
+                    if(this.cells[x - 1][y - 1].type === 0 && this.cells[x - 1][y - 1].status === -1){
+                        flag = false;
+                    }else if(this.cells[x - 1][y - 1].ele.className !== "open" && this.cells[x - 1][y - 1].type === 1){
+                        n++;
+                    }
+                }
+                if(x !== 0 && y !== this.rows - 1){
+                    if(this.cells[x - 1][y + 1].type === 0 && this.cells[x - 1][y + 1].status === -1){
+                        flag = false;
+                    }else if(this.cells[x - 1][y + 1].ele.className !== "open" && this.cells[x - 1][y + 1].type === 1){
+                        n++;
+                    }
+                }
+                if(x !== this.cols - 1 && y !== 0){
+                    if(this.cells[x + 1][y - 1].type === 0 && this.cells[x + 1][y - 1].status === -1){
+                        flag = false;
+                    }else if(this.cells[x + 1][y - 1].ele.className !== "open" && this.cells[x + 1][y - 1].type === 1){
+                        n++;
+                    }
+                }
+                if(x !== this.cols - 1 && y !== this.rows - 1){
+                    if(this.cells[x + 1][y + 1].type === 0 && this.cells[x + 1][y + 1].status === -1){
+                        flag = false;
+                    }else if(this.cells[x + 1][y + 1].ele.className !== "open" && this.cells[x + 1][y + 1].type === 1){
+                        n++;
+                    }
+                }
+                if(!flag && n === +this.cells[x][y].ele.innerText){
+                    alert("game over");
+                    this.init();
+                    return true;
+                }
+            },
             //鼠标左右键操作
             allMouse:function(obj,self,x,y){
                 if(obj.className === "open"){
                     var arr = [self.cells[x][y]];
+                    if(self.hasLandmines(x,y)){
+                        return;
+                    }
                     while(arr.length > 0){
                         var c = arr.pop();
                         var brr = [];

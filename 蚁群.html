@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+    <style>
+        #bg,#path{
+            position: absolute;
+            left: -1000%;
+            top:-1000%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg" width="1600" height="900"></canvas>
+    <canvas id="path" width="1600" height="900"></canvas>
+    <canvas id="showScreen" width="1600" height="900"></canvas>
+    <script>
+        var bg = document.getElementById("bg"),
+            bgCtx = bg.getContext("2d"),
+            path = document.getElementById("path"),
+            pathCtx = path.getContext("2d"),
+            showScreen = document.getElementById("showScreen"),
+            showScreenCtx = showScreen.getContext("2d");
+
+        pathCtx.fillStyle = "#f00";
+
+        var MAP = {
+            cols:80,
+            rows:45,
+            cellSize:20,
+            cells:function(){
+                var cellArr = [];
+                for(var x = 0;x < this.cols;x++){
+                    var arr = [];
+                    for(var y = 0;y < this.rows;y++){
+                        arr[y] = new Cell(x,y,this.cellSize,0,0);
+                    }
+                    cellArr[x] = arr;
+                }
+                return cellArr;
+            }()
+        }
+        var Cell = function(x,y,size,foodConcentration,homeConcentration){
+            this.x = x;
+            this.y = y;
+            this.size = size;
+            this.foodConcentration = foodConcentration || 0;
+            this.homeConcentration = homeConcentration || 0;
+        }
+        var Ant = function(x,y,type,size){
+            this.x = x;
+            this.y = y;
+            this.size = size;
+            this.type = type;
+            this.path = {};
+        }
+        Ant.prototype.draw = function(){
+            pathCtx.fillRect(this.x * this.size,this.y * this.size,this.size,this.size);
+        }
+        var GAME = {
+            start:{x:5,y:5},
+            end:{x:29,y:29},
+            antList:[],
+            createAnt:function(){
+                return new Ant(this.start.x,this.start.y,0,MAP.cellSize);
+            },
+            init:function(){
+                pathCtx.clearRect(0,0,1600,900);
+                showScreenCtx.clearRect(0,0,1600,900);
+                this.ant = this.createAnt();
+                this.ant.draw();
+                showScreenCtx.drawImage(path,0,0);
+            },
+        }
+        GAME.init();
+
+    </script>
+</body>
+</html>

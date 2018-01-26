@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+</head>
+<body>
+    <canvas id="canvas" width="200" height="200"></canvas>
+    <script>
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var arr = [];
+        var openArr = [];
+        for(var i = 0;i < 10;i++){
+            arr[i] = [];
+            for(var j = 0;j < 10;j++){
+                arr[i][j] = {x:j,y:i,isPass:true,parent:null,isVisit:false,isOpen:false}
+            }
+        }
+        for(var i = 3;i < 7;i++){
+            arr[i][5].isPass = false;
+            arr[i][5].isVisit = true;
+            arr[i][5].isOpen = true;
+        }
+        for(var i = 0;i < 10;i++){
+            for(var j = 0;j < 10;j++){
+                if(arr[i][j].isPass){
+                    ctx.fillStyle = "#fff";
+                }else{
+                    ctx.fillStyle = "#000";
+                }
+                ctx.fillRect(j * 20,i * 20,20,20);
+            }
+        }
+        var x0 = 1;
+        var y0 = 5;
+        var x = 1;
+        var y = 5;
+        var x1 = 9;
+        var y1 = 5;
+        var gs = [];
+        arr[y][x].isVisit = true;
+        var draw = function(cell){
+            ctx.fillStyle = "red";
+            ctx.fillRect(cell.x * 20,cell.y * 20,20,20);
+            if(cell.parent){
+                draw(cell.parent)
+            }
+        }
+        var foo = function(){
+            if(x > 0 && !arr[y][x - 1].isVisit){
+                if(!arr[y][x - 1].isOpen){
+                    arr[y][x - 1].H = Math.abs(x - 1 - x1) + Math.abs(y - y1);
+                    arr[y][x - 1].G = Math.abs(x - 1 - x0) + Math.abs(y - y0);
+                    arr[y][x - 1].F = arr[y][x - 1].H + arr[y][x - 1].G;
+                    arr[y][x - 1].parent = arr[y][x];
+                    arr[y][x - 1].isOpen = true;
+                    openArr.push(arr[y][x - 1]);
+                }else if(Math.abs(x - 1 - x0) + Math.abs(y - y0) < arr[y][x - 1].G){
+                    arr[y][x - 1].G = Math.abs(x - 1 - x0) + Math.abs(y - y0);
+                    arr[y][x - 1].F = arr[y][x - 1].H + arr[y][x - 1].G;
+                    arr[y][x - 1].parent = arr[y][x];
+                }
+            }
+            if(x < 9 && !arr[y][x + 1].isVisit){
+                if(!arr[y][x + 1].isOpen){
+                    arr[y][x + 1].H = Math.abs(x + 1 - x1) + Math.abs(y - y1);
+                    arr[y][x + 1].G = Math.abs(x + 1 - x0) + Math.abs(y - y0);
+                    arr[y][x + 1].F = arr[y][x + 1].H + arr[y][x + 1].G;
+                    arr[y][x + 1].parent = arr[y][x];
+                    arr[y][x + 1].isOpen = true;
+                    openArr.push(arr[y][x + 1]);
+                }else if(Math.abs(x + 1 - x0) + Math.abs(y - y0) < arr[y][x + 1].G){
+                    arr[y][x + 1].G = Math.abs(x + 1 - x0) + Math.abs(y - y0);
+                    arr[y][x + 1].F = arr[y][x + 1].H + arr[y][x + 1].G;
+                    arr[y][x + 1].parent = arr[y][x];
+                }
+            }
+            if(y > 0 && !arr[y - 1][x].isVisit){
+                if(!arr[y - 1][x].isOpen){
+                    arr[y - 1][x].H = Math.abs(x - x1) + Math.abs(y - 1 - y1);
+                    arr[y - 1][x].G = Math.abs(x - x0) + Math.abs(y - 1 - y0);
+                    arr[y - 1][x].F = arr[y - 1][x].H + arr[y - 1][x].G;
+                    arr[y - 1][x].parent = arr[y][x];
+                    arr[y - 1][x].isOpen = true;
+                    openArr.push(arr[y - 1][x]);
+                }else if(Math.abs(x - x0) + Math.abs(y - 1 - y0) < arr[y - 1][x].G){
+                    arr[y - 1][x].G = Math.abs(x - x0) + Math.abs(y - 1 - y0);
+                    arr[y - 1][x].F = arr[y - 1][x].H + arr[y - 1][x].G;
+                    arr[y - 1][x].parent = arr[y][x];
+                }
+            }
+            if(y < 9 && !arr[y + 1][x].isVisit){
+                if(!arr[y + 1][x].isOpen){
+                    arr[y + 1][x].H = Math.abs(x - x1) + Math.abs(y + 1 - y1);
+                    arr[y + 1][x].G = Math.abs(x - x0) + Math.abs(y + 1 - y0);
+                    arr[y + 1][x].F = arr[y + 1][x].H + arr[y + 1][x].G;
+                    arr[y + 1][x].parent = arr[y][x];
+                    arr[y + 1][x].isOpen = true;
+                    openArr.push(arr[y + 1][x]);
+                }else if(Math.abs(x - x0) + Math.abs(y + 1 - y0) < arr[y + 1][x].G){
+                    arr[y + 1][x].G = Math.abs(x - x0) + Math.abs(y + 1 - y0);
+                    arr[y + 1][x].F = arr[y + 1][x].H + arr[y + 1][x].G;
+                    arr[y + 1][x].parent = arr[y][x];
+                }
+            }
+            if(openArr.length > 0){
+                var min = openArr[0].F;
+                var mini = 0;
+                for(var i = 1,len = openArr.length;i < len;i++){
+                    if(openArr[i].F < min){
+                        min = openArr[i].F;
+                        mini = i;
+                    }
+                }
+                openArr[mini].isVisit = true;
+                x = openArr[mini].x;
+                y = openArr[mini].y;
+                openArr.splice(mini,1);
+            }else{
+                var p = arr[y][x].parent;
+                if(p){
+                    x = p.x;
+                    y = p.y;
+                }else{
+                    alert("无路可走");
+                    return;
+                }
+            }
+            if(x === x1 && y === y1){
+                draw(arr[y][x])
+            }else{
+                foo();
+            }
+        }
+        console.time();
+        foo();
+        console.timeEnd();
+    </script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <style>
+        body{
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="1200" height="800"></canvas>
+    <script>
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var size = 10;
+        var maxW = 1200;
+        var maxH = 800;
+        var numH = ~~(maxH / size);
+        var numW = ~~(maxW / size);
+        var walls = [];
+        var cells = [];
+        var createN = 1000;
+        var createI = 0;
+        var roomSizes = [5,7,9];
+        var rooms = [];
+        var nowX = numW / 2;
+        var nowY = numH / 2
+        for(var i = 0;i < numW;i++){
+            cells[i] = [];
+            for(var j = 0;j < numH;j++){
+                cells[i][j] = {x:i,y:j,type:0};//type 0 空地 1 地板 2 墙 3 门
+            }
+        }
+        function addRoom(x,y,w,h,d){
+            if(d){
+                switch(d){
+                    case 1:
+                        for(var i = 0;i < w + 2;i++){
+                            for(var j = 0;j < h + 2;j++){
+                                if(j === h + 1){
+                                    if(cells[x + i][y + j].type === 0){
+                                        cells[x + i][y + j].type = 2;
+                                        if(i !== 0 && i !== w + 1){
+                                            walls.push(cells[x + i][y + j]);
+                                        }
+                                    }
+                                }else if(i === 0 || i === w + 1 || j === 0){
+                                    cells[x + i][y + j].type = 2;
+                                    if((i === 0 || i === w + 1) && (j !== 0) || (j === 0 && i !== 0 && i !== w + 1)){
+                                        walls.push(cells[x + i][y + j]);
+                                    }
+                                }else{
+                                    cells[x + i][y + j].type = 1;
+                                }
+                            }
+                        }
+                        break;
+                    case 2:
+                        for(var i = 0;i < w + 2;i++){
+                            for(var j = 0;j < h + 2;j++){
+                                if(i === 0){
+                                    if(cells[x + i][y + j].type === 0){
+                                        cells[x + i][y + j].type = 2;
+                                        if(j !== 0 && j !== h + 1){
+                                            walls.push(cells[x + i][y + j]);
+                                        }
+                                    }
+                                }else if(i === w + 1 || j === 0 || j === h + 1){
+                                    cells[x + i][y + j].type = 2;
+                                    if(i !== w + 1 && (j === 0 || j === h + 1) || (i === w + 1 && j !== 0 && j !== h + 1)){
+                                        walls.push(cells[x + i][y + j]);
+                                    }
+                                }else{
+                                    cells[x + i][y + j].type = 1;
+                                }
+                            }
+                        }
+                        break;
+                    case 3:
+                        for(var i = 0;i < w + 2;i++){
+                            for(var j = 0;j < h + 2;j++){
+                                if(j === 0){
+                                    if(cells[x + i][y + j].type === 0){
+                                        cells[x + i][y + j].type = 2;
+                                        if(i !== 0 || i !== w + 1){
+                                            walls.push(cells[x + i][y + j]);
+                                        }
+                                    }
+                                }else if(i === 0 || i === w + 1 || j === h + 1){
+                                    cells[x + i][y + j].type = 2;
+                                    if((i === 0 || i === w + 1) && j !== h + 1 || (i !== 0 && i !== w + 1 && j === h + 1)){
+                                        walls.push(cells[x + i][y + j]);
+                                    }
+                                }else{
+                                    cells[x + i][y + j].type = 1;
+                                }
+                            }
+                        }
+                        break;
+                    case 4:
+                        for(var i = 0;i < w + 2;i++){
+                            for(var j = 0;j < h + 2;j++){
+                                if(i === w + 1){
+                                    if(cells[x + i][y + j].type === 0){
+                                        cells[x + i][y + j].type = 2;
+                                        if(j !== 0 || j !== h + 1){
+                                            walls.push(cells[x + i][y + j]);
+                                        }
+                                    }
+                                }else if(i === 0 || j === 0 || j === h + 1){
+                                    cells[x + i][y + j].type = 2;
+                                    if((i !== 0 && (j === 0 || j === h + 1) || (i === 0 && j !== 0 && j !== h + 1))){
+                                        walls.push(cells[x + i][y + j]);
+                                    }
+                                }else{
+                                    cells[x + i][y + j].type = 1;
+                                }
+                            }
+                        }
+                        break;
+
+                }
+            }else{
+                for(var i = 0;i < w + 2;i++){
+                    for(var j = 0;j < h + 2;j++){
+                        if(i === 0 || i === w + 1 || j === 0 || j === h + 1){
+                            cells[x + i][y + j].type = 2;
+                            if((i === 0 || i ===  w + 1) && j !== 0 && j !== h + 1 || ((i !== 0 && i !==  w + 1) && (j === 0 || j === h + 1))){
+                                walls.push(cells[x + i][y + j]);
+                            }
+                        }else{
+                            cells[x + i][y + j].type = 1;
+                        }
+                    }
+                }
+            }
+            rooms.push({x:x,y:y,w:w,h:h});
+        }
+        // function addAisle(x,y,l,d){
+
+        // }
+        addRoom(nowX - 4,nowY - 4,7,7);
+        while(createI++ < createN){
+            var r = (~~(Math.random() * walls.length));
+            var wall = walls[r];
+            walls.splice(r,1);
+            if(Math.random() > 0.5){
+                isAddRoom(wall.x,wall.y,roomSizes[~~(Math.random() * roomSizes.length)],roomSizes[~~(Math.random() * roomSizes.length)]);
+            }else{
+                isAddAisle(wall.x,wall.y,roomSizes[~~(Math.random() * roomSizes.length)])
+            }
+        }
+        function isAddAisle(x,y,l){
+            var flag = true;
+            for(var i = 0;i < 3;i++){
+                for(var j = 0;j < l + 1;j++){
+                    if(i === 0 || i === 2 || j === 0){
+                        if(x - 1 + i < 0 || x - 1 + i >= numW || y - 1 - l + j < 0 || cells[x - 1 + i][y - 1 - l + j] .type === 1 || cells[x - 1 + i][y - 1 - l + j] .type === 3){
+                            flag = false;
+                            break;
+                        }
+                    }else{
+                        if(x - 1 + i >= numW || x - 1 + i < 0 || y - 1 - l + j < 0 || cells[x - 1 + i][y - 1 - l + j] .type !== 0){
+                            flag = false; 
+                            break;
+                        }
+                    }
+                }
+            }
+            if(flag){
+                cells[x][y].type = 3;
+                addRoom(x - 1,y - 1 - l,1,l,1);
+            }else{
+                flag = true;
+            }
+            for(var i = 1;i < l + 2;i++){
+                for(var j = 0;j < 3;j++){
+                    if(i === l + 1 || j === 0 || j === 2){
+                        if(y - 1 + j < 0 || y - 1 + j >= numH || x + i >= numW || cells[x + i][y - 1 + j] .type === 1 || cells[x + i][y - 1 + j] .type === 3){
+                            flag = false;
+                            break;
+                        }
+                    }else{
+                        if(x + i >= numW || y - 1 + j < 0 || y - 1 + j >= numH || cells[x + i][y - 1 + j] .type !== 0){
+                            flag = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(flag){
+                cells[x][y].type = 3;
+                addRoom(x,y - 1,l,1,2);
+            }else{
+                flag = true;
+            }
+            for(var i = 0;i < 3;i++){
+                for(var j = 1;j < l + 2;j++){
+                    if(i === 2 || i === 0 || j === l + 1){
+                        if(x - 1 + i >= numW || x - 1 + i < 0 || y + j >= numH || cells[x - 1 + i][y + j] .type === 1 || cells[x - 1 + i][y + j] .type === 3){
+                            flag = false;
+                            break;
+                        }
+                    }else{
+                        if(x - 1 + i >= numW || x - 1 + i < 0 || y + j >= numH || cells[x - 1 + i][y + j] .type !== 0){
+                            flag = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(flag){
+                cells[x][y].type = 3;
+                addRoom(x - 1,y,1,l,3);
+            }else{
+                flag = true;
+            }
+            for(var i = 0;i < l + 1;i++){
+                for(var j = 0;j < 3;j++){
+                    if(i === l + 1 || j === 0 || j === 2){
+                        if(y - 1 + j < 0 || y - 1 + j >= numH || x - l - 1 + i < 0 || cells[x - l - 1 + i][y - 1 + j] .type === 1 || cells[x - l - 1 + i][y - 1 + j] .type === 3){
+                            flag = false;
+                            break;
+                        }
+                    }else{
+                        if(x - l - 1 + i < 0 || y - 1 + j < 0 || y - 1 + j >= numH || cells[x - l - 1 + i][y - 1 + j] .type !== 0){
+                            flag = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(flag){
+                cells[x][y].type = 3;
+                addRoom(x - l - 1,y - 1,l,1,4);
+            }
+        }
+        //判断能否加入房间 能则加入
+        function isAddRoom(x,y,w,h){
+            var flag = true;
+            for(var i = 0;i < w + 2;i++){
+                for(var j = 0;j < h + 1;j++){
+                    if(i === 0 || i === w + 1 || j === 0){
+                        if(x - (w + 1) / 2 + i < 0 || y - 1 - h + j < 0 || x + (w + 1) / 2 + i >= numW || cells[x - (w + 1) / 2 + i][y - 1 - h + j] .type === 1 || cells[x - (w + 1) / 2 + i][y - 1 - h + j] .type === 3){
+                            flag = false;
+                            break;
+                        }
+                    }else{
+                        if(x - (w + 1) / 2 + i >= numW || x - (w + 1) / 2 + i < 0 || y - 1 - h + j < 0 || cells[x - (w + 1) / 2 + i][y - 1 - h + j] .type !== 0){
+                            flag = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(flag){
+                cells[x][y].type = 3;
+                addRoom(x - (w + 1) / 2,y - 1 - h,w,h,1);
+            }else{
+                flag = true;
+            }
+            for(var i = 1;i < w + 2;i++){
+                for(var j = 0;j < h + 2;j++){
+                    if(i === w + 1 || j === 0 || j === h + 1){
+                        if(y - (h + 1) / 2 + j >= numH || y - (h + 1) / 2 + j < 0 || x + i >= numW || cells[x + i][y - (h + 1) / 2 + j] .type === 1 || cells[x + i][y - (h + 1) / 2 + j] .type === 3){
+                            flag = false;
+                            break;
+                        }
+                    }else{
+                        if(x + i >= numW || y - (h + 1) / 2 + j < 0 || y - (h + 1) / 2 + j >= numH || cells[x + i][y - (h + 1) / 2 + j] .type !== 0){
+                            flag = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(flag){
+                cells[x][y].type = 3;
+                addRoom(x,y - (h + 1) / 2,w,h,2);
+            }else{
+                flag = true;
+            }
+            for(var i = 0;i < w + 2;i++){
+                for(var j = 1;j < h + 2;j++){
+                    if(i === w + 1 || i === 0 || j === h + 1){
+                        if(y + j >= numH || x - (w + 1) / 2 + i < 0 || x + i >= numW || cells[x - (w + 1) / 2 + i][y + j] .type === 1 || cells[x - (w + 1) / 2 + i][y + j] .type === 3){
+                            flag = false;
+                            break;
+                        }
+                    }else{
+                        if(x - (w + 1) / 2 + i >= numW || x - (w + 1) / 2 + i < 0 || y + j >= numH || cells[x - (w + 1) / 2 + i][y + j] .type !== 0){
+                            flag = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(flag){
+                cells[x][y].type = 3;
+                addRoom(x - (w + 1) / 2,y,w,h,3);
+            }else{
+                flag = true;
+            }
+            for(var i = 0;i < w + 1;i++){
+                for(var j = 0;j < h + 2;j++){
+                    if(i === w + 1 || j === 0 || j === h + 1){
+                        if(y - (h + 1) / 2 + j >= numH || y - (h + 1) / 2 + j < 0 || x - w - 1 + i < 0 || cells[x - w - 1 + i][y - (h + 1) / 2 + j] .type === 1 || cells[x - w - 1 + i][y - (h + 1) / 2 + j] .type === 3){
+                            flag = false;
+                            break;
+                        }
+                    }else{
+                        if(x - w - 1 + i < 0 || y - (h + 1) / 2 + j < 0 || y - (h + 1) / 2 + j >= numH || cells[x - w - 1 + i][y - (h + 1) / 2 + j] .type !== 0){
+                            flag = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(flag){
+                cells[x][y].type = 3;
+                addRoom(x - w - 1,y - (h + 1) / 2,w,h,4);
+            }
+        }
+        // ctx.translate(-nowX * size,-nowY * size);
+        for(var i = 0;i < numW;i++){
+            for(var j = 0;j < numH;j++){
+                switch(cells[i][j].type){
+                    case 0:
+                        ctx.fillStyle = "#000";
+                        break;
+                    case 1:
+                        ctx.fillStyle = "#fff";
+                        break;
+                    case 2:
+                        ctx.fillStyle = "#666";
+                        break;
+                    case 3:
+                        ctx.fillStyle = "#ff0";
+                        // ctx.fillStyle = "#fff";
+                        break;
+                }
+                ctx.fillRect(i * size,j * size,size,size);
+            }
+        }
+        document.onkeydown = function(e){
+            switch(e.keyCode){
+                case 37:
+                    nowX--;
+                    ctx.translate(-nowX * size,-nowY * size);
+                    break;
+                case 38:
+                    nowY--;
+                    ctx.translate(-nowX * size,-nowY * size);
+                    break;
+                case 39:
+                    nowX++;
+                    ctx.translate(-nowX * size,-nowY * size);
+                    break;
+                case 40:
+                    nowY++;
+                    ctx.translate(-nowX * size,-nowY * size);
+                    break;
+            }
+            console.log(nowX)
+            for(var i = 0;i < numW;i++){
+                for(var j = 0;j < numH;j++){
+                    switch(cells[i][j].type){
+                        case 0:
+                            ctx.fillStyle = "#000";
+                            break;
+                        case 1:
+                            ctx.fillStyle = "#fff";
+                            break;
+                        case 2:
+                            ctx.fillStyle = "#666";
+                            break;
+                        case 3:
+                            ctx.fillStyle = "#ff0";
+                            // ctx.fillStyle = "#fff";
+                            break;
+                    }
+                    ctx.fillRect(i * size,j * size,size,size);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -54,8 +54,8 @@
 			moveCtx = moveCanvas.getContext("2d"),
 			baseHeight = window.innerHeight >= 930 ? window.innerHeight : 930;
 
-		document.getElementById("content").style.height = baseHeight >= 930 ? baseHeight : 930  + "px";
-		moveCanvas.setAttribute("height",baseHeight >= 930 ? baseHeight : 930);
+		document.getElementById("content").style.height = baseHeight  + "px";
+		moveCanvas.setAttribute("height",baseHeight);
 
 
 		var cells = [],
@@ -386,6 +386,7 @@
 				rrr = 0;
 				clearTimeout(sto);
 				rcFun();
+				sto = null;
 			}else{
 				sto = setTimeout(rotateCell,16);
 			}
@@ -550,7 +551,7 @@
 				x1 = (cell.x - x) / n,
 				y1 = (cell.y - y) / n;
 			function _moveCell(){
-				moveCtx.clearRect(0,0,640,baseHeight >= 930 ? baseHeight : 930);
+				moveCtx.clearRect(0,0,640,baseHeight);
 				drawSix(x + n * x1,y + n * y1,moveCtx,cell.t);
 				n--;
 				if(n > 0){
@@ -738,14 +739,14 @@
 			}
 		}
 		moveCanvas.onmousedown = function(e){
-			if(e.layerY >= 740 && e.layerY <= 930 && e.layerX >= 220 && e.layerX <= 420){
+			if(!sto && e.layerY >= 740 && e.layerY <= 930 && e.layerX >= 220 && e.layerX <= 420){
 				mouseStatus = 2;
 				moveCanvas.onmousemove = function(e){
 					if(!moveFlag){
 						currentCtx.clearRect(-95,-90,190,190);
 					}
 					moveFlag = true;
-					moveCtx.clearRect(0,0,640,baseHeight >= 930 ? baseHeight : 930);
+					moveCtx.clearRect(0,0,640,baseHeight);
 					checkMoving(e.layerX,e.layerY);
 					drawCell(e.layerX,e.layerY,curr.type,curr.c1,curr.c2,moveCtx);
 				}
@@ -758,14 +759,16 @@
 				if(!moveFlag && e.layerY >= 740 && e.layerY <= 930 && e.layerX >= 220 && e.layerX < 420){
 					currentCtx.clearRect(-95,-90,190,190);
 					currentCtx.save();
-					rotateCell(function(){
-						currentCtx.restore();
-						if(curr.type != 3){
-							curr.c1 = curr.c1 + curr.c2;
-							curr.c2 = curr.c1 - curr.c2;
-							curr.c1 = curr.c1 - curr.c2;
-						}
-					});
+					if(!sto){
+						rotateCell(function(){
+							currentCtx.restore();
+							if(curr.type != 3){
+								curr.c1 = curr.c1 + curr.c2;
+								curr.c2 = curr.c1 - curr.c2;
+								curr.c1 = curr.c1 - curr.c2;
+							}
+						});
+					}
 				}
 				moveFlag = false;
 				var dropSucc = dropCell(e.layerX,e.layerY);
@@ -776,7 +779,7 @@
 				}else{
 					drawNext(curr.type,curr.c1,curr.c2,currentCtx);
 				}
-				moveCtx.clearRect(0,0,640,baseHeight >= 930 ? baseHeight : 930);
+				moveCtx.clearRect(0,0,640,baseHeight);
 				moveCanvas.onmousemove = null;
 			}
 		}

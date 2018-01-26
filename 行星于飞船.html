@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>行星与飞船</title>
+    <style>
+        body,div,dt,dl{
+            margin: 0;
+            padding: 0;
+        }
+        #yz{
+            position: absolute;
+            width: 900px;
+            height: 900px;
+            left: 50%;
+            top: 0;
+            margin-left: -100px;
+            background-color: black;
+        }
+        #xq{
+            width: 200px;
+            height: 200px;
+            position: absolute;
+            left: 350px;
+            top: 350px;
+            border-radius: 50%;
+            background-color: red;
+        }
+        .fc{
+            position: absolute;
+            width: 100px;
+            height: 40px;
+            border-radius: 20px;
+            box-sizing: border-box;
+            border-left: 0 solid blue;
+            background-color: gray;
+        }
+        button{
+            margin: 0 10px;
+        }
+        table{
+            border-collapse:collapse
+        }
+        table td,table th{
+            border: 1px solid #000;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="yz">
+        <div id="xq"></div>
+    </div>
+    <div>
+        <dl>
+            <label>动力系统选择：</label><br/>
+            <input type="radio" name="power" id="power1" checked onclick="powerSelect(0)"><label for="power1">前进号(速率：30px/s，能耗：5%/s)</label><br/>
+            <input type="radio" name="power" id="power2" onclick="powerSelect(1)"><label for="power2">奔腾号(速率：50px/s，能耗：7%/s)</label><br/>
+            <input type="radio" name="power" id="power3" onclick="powerSelect(2)"><label for="power3">超越号(速率：80px/s，能耗：9%/s)</label><br/>
+        </dl>
+        <dl>
+            <label>能源系统选择：</label><br/>
+            <input type="radio" name="energy" id="energy1" checked onclick="energySelect(0)"><label for="energy1">劲量型(补充能源速度：2%/s)</label><br/>
+            <input type="radio" name="energy" id="energy2" onclick="energySelect(1)"><label for="energy2">光能型(补充能源速度：3%/s)</label><br/>
+            <input type="radio" name="energy" id="energy3" onclick="energySelect(2)"><label for="energy3">永久型(补充能源速度：4%/s)</label><br/>
+            <input type="radio" name="energy" id="energy4" onclick="energySelect(3)"><label for="energy4">永动型(补充能源速度：100%/s)</label><br/>
+        </dl>
+    </div>
+    <button onclick="createSpaceship()">新飞船起飞</button>
+    <div id="list"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>编号</th><th>动力系统</th><th>能源系统</th><th>状态</th><th>剩余能源</th>
+            </tr>
+        </thead>
+        <tbody id="info"></tbody>
+    </table>
+    <script>
+        var Spaceship = function(id,status,energy,speed,consumption,restore,dom,r,d) {
+            this.id = id;//编号
+            this.status = status;//状态 0 静止 1 移动
+            this.energy = energy;//所剩能量
+            this.speed = speed;//速度
+            this.consumption = consumption;//每秒耗能
+            this.restore = restore;//每秒恢复能量
+            this.dom = dom;//对应页面dom
+            this.r = r;//角度
+            this.d = d;//距离
+            var self = this;
+            this.commondSto = setTimeout(function(){
+                self.getCommond();
+            },100);
+            this.infoSto = setTimeout(function(){
+                self.giveInfo();
+            });
+        }
+        Spaceship.prototype.draw = function(){
+            this.dom.style.left = Math.cos(this.r / 180 * Math.PI) * this.d + 400 + "px";
+            this.dom.style.top = Math.sin(this.r / 180 * Math.PI) * this.d + 430 + "px";
+            this.dom.style.borderLeftWidth = this.energy + "px";
+            this.dom.innerHTML = "<span style='position:absolute;width:100px;height:40px;text-align:center;line-height:40px;left:-" + this.energy + "px;top:0;color:#fff;'>" + this.id + "号-" + this.energy + "%</span>";
+            this.dom.style.transform = "rotate(" + (this.r + 90) + "deg)"
+        }
+        Spaceship.prototype.move = function(){
+            if(this.energy > this.consumption){
+                var moveR = ~~(360 * this.speed / (2 * this.d * Math.PI));
+                this.r = (this.r + moveR) % 360;
+                this.energy -= this.consumption;
+            }else{
+                var moveR = ~~(360 * this.speed / (2 * this.d * Math.PI) * this.energy / this.consumption);
+                this.r = (this.r + moveR) % 360;
+                this.energy = 0;
+                this.status = 0;
+            }
+            this.dom.style.left = Math.cos(this.r / 180 * Math.PI) * this.d + 400 + "px";
+            this.dom.style.top = Math.sin(this.r / 180 * Math.PI) * this.d + 430 + "px";
+            this.dom.style.borderLeftWidth = this.energy + "px";
+            this.dom.innerHTML = "<span style='position:absolute;width:100px;height:40px;text-align:center;line-height:40px;left:-" + this.energy + "px;top:0;color:#fff;'>" + this.id + "号-" + this.energy + "%</span>";
+            this.dom.style.transform = "rotate(" + (this.r + 90) + "deg)"
+        }
+        Spaceship.prototype.charged = function(){
+            this.energy += this.restore;
+            this.energy = this.energy > 100 ? 100 : this.energy;
+            this.dom.style.borderLeftWidth = this.energy + "px";
+            this.dom.innerHTML = "<span style='position:absolute;width:100px;height:40px;text-align:center;line-height:40px;left:-" + this.energy + "px;top:0;color:#fff;'>" + this.id + "号-" + this.energy + "%</span>";
+        }
+        Spaceship.prototype.twoToTen = function(n){
+            n += "";
+            var v = 0;
+            var i = 0;
+            while(n.length > i){
+                v += (+n.charAt(n.length - i - 1) * Math.pow(2,i));
+                i++;
+            }
+            return v;
+        }
+        Spaceship.prototype.getCommond = function(){
+            for(var i = 0,len = commond.length;i < len;i++){
+                var cd = commond[i];
+                var id = this.twoToTen(cd.substr(0,4)) + "";
+                var action = cd.substr(4,4);
+                if(id !== undefined && id === this.id){
+                    switch(action){
+                        case "0001":
+                            if(this.energy > 0){
+                                this.status = 1;
+                            }
+                            break;
+                        case "0010":
+                            this.status = 0;
+                            break;
+                        case "0011":
+                            yz.removeChild(this.dom)
+                            spsps[this.id] = null;
+                            setSpsps();
+                            break;
+                    }
+                }
+            }
+            var self = this;
+            this.commondSto = setTimeout(function(){
+                self.getCommond();
+            },100)
+        }
+        Spaceship.prototype.tenToTwo = function(n,w){
+            var s = "";
+            while(n > 1){
+                s = n % 2 + s;
+                n = ~~(n / 2);
+            }
+            s = n === 1 ? 1 + s : s;
+            var y = w - s.length;
+            while(y-- > 0){
+                s = "0" + s;
+            }
+            return s;
+        }
+        Spaceship.prototype.giveInfo = function(){
+            var infoStr = this.tenToTwo(+this.id,4);
+            switch(this.status){
+                case 0:
+                    infoStr += "0001";
+                    break;
+                case 1:
+                    infoStr += "0010";
+                    break;
+            }
+            infoStr += this.tenToTwo(this.energy,8);
+            info.push(infoStr);
+            var self = this;
+            this.infoSto = setTimeout(function(){
+                self.giveInfo();
+            },1000);
+        }
+        //飞船列表
+        var spsps = {"1":null,"2":null,"3":null,"4":null};
+        var yz = document.getElementById("yz");
+        //创建飞船的选项
+        var createParame = {
+            power:0,
+            energy:0
+        }
+        var powerSelect = function(value){
+            createParame.power = value;
+        }
+        var energySelect = function(value){
+            createParame.energy = value;
+        }
+        //创建飞船
+        var createSpaceship = function(){
+            var speeds = [30,50,80];
+            var consumptions = [5,7,9];
+            var restores = [2,3,4,100];
+            var powers = ["前进号","奔腾号","超越号"];
+            var energys = ["劲量型","光能型","永久型","永动型"]
+            for(var key in spsps){
+                if(!spsps[key]){
+                    var dl = document.createElement("dl");
+                    var r = ~~(Math.random() * 360);
+                    var d = ~~(Math.random() * 290) + 140;
+                    dl.className = "fc";
+                    yz.appendChild(dl);
+                    spsps[key] = new Spaceship(key,0,100,speeds[createParame.power],consumptions[createParame.power],restores[createParame.energy],dl,r,d);
+                    spsps[key].draw();
+                    spsInfo[key] = {id:key,power:powers[createParame.power],energy:energys[createParame.energy],status:"静止",energyNum:100}
+                    setSpsps();
+                    setSpsInfo();
+                    break;
+                }
+            }
+        }
+        var list = document.getElementById("list");
+        //发布命令按钮
+        var setSpsps = function(){
+            var str = "";
+            for(var key in spsps){
+                if(spsps[key]){
+                    str += "<div>" + key + "<button onclick='giveInstructions({id:\"" + spsps[key].id + "\",commond:\"start\"})'>开始飞行</button><button onclick='giveInstructions({id:\"" + spsps[key].id + "\",commond:\"stop\"})'>停止飞行</button><button onclick='giveInstructions({id:\"" + spsps[key].id + "\",commond:\"destroy\"})'>销毁</button></div>"
+                }
+            }
+            list.innerHTML = str;
+        }
+        var infoTable = document.getElementById("info");
+        var setSpsInfo = function (argument) {
+            var str = "";
+            for(var key in spsInfo){
+                if(spsInfo[key]){
+                    str += "<tr><td>" + key + "号</td><td>" + spsInfo[key].power + "</td><td>" + spsInfo[key].energy + "</td><td>" + spsInfo[key].status + "</td><td>" + spsInfo[key].energyNum + "%</td></tr>"
+                }
+            }
+            infoTable.innerHTML = str;
+        }
+        var twoToTen = function(n){
+            n += "";
+            var v = 0;
+            var i = 0;
+            while(n.length > i){
+                v += (+n.charAt(n.length - i - 1) * Math.pow(2,i));
+                i++;
+            }
+            return v;
+        }
+        var tenToTwo = function(n,w){
+            var s = "";
+            while(n > 1){
+                s = n % 2 + s;
+                n = ~~(n / 2);
+            }
+            s = n === 1 ? 1 + s : s;
+            var y = w - s.length;
+            while(y-- > 0){
+                s = "0" + s;
+            }
+            return s;
+        }
+        var commond = [];
+        var info = [];
+        //发布命令
+        var giveInstructions = function(option){
+            var command = tenToTwo(+option.id,4);
+            switch(option.commond){
+                case "start":
+                    command += "0001"
+                    break;
+                case "stop":
+                    command += "0010"
+                    break;
+                case "destroy":
+                    command += "0011"
+                    break;
+            }
+            if(Math.random() > 0.1){
+                setTimeout(function(){
+                    commond.push(command);
+                    setTimeout(function(){
+                        commond.pop();
+                    },100)
+                },300)
+            }else{
+                setTimeout(function(){
+                    giveInstructions(option);
+                },300)
+            }
+        }
+        var spsInfo = {"1":null,"2":null,"3":null,"4":null};
+        var getInfo = function(){
+            if(info.length > 0){
+                var twoInfo = info.pop();
+                var id = twoToTen(twoInfo.substr(0,4));
+                var status = twoInfo.substr(4,4) === "0001" ? "静止" : "移动";
+                var energy = twoToTen(twoInfo.substr(8,8));
+                spsInfo[id].status = status;
+                spsInfo[id].energyNum = energy;
+                setSpsInfo();
+            }
+            setTimeout(getInfo,100);
+        }
+        getInfo();
+        var timeFlies = function(){
+            for(var key in spsps){
+                if(spsps[key]){
+                    if(spsps[key].status === 0){
+                        spsps[key].charged();
+                    }else{
+                        spsps[key].move();
+                        spsps[key].charged();
+                    }
+                }
+            }
+            setTimeout(timeFlies,1000);
+        }
+        timeFlies();
+    </script>
+</body>
+</html>

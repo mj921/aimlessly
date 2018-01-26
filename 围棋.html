@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>禅棋传说</title>
+    <style type="text/css">
+        body{
+            padding: 0;
+            margin: 0;
+        }
+        .canvas{
+            margin: 10px auto;
+            width: 760px;
+            height: 760px;
+            background-color: #feef72;
+        }
+        .hidden{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas">
+        <canvas id="canvas" width="760" height="760"></canvas>
+    </div>
+    <script type="text/javascript">
+        (function(){
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d")
+            var chessType,cells;
+            //初始化
+            function init(){
+                ctx.clearRect(0,0,760,760);
+                ctx.strokeStyle = "#000";
+                for(var i = 0;i < 20;i++){
+                    ctx.beginPath();
+                    ctx.moveTo(20,40 * i + 20);
+                    ctx.lineTo(740,40 * i + 20);
+                    ctx.stroke();
+                }
+                for(var i = 0;i < 20;i++){
+                    ctx.beginPath();
+                    ctx.moveTo(40*i+20,20);
+                    ctx.lineTo(40*i+20,740);
+                    ctx.stroke();
+                }
+                chessType = 1;
+                cells = new Array();
+                for(var i = 0;i<20;i++){
+                    var cellss = new Array();
+                    for(var j = 0;j<20;j++){
+                        cellss[j] = 0;
+                    }
+                    cells[i] = cellss;
+                }
+                ctx.beginPath();
+                ctx.arc(140,140,4,0,Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(380,140,4,0,Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(620,140,4,0,Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(140,380,4,0,Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(380,380,4,0,Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(620,380,4,0,Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(140,620,4,0,Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(380,620,4,0,Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(620,620,4,0,Math.PI * 2);
+                ctx.fill();
+            }
+            init();
+            var canvasPosition = canvas.getBoundingClientRect();
+            canvas.onclick = function(e){
+                var x = Math.floor((e.clientX - canvasPosition.x) / 40);
+                var y = Math.floor((e.clientY - canvasPosition.y) / 40);
+                if(cells[x][y] == 0){
+                    if(chessType == 1){
+                        ctx.fillStyle = "#000";
+                    }else{
+                     ctx.fillStyle = "#fff";
+                    }
+                    ctx.beginPath()
+                    ctx.arc(x * 40 + 20,y * 40 + 20,20,0,Math.PI * 2);
+                    ctx.fill();
+                    cells[x][y] = chessType;
+                    chessType = 3 - chessType;
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

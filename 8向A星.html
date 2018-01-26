@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+</head>
+<body>
+    <canvas id="canvas" width="200" height="200"></canvas>
+    <script>
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var arr = [];
+        for(var i = 0;i < 10;i++){
+            arr[i] = [];
+            for(var j = 0;j < 10;j++){
+                arr[i][j] = {x:j,y:i,isPass:true,parent:null,isVisit:true}
+            }
+        }
+        for(var i = 3;i < 7;i++){
+            arr[i][5].isPass = false;
+            arr[i][5].isVisit = false;
+        }
+        for(var i = 0;i < 10;i++){
+            for(var j = 0;j < 10;j++){
+                if(arr[i][j].isPass){
+                    ctx.fillStyle = "#fff";
+                }else{
+                    ctx.fillStyle = "#000";
+                }
+                ctx.fillRect(j * 20,i * 20,20,20);
+            }
+        }
+        var x = 1;
+        var y = 5;
+        var x1 = 9;
+        var y1 = 5;
+        var gs = [];
+        arr[y][x].isVisit = false;
+        var draw = function(cell){
+            ctx.fillStyle = "red";
+            ctx.fillRect(cell.x * 20,cell.y * 20,20,20);
+            if(cell.parent){
+                draw(cell.parent)
+            }
+        }
+        var foo = function() {
+            gs = [];
+            var n = 0;
+            if(x > 0){
+                if(y > 0 && arr[y - 1][x - 1].isVisit){
+                    n++;
+                    gs[0] = {g:Math.abs(x - 1 - x1) + Math.abs(y - 1 - y1),c:arr[y - 1][x - 1]};
+                }else{
+                    gs[0] = {g:-1};
+                }
+                if(y < 9 && arr[y + 1][x - 1].isVisit){
+                    n++;
+                    gs[6] = {g:Math.abs(x - 1 - x1) + Math.abs(y + 1 - y1),c:arr[y + 1][x - 1]};
+                }else{
+                    gs[6] = {g:-1};
+                }
+                if(arr[y][x - 1].isVisit){
+                    n++;
+                    gs[7] = {g:Math.abs(x - 1 - x1) + Math.abs(y - y1),c:arr[y][x - 1]};
+                }else{
+                    gs[7] = {g:-1};
+                }
+            }else{
+                gs[0] = {g:-1};
+                gs[6] = {g:-1};
+                gs[7] = {g:-1};
+            }
+            if(x < 9){
+                if(y > 0 && arr[y - 1][x + 1].isVisit){
+                    n++;
+                    gs[2] = {g:Math.abs(x + 1 - x1) + Math.abs(y - 1 - y1),c:arr[y - 1][x + 1]};
+                }else{
+                    gs[2] = {g:-1};
+                }
+                if(y < 9 && arr[y + 1][x + 1].isVisit){
+                    n++;
+                    gs[3] = {g:Math.abs(x + 1 - x1) + Math.abs(y + 1 - y1),c:arr[y + 1][x + 1]};
+                }else{
+                    gs[3] = {g:-1};
+                }
+                if(arr[y][x + 1].isVisit){
+                    n++;
+                    gs[4] = {g:Math.abs(x + 1 - x1) + Math.abs(y - y1),c:arr[y][x + 1]};
+                }else{
+                    gs[4] = {g:-1};
+                }
+            }else{
+                gs[2] = {g:-1};
+                gs[3] = {g:-1};
+                gs[4] = {g:-1};
+            }
+            if(y > 0 && arr[y - 1][x].isVisit){
+                n++;
+                gs[1] = {g:Math.abs(x - x1) + Math.abs(y - 1 - y1),c:arr[y - 1][x]};
+            }else{
+                gs[1] = {g:-1};
+            }
+            if(y < 9 && arr[y + 1][x].isVisit){
+                n++;
+                gs[5] = {g:Math.abs(x - x1) + Math.abs(y + 1 - y1),c:arr[y + 1][x]};
+            }else{
+                gs[5] = {g:-1};
+            }
+            if(n > 0){
+                var min = gs[0].g;
+                var mini = 0;
+                for(var i = 1;i < 8;i++){
+                    if(gs[i].g !== -1){
+                        if(min === -1 || gs[i].g < min){
+                            min = gs[i].g;
+                            mini = i;
+                        }
+                    }
+                }
+                gs[mini].c.isVisit = false;
+                gs[mini].c.parent = arr[y][x];
+                x = gs[mini].c.x;
+                y = gs[mini].c.y;
+            }else{
+                var p = arr[y][x].parent;
+                x = p.x;
+                y = p.y;
+            }
+            if(x === x1 && y === y1){
+                draw(arr[y][x])
+            }else{
+                foo();
+            }
+        }
+        console.time();
+        foo();
+        console.timeEnd();
+    </script>
+</body>
+</html>

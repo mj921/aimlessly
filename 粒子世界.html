@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+    <style>
+        #queen,#zerg{
+            position: absolute;
+            left: -1000%;
+            top: -1000%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="main" width="1600" height="900"></canvas>
+    <canvas id="queen" width="1600" height="900"></canvas>
+    <canvas id="zerg" width="1600" height="900"></canvas>
+    <script>
+        var main = document.getElementById("main"),
+            mainCtx = main.getContext("2d"),
+            queen = document.getElementById("queen"),
+            queenCtx = queen.getContext("2d"),
+            zerg = document.getElementById("zerg"),
+            zergCtx = zerg.getContext("2d");
+
+        queenCtx.fillStyle = "#f00";
+        zergCtx.fillStyle = "#00f";
+
+        var WORLD = {
+            width:1600,
+            height:900,
+            time:0,
+            zergList:[],
+            queenList:[],
+            createQueen:function(){
+                this.queenList.push(new Queen(1,100,100));
+                this.queenList.push(new Queen(1,900,800));
+            },
+            init:function(){
+                mainCtx.clearRect(0,0,this.width,this.height);
+                queenCtx.clearRect(0,0,this.width,this.height);
+                zergCtx.clearRect(0,0,this.width,this.height);
+                this.createQueen();
+                for(var i = 0,len = this.queenList.length;i < len;i++){
+                    this.queenList[i].draw();
+                    console.log(this.queenList[i])
+                }
+                mainCtx.drawImage(queen,0,0);
+                mainCtx.drawImage(zerg,0,0);
+            }
+        }
+        var Queen = function(lv,x,y){
+            this.id = ++Queen.ID;
+            this.lv = lv;
+            this.x = x;
+            this.y = y;
+            this.size = lv * 5 + 15;
+            this.zergList = [];
+        }
+        Queen.ID = 0;
+        Queen.prototype = {
+            constructor:Queen,
+            draw:function(){
+                queenCtx.beginPath();
+                queenCtx.arc(this.x,this.y,this.size,0,2 * Math.PI);
+                queenCtx.fill();
+                queenCtx.closePath();
+                return this;
+            },
+            createZerg:function(){
+                this.zergList.push(new Zerg());
+            }
+        }
+        var Zerg = function(x,y,size,lv,atk){
+            this.x = x;
+            this.y = y;
+            this.power = size * Math.pow(10,lv);
+            this.size = size;
+            this.lv = lv;
+            this.atk = atk;
+        }
+        WORLD.init();
+    </script>
+</body>
+</html>

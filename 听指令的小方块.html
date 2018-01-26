@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+    <style>
+        body,div,dl,textarea,p{
+            margin: 0;
+            padding: 0;
+        }
+        #main{
+            position: absolute;
+            left: 50%;
+            margin-left: -300px;
+            top: 0;
+            width: 600px;
+            height: 900px;
+            box-sizing: border-box;
+            padding: 50px 0 0 50px;
+        }
+        #qp{
+            position: relative;
+            width: 500px;
+            height: 500px;
+            border: 1px solid #000;
+        }
+        #qp>dl{
+            float: left;
+            width: 25px;
+            height: 25px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+        }
+        #box{
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-top: 5px solid blue;
+            box-sizing: border-box;
+            background-color: red;
+            transition: all 0.6s linear;
+        }
+        #btn{
+            margin: 5px 0;
+        }
+        #num p{
+            width: 20px;
+            text-align: center;
+        }
+        #num p span{
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: red;
+        }
+        #ipt{
+            position: absolute;
+            left: 20px;
+            top: 0;
+            padding: 0 5px;
+            width: 470px;
+            height: 170px;
+            border: 0;
+            background-color: #000;
+            color: green;
+            font-family: "微软雅黑";
+            resize:none;
+            outline: none;
+            font-size: 16px;
+        }
+        #text{
+            position: relative;
+            width: 500px;
+            padding-left:20px; 
+            background-color: gray;
+            color: #fff;
+            box-sizing: border-box;
+            height: 170px;
+        }
+        #num{
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 40px;
+            height: 170px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <div id="qp"></div>
+        <button id="btn">执行</button><br>
+        <div id="text">
+            <div id="num">
+                <p>1 </p>
+            </div>
+            <textarea id="ipt" spellcheck="false"></textarea>
+        </div>
+    </div>
+    <script>
+        var Box = function(x,y,direction,dom){
+            Box = function(){
+                return Box.obj;
+            }
+            this.x = x;
+            this.y = y;
+            this.direction = direction;
+            this.dom = dom;
+            this.BASE_SIZE = 25;
+            Box.obj = this;
+        }
+        Box.obj = null;
+        Box.prototype.move = function(row,direction){
+            if(direction !== undefined){
+                switch(direction){
+                    case 0:
+                        if(this.y > 0){
+                            this.y--;
+                        }
+                        break;
+                    case 1:
+                        if(this.x < row - 1){
+                            this.x++;
+                        }
+                        break;
+                    case 2:
+                        if(this.y < row - 1){
+                            this.y++;
+                        }
+                        break;
+                    case 3:
+                        if(this.x > 0){
+                            this.x--;
+                        }
+                        break;
+                }
+            }else{
+                switch(this.direction % 4 >= 0 ? this.direction % 4 : (this.direction % 4 + 4)){
+                    case 0:
+                        if(this.y > 0){
+                            this.y--;
+                        }
+                        break;
+                    case 1:
+                        if(this.x < row - 1){
+                            this.x++;
+                        }
+                        break;
+                    case 2:
+                        if(this.y < row - 1){
+                            this.y++;
+                        }
+                        break;
+                    case 3:
+                        if(this.x > 0){
+                            this.x--;
+                        }
+                        break;
+                }
+            }
+            this.dom.style.left = this.BASE_SIZE * this.x + "px";
+            this.dom.style.top = this.BASE_SIZE * this.y + "px";
+        }
+        Box.prototype.moveTo = function(x,y){
+            this.x = x;
+            this.y = y;
+            this.dom.style.left = this.BASE_SIZE * this.x + "px";
+            this.dom.style.top = this.BASE_SIZE * this.y + "px";
+        }
+        Box.prototype.turn = function(direction){
+            this.direction += (direction - this.direction % 4);
+            this.dom.style.transform = "rotate(" + (this.direction * 90) + "deg)";
+        }
+        Box.prototype.turnLeft = function(){
+            this.direction--;
+            this.dom.style.transform = "rotate(" + (this.direction * 90) + "deg)"
+        }
+        Box.prototype.turnRight = function(){
+            this.direction++;
+            this.dom.style.transform = "rotate(" + (this.direction * 90) + "deg)"
+        }
+        Box.prototype.turnBack = function(){
+            this.direction = this.direction - 2;
+            this.dom.style.transform = "rotate(" + (this.direction * 90) + "deg)";
+        }
+        var app = {
+            row:20,
+            qp:document.getElementById("qp"),
+            box:null,
+            actions:[],
+            floorList:[],
+            pathList:{},
+            openArr:[],
+            flag:true,
+            x:4,
+            y:4,
+            color:"gray",
+            ipt:document.getElementById("ipt"),
+            btn:document.getElementById("btn"),
+            num:document.getElementById("num"),
+            numP:num.getElementsByTagName("p")[0],
+            BASE_SIZE:25,
+            createBox:function(){
+                var div = document.createElement("div");
+                div.id = "box";
+                div.style.left = this.BASE_SIZE * this.x + "px";
+                div.style.top = this.BASE_SIZE * this.y + "px";
+                qp.appendChild(div);
+                this.box = new Box(4,4,0,div);
+            },
+            createFloor:function(){
+                this.floorList = [];
+                for(var i = 0;i < this.row;i++){
+                    var list = [];
+                    for(var j = 0;j < this.row;j++){
+                        var dl = document.createElement("dl");
+                        this.qp.appendChild(dl);
+                        list[j] = {dom:dl,flag:true,x:j,y:i,isWall:false,isVisit:false,color:"#fff",isOpen:false};
+                    }  
+                    this.floorList[i] = list;
+                }
+            },
+            runAction:function(action,color){
+                switch(action){
+                    case "GO":
+                        this.box.move(this.row);
+                        break;
+                    case "TUN LEF":
+                        this.box.turnLeft();
+                        break;
+                    case "TUN RIG":
+                        this.box.turnRight();
+                        break;
+                    case "TUN BAC":
+                        this.box.turnBack();
+                        break;
+                    case "TRA LEF":
+                        this.box.move(this.row,3);
+                        break;
+                    case "TRA TOP":
+                        this.box.move(this.row,0);
+                        break;
+                    case "TRA RIG":
+                        this.box.move(this.row,1);
+                        break;
+                    case "TRA BOT":
+                        this.box.move(this.row,2);
+                        break;
+                    case "MOV LEF":
+                        this.box.turn(-1);
+                        this.box.move(this.row,3);
+                        break;
+                    case "MOV TOP":
+                        this.box.turn(0);
+                        this.box.move(this.row,0);
+                        break;
+                    case "MOV RIG":
+                        this.box.turn(1);
+                        this.box.move(this.row,1);
+                        break;
+                    case "MOV BOT":
+                        this.box.turn(2);
+                        this.box.move(this.row,2);
+                        break;
+                    case "BUILD":
+                        var cell = this.getFrontCell();
+                        this.buildWall(cell.x,cell.y)
+                        break;
+                    case "BRU":
+                        var cell = this.getFrontCell();
+                        this.bruColor(cell.x,cell.y,color)
+                        break;
+                }
+                this.x = this.box.x;
+                this.y = this.box.y;
+            },
+            buildWall:function(x,y){
+                if(x >= 0 && y >= 0 && x < this.row && y < this.row){
+                    if(this.floorList[y][x].isWall == true){
+                        console.log("(x:" + x + ",y:" + y + ")已经存在墙");
+                        this.floorList[y][x].dom.style.backgroundColor = "gray";
+                    }else{
+                        this.floorList[y][x].isWall = true;
+                        this.floorList[y][x].isVisit = true;
+                        this.floorList[y][x].color = "gray";
+                        this.floorList[y][x].dom.style.backgroundColor = "gray";
+                    }
+                }
+            },
+            bruColor:function(x,y,color){
+                if(x >= 0 && y >= 0 && x < this.row && y < this.row && this.floorList[y][x].isWall){
+                    this.floorList[y][x].color = color;
+                    this.floorList[y][x].dom.style.backgroundColor = color;
+                }
+            },
+            getFrontCell:function(){
+                switch(this.box.direction % 4 >= 0 ? this.box.direction % 4 : (this.box.direction % 4 + 4)){
+                    case 0:
+                        return {x:this.box.x,y:this.box.y - 1};
+                    case 1:
+                        return {x:this.box.x + 1,y:this.box.y};
+                    case 2:
+                        return {x:this.box.x,y:this.box.y + 1};
+                    case 3:
+                        return {x:this.box.x - 1,y:this.box.y};
+                }
+            },
+            moveTo:function(list,i){
+                var x = list[i].x - this.box.x
+                var y = list[i].y - this.box.y;
+                if(x > 0){
+                    this.box.turn(1)
+                }
+                if(x < 0){
+                    this.box.turn(-1)
+                }
+                if(y > 0){
+                    this.box.turn(2)
+                }
+                if(y < 0){
+                    this.box.turn(0)
+                }
+                this.box.moveTo(list[i].x,list[i].y)
+                i--;
+                if(i >= 0){
+                    var self = this;
+                    setTimeout(function(){
+                        self.moveTo(list,i)
+                    },700);
+                }
+            },
+            AStart:function(x,y,x1,y1,x0,y0){
+                this.floorList[y][x].isVisit = true;
+                if(x > 0 && !this.floorList[y][x - 1].isVisit){
+                    if(!this.floorList[y][x - 1].isOpen){
+                        this.floorList[y][x - 1].H = Math.abs(x - 1 - x1) + Math.abs(y - y1);
+                        this.floorList[y][x - 1].G = Math.abs(x - 1 - x0) + Math.abs(y - y0);
+                        this.floorList[y][x - 1].F = this.floorList[y][x - 1].H + this.floorList[y][x - 1].G;
+                        this.floorList[y][x - 1].parent = this.floorList[y][x];
+                        this.floorList[y][x - 1].isOpen = true;
+                        this.openArr.push(this.floorList[y][x - 1]);
+                    }else if(Math.abs(x - 1 - x0) + Math.abs(y - y0) < this.floorList[y][x - 1].G){
+                        this.floorList[y][x - 1].G = Math.abs(x - 1 - x0) + Math.abs(y - y0);
+                        this.floorList[y][x - 1].F = this.floorList[y][x - 1].H + this.floorList[y][x - 1].G;
+                        this.floorList[y][x - 1].parent = this.floorList[y][x];
+                    }
+                }
+                if(x < this.row - 1 && !this.floorList[y][x + 1].isVisit){
+                    if(!this.floorList[y][x + 1].isOpen){
+                        this.floorList[y][x + 1].H = Math.abs(x + 1 - x1) + Math.abs(y - y1);
+                        this.floorList[y][x + 1].G = Math.abs(x + 1 - x0) + Math.abs(y - y0);
+                        this.floorList[y][x + 1].F = this.floorList[y][x + 1].H + this.floorList[y][x + 1].G;
+                        this.floorList[y][x + 1].parent = this.floorList[y][x];
+                        this.floorList[y][x + 1].isOpen = true;
+                        this.openArr.push(this.floorList[y][x + 1]);
+                    }else if(Math.abs(x + 1 - x0) + Math.abs(y - y0) < this.floorList[y][x + 1].G){
+                        this.floorList[y][x + 1].G = Math.abs(x + 1 - x0) + Math.abs(y - y0);
+                        this.floorList[y][x + 1].F = this.floorList[y][x + 1].H + this.floorList[y][x + 1].G;
+                        this.floorList[y][x + 1].parent = this.floorList[y][x];
+                    }
+                }
+                if(y > 0 && !this.floorList[y - 1][x].isVisit){
+                    if(!this.floorList[y - 1][x].isOpen){
+                        this.floorList[y - 1][x].H = Math.abs(x - x1) + Math.abs(y - 1 - y1);
+                        this.floorList[y - 1][x].G = Math.abs(x - x0) + Math.abs(y - 1 - y0);
+                        this.floorList[y - 1][x].F = this.floorList[y - 1][x].H + this.floorList[y - 1][x].G;
+                        this.floorList[y - 1][x].parent = this.floorList[y][x];
+                        this.floorList[y - 1][x].isOpen = true;
+                        this.openArr.push(this.floorList[y - 1][x]);
+                    }else if(Math.abs(x - x0) + Math.abs(y - 1 - y0) < this.floorList[y - 1][x].G){
+                        this.floorList[y - 1][x].G = Math.abs(x - x0) + Math.abs(y - 1 - y0);
+                        this.floorList[y - 1][x].F = this.floorList[y - 1][x].H + this.floorList[y - 1][x].G;
+                        this.floorList[y - 1][x].parent = this.floorList[y][x];
+                    }
+                }
+                if(y < this.row - 1 && !this.floorList[y + 1][x].isVisit){
+                    if(!this.floorList[y + 1][x].isOpen){
+                        this.floorList[y + 1][x].H = Math.abs(x - x1) + Math.abs(y + 1 - y1);
+                        this.floorList[y + 1][x].G = Math.abs(x - x0) + Math.abs(y + 1 - y0);
+                        this.floorList[y + 1][x].F = this.floorList[y + 1][x].H + this.floorList[y + 1][x].G;
+                        this.floorList[y + 1][x].parent = this.floorList[y][x];
+                        this.floorList[y + 1][x].isOpen = true;
+                        this.openArr.push(this.floorList[y + 1][x]);
+                    }else if(Math.abs(x - x0) + Math.abs(y + 1 - y0) < this.floorList[y + 1][x].G){
+                        this.floorList[y + 1][x].G = Math.abs(x - x0) + Math.abs(y + 1 - y0);
+                        this.floorList[y + 1][x].F = this.floorList[y + 1][x].H + this.floorList[y + 1][x].G;
+                        this.floorList[y + 1][x].parent = this.floorList[y][x];
+                    }
+                }
+                if(this.openArr.length > 0){
+                    var min = this.openArr[0].F;
+                    var mini = 0;
+                    for(var i = 1,len = this.openArr.length;i < len;i++){
+                        if(this.openArr[i].F < min){
+                            min = this.openArr[i].F;
+                            mini = i;
+                        }
+                    }
+                    this.openArr[mini].isVisit = true;
+                    x = this.openArr[mini].x;
+                    y = this.openArr[mini].y;
+                    this.openArr.splice(mini,1);
+                }else{
+                    var p = this.floorList[y][x].parent;
+                    if(p){
+                        x = p.x;
+                        y = p.y;
+                    }else{
+                        alert("无路可走");
+                        return;
+                    }
+                }
+                if(x === x1 && y === y1){
+                    var c = this.floorList[y][x];
+                        this.x = x;
+                        this.y = y;
+                        this.pathList = [this.floorList[y][x]];
+                        while(c.parent){
+                            c = c.parent;
+                            this.pathList.push(c);
+                        }
+                        for(var i = 0;i < this.row;i++){
+                            for(var j = 0;j < this.row;j++){
+                                this.floorList[i][j].isVisit = this.floorList[i][j].isWall;
+                                this.floorList[i][j].isOpen = this.floorList[i][j].isWall;
+                                this.floorList[i][j].parent = null;
+                            }  
+                        }
+                }else{
+                    this.AStart(x,y,x1,y1,x0,y0);
+                }
+            },
+            _iptInput:function(){
+                var act = app.ipt.value.split("\n");
+                var str = "";
+                for(var i = 0,len = act.length;i < len;i++){
+                    if(act[i] !== "" && !/^((LOOP|LOOPEND|BUILD|GO|TUN (LEF|RIG|BAC)|(MOV|TRA) (LEF|RIG|TOP|BOT))(\s{1}\d*)?)|MOVTO \d* \d*|BRU \#[0-9a-f]{6}$/.test(act[i])){
+                        str += "<span>" + (i + 1) + "</span>" + " ";
+                    }else{
+                        str += i + 1 + " ";
+                    }
+                }
+                app.numP.innerHTML = str;
+            },
+            dealAction:function(act,i){
+                if(i >= act.length){
+                    this.flag = true
+                }else if(/^MOVTO \d* \d*$/.test(act[i])){
+                    var actions = act[i].split(" ");
+                    this.openArr = [];
+                    this.AStart(this.x,this.y,+actions[1],+actions[2],this.x,this.y);
+                    if(this.pathList.length > 0){
+                        this.moveTo(this.pathList,this.pathList.length - 1);
+                    }
+                    var self = this;
+                    setTimeout(function(){
+                        self.dealAction(act,++i);
+                    },this.pathList.length * 700)
+                    this.pathList = [];
+                }else if(/^BRU #[0-9a-f]{6}$/.test(act[i])){
+                    var actions = act[i].split(" ");
+                    this.runAction("BRU",actions[1]);
+                    var self = this;
+                    setTimeout(function(){
+                        self.dealAction(act,++i);
+                    },700)
+                }else{
+                    var n = act[i].replace(/[^0-9]/g,"");
+                    var action = n === "" ? act[i] : act[i].replace(/\d/g,"").substr(0,act[i].length - n.length - 1);
+                    if(n === "" || +n < 1){
+                        n = 1;
+                    }else{
+                        n = +n;
+                    }
+                    if(/^BUILD|GO|TUN (LEF|RIG|BAC)|(MOV|TRA) (LEF|RIG|TOP|BOT)$/.test(action)){
+                        var self = this;
+                        for(var j = 0;j < n;j++){
+                            (function(j,action){
+                                setTimeout(function(){
+                                    self.runAction(action);
+                                },j * 700);
+                            }(j,action));
+                        }
+                        setTimeout(function(){
+                            self.dealAction(act,++i);
+                        },700 * n)
+                    }else{
+                        this.dealAction(act,++i);
+                    }
+                }
+            },
+            _btnClick:function(){
+                if(app.flag){
+                    app.flag = false;
+                    var act = app.ipt.value.split("\n");
+                    app.dealAction(act,0);
+                }
+            },
+            createAction:function(){
+                var flag = true;
+                this.ipt.onscroll = function(){
+                    num.scrollTop = ipt.scrollTop;
+                }
+                this.ipt.addEventListener("input",this._iptInput);
+                this.btn.onclick = this._btnClick;
+            },
+            init:function(){
+                this.createFloor();
+                this.createBox();
+                this.createAction();
+            }
+        }
+        app.init();
+    </script>
+</body>
+</html>
