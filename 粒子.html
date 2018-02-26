@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+    <style>
+        #canvas1,#canvas2{
+            position: absolute;
+            left: -1000%;
+            top: -1000%;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="ipt">
+    <button id="btn">显示</button>
+    <br/>
+    <br/>
+    <canvas id="canvas" width="800" height="800"></canvas>
+    <canvas id="canvas1" width="800" height="800"></canvas>
+    <canvas id="canvas2" width="800" height="800"></canvas>
+    <script>
+        var canvas = document.getElementById("canvas");
+        var canvas1 = document.getElementById("canvas1");
+        var canvas2 = document.getElementById("canvas2");
+        var ctx = canvas.getContext("2d");
+        var ctx1 = canvas1.getContext("2d");
+        var ctx2 = canvas2.getContext("2d");
+        var ipt = document.getElementById("ipt");
+        var btn = document.getElementById("btn");
+        ctx.fillStyle = "#000";
+        ctx1.font = "256px 微软雅黑";
+        ctx1.textAlign = "center";
+        var BASE_SIZE = 10;
+        var BASE_WIDTH = 800;
+        var text = "马杰";
+        var list = [];
+        var animateSto;
+        var animate = function(n){
+            n++;
+            ctx.clearRect(0,0,BASE_WIDTH,BASE_WIDTH);
+            ctx2.clearRect(0,0,BASE_WIDTH,BASE_WIDTH);
+            for(var i = 0,len = list.length;i < len;i++){
+                if(n < 60){
+                    list[i].x += list[i].x0;
+                    list[i].y += list[i].y0;
+                }else{
+                    list[i].x = list[i].x1;
+                    list[i].y = list[i].y1;
+                }
+                ctx.beginPath();
+                ctx.arc(list[i].x,list[i].y,BASE_SIZE / 2,0,Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.drawImage(canvas2,0,0);
+            if(n < 60){
+                animateSto = setTimeout(function(){
+                    animate(n);
+                },1000 / 60);
+            }
+        }
+        var show = function(){
+            list = [];
+            ctx1.clearRect(0,0,BASE_WIDTH,BASE_WIDTH);
+            ctx1.fillText(text,BASE_WIDTH / 2,BASE_WIDTH / 2 + 64);
+            var ctxData = ctx1.getImageData(0,0,BASE_WIDTH,BASE_WIDTH).data;
+            for(var i = 0,len = ctxData.length,i1 = 0,i2 = 0;i < len;i += 4 * BASE_SIZE,i2++){
+                var sum = 0;
+                for(var j = 0;j < BASE_SIZE;j++){
+                    for(var k = 0;k < BASE_SIZE;k++){
+                        sum += ctxData[k * BASE_WIDTH * 4 + i + j * (BASE_SIZE - 1) + 3];
+                    }
+                }
+                sum /= (BASE_SIZE * BASE_SIZE);
+                if(sum > 24){
+                    var x = Math.floor(Math.random() * BASE_WIDTH * 3) - 800;
+                    var y = Math.floor(Math.random() * BASE_WIDTH * 3) - 800;
+                    var x1 = i2 * BASE_SIZE + BASE_SIZE / 2;
+                    var y1 = i1 * BASE_SIZE + BASE_SIZE / 2;
+                    var x0 = (x1 - x) / 60;
+                    var y0 = (y1 - y) / 60;
+                    list.push({x1:x1,y1:y1,x:x,y:y,x0:x0,y0:y0});
+                }
+                if(i % (BASE_WIDTH * 4 * BASE_SIZE) === (BASE_WIDTH * 4 - 4 * BASE_SIZE)){
+                    i += (BASE_WIDTH * 4 * (BASE_SIZE - 1));
+                    i1++;
+                    i2 = 0;
+                }
+            }
+            animate(0);
+        }
+        show();
+        btn.addEventListener("click",function() {
+            text = ipt.value || "马杰";
+            show();
+        })
+        
+    </script>
+</body>
+</html>
