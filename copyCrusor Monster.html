@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>cursor-monster</title>
+    <style>
+        /*Global------------------------------------------------*/
+    /*谷歌字体*/
+    @import url(http://fonts.googleapis.com/css?family=Slackey);
+    html{
+        font:62.5%/1 "Droid Sans", "Lucida Sans Unicode", "Lucida Grande", Verdana, Arial, Helvetica, sans-serif;
+        background: #d9e4f1 url('http://www.tofei.cc/comments/25_cursor-monster/simurai/bg.jpg') no-repeat center center;
+    }
+    html,body{
+        height: 100%;
+    }
+    body{
+        margin: 0;
+        text-align: center;
+    }
+    @media only screen and(max-width: 480px){
+        body{
+            -webkit-text-size-adjust: 100%;
+            /*关闭字体放大缩小的功能,Phone 和 Android 的浏览
+            器纵向 (Portrate mode) 和橫向 (Landscape mode) 模式皆有自动调整字体大小
+            的功能。控制它的就是 CSS 中的 -webkit-text-size-adjust。支持性不好
+            ，现在已经用<meta name="viewport" content="width=device-width,initial-scale=1"/>解决*/
+        }
+    }
+
+    /*Header------------------------------------------------*/
+
+    header{
+        padding-top: 80px;
+    }
+    header h1{
+        display: inline-block;
+        text-transform: uppercase;/*定义文字大小写*/
+        text-shadow: rgba(255, 255, 255, 0.6) 0 1px 0;
+        font: 3.5em/1.3em "slackey","Droid Sans", sans-serif;/*3.5em/1.3em字体大小/行高*/
+    }
+    header>h1>span{
+        display: block;
+        font-size: 1.25em;
+    }
+
+    /*#wrapper--------------------------------------------------*/
+
+    #wrapper{
+        z-index: 11;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 200px;
+        height: 240px;
+        margin: -120px 0 0 -100px;
+    }
+    #wrapper:after{/*shadow*/
+        content: "";
+        z-index: -1;
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        border-radius: 50px;
+        top: -50px;
+        left: 100px;
+
+        -webkit-box-shadow: hsla(210,0%,0%,.8) 0 200px 100px 1px;
+        box-shadow: hsla(210,0%,0%,.8) 0 200px 100px 1px;
+
+    }
+
+    /*#monster--------------------------------------------------*/
+
+    #monster{
+        width:100%;
+        height: 100%;
+        position: relative;
+
+        border-radius: 100px 100px 50px 50px/160px 160px 80px 80px;
+        /*水平半径/垂直半径http://www.cnblogs.com/mofish/p/3832136.html*/
+
+        background: #5e97ed;
+        background-image: -webkit-gradient(radial, 50% 8%, 0, 50% 40%, 120, 
+                            color-stop( 0, rgba(255,255,255,.8) ),
+                            color-stop(.8, rgba(255,255,255, 0) ),
+                            color-stop(.8, rgba(0,0,0, 0) ), 
+                            color-stop( 1, rgba(0,0,0,.33) )), 
+                            url(http://www.tofei.cc/comments/25_cursor-monster/simurai/noise.png);
+        background-image:   radial-gradient(circle farthest-corner at 50% 14%, rgba(255,255,255,.8) 0%, rgba(255,255,255, 0) 60%, rgba(0,0,0, 0) 60%, rgba(0,0,0,.33) 100% ),url(http://www.tofei.cc/comments/25_cursor-monster/simurai/noise.png);
+
+        -webkit-box-shadow: inset rgba(0, 0, 0, .5) 0 -10px 50px;
+        box-shadow: inset rgba(0, 0, 0, .5) 0 -10px 50px;
+
+        -webkit-transform-origin: bottom;
+        -moz-transform-origin: bottom;
+        -ms-transform-origin: bottom;
+        -o-transform-origin: bottom;
+        transform-origin: bottom;
+
+        -webkit-box-reflect: below -3px -webkit-gradient(radial, 50% 100%, 0, 50% 100%, 100, 
+                                        color-stop(0.6, rgba(0,0,0,.2) ), to( transparent ));
+        -webkit-transform: scale3d(1,1,1);
+        -ms-transform: scale3d(1,1,1);
+        -o-transform: scale3d(1,1,1);
+        transform: scale3d(1,1,1);
+
+        -webkit-transition: background-color .5s ease-out;
+        -o-transition: background-color .5s ease-out;
+        transition: background-color .5s ease-out;
+    }
+
+    /*Eyes---------------------------------------------------*/
+
+    .eye{
+        position: relative;
+        width: 60px;
+        height: 40px;
+        margin: 0 auto 5px auto;
+
+        top: 15%;
+
+        border-radius: 60px/40px;
+
+        background-color: #eee;
+
+        -webkit-box-shadow: inset rgba(0,0,0,.4) 0 -1px 3px 1px,inset rgba(0,0,0,.5) 0 -5px 20px, rgba(0,0,0,.5) 0 -5px 10px ,rgba(255,255,255,.5) 0 5px 10px;
+        box-shadow: inset rgba(0,0,0,.4) 0 -1px 3px 1px,inset rgba(0,0,0,.5) 0 -5px 20px, rgba(0,0,0,.5) 0 -5px 10px ,rgba(255,255,255,.5) 0 5px 10px;
+
+        background-repeat: no-repeat;
+
+        background-image: -webkit-gradient(radial,50% 50%,0,50% 50%,40,
+                            color-stop(.12,rgba(0,0,0,1)),
+                            color-stop(.22, hsl(190,50%,50%) ),
+                            color-stop(.4, hsl(200,50%,30%) ),
+                            color-stop(.5, rgba(255,255,255,0) )
+                             );
+        background-image:radial-gradient(circle farthest-corner at 50% 50%, rgba(0,0,0,1) 12%, hsl(190,50%,50%) 22%, hsl(200,50%,30%) 40%, rgba(255,255,255,0) 50%);
+    }
+    /*highlight*/
+    .eye:before{
+        content: "";
+        position: absolute;
+        top: 20%;
+        left: 32%;
+        border-radius: 5px;
+        width: 10px;
+        height: 10px;
+        background-color: #fff;
+
+        -webkit-transform: skewX(-10deg);
+        -ms-transform: skewX(-10deg);
+        -o-transform: skewX(-10deg);
+        transform: skewX(-10deg);
+
+    }
+
+    #monster .eye:first-child {
+        -webkit-transform: scale(0.6);
+           -moz-transform: scale(0.6);
+             -o-transform: scale(0.6);
+                transform: scale(0.6);
+    }
+
+    .eye .lid{
+        position: absolute;
+        border-radius: inherit;
+        height: inherit;
+        width: inherit;
+
+        background-color: rgba(94,151,237,0.8);
+
+        -webkit-box-shadow: inset rgba(0,0,0,.2) 0 -1px 3px 1px,inset rgba(0,0,0,.5) 0 -5px 20px ,rgba(0,0,0,.6) 0 1px 2px;
+        box-shadow: inset rgba(0,0,0,.2) 0 -1px 3px 1px,inset rgba(0,0,0,.5) 0 -5px 20px ,rgba(0,0,0,.6) 0 1px 2px;
+
+        background-image: -webkit-gradient(radial ,50% 10%, 0, 50% 30%,40,
+                          color-stop(0,rgba(255,255,255,.8)),
+                          color-stop(.8,rgba(255,255,255,0)),
+                          color-stop(.8,rgba(0,0,0,0)),
+                          color-stop(1,rgba(0,0,0,.33))),
+                          url(http://www.tofei.cc/comments/25_cursor-monster/simurai/noise.png);
+        /*眼皮 遮罩*/
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-position: 0px 0px;
+        -webkit-mask-image:-webkit-gradient(radial, 50% 120%, 20, 50% 120%, 50, 
+                        color-stop(.5, rgba(0,0,0,0)),
+                        color-stop(.6, rgba(0,0,0,1)) 
+                        );
+        -webkit-transform: translate3d(0, 0, 0);/*硬件加速*/
+
+    }
+
+    /*Mouth----------------------------------*/
+    #mouth{
+        position: relative;
+        width: 100px;
+        height: 20px;
+
+        margin: 0 auto;
+        top: 25%;
+        overflow: hidden;
+
+        border-radius: 100px 100px 50px 50px/60px 60px 80px 80px;
+         background-color: #111;
+
+         -webkit-box-shadow: inset rgba(0,0,0,.7) 0 -2px 10px 1px ,rgba(0,0,0,.7) 0 -5px 10px ,rgba(255,255,255,.7) 0 5px 10px;
+         box-shadow: inset rgba(0,0,0,.7) 0 -2px 10px 1px ,rgba(0,0,0,.7) 0 -5px 10px ,rgba(255,255,255,.7) 0 5px 10px;
+
+         /*tongue舌头*/
+         background-repeat: no-repeat;
+         background-position: center 85%;
+         -webkit-background-size: 100px;
+         background-size: 100px;
+
+         background-image: -webkit-gradient(radial,62% 100%,0,62% 100%,50,
+                            color-stop(.3,rgba(255,0,0,1)),
+                            color-stop(.5,rgba(255,0,0,0))),
+                            -webkit-gradient(radial,38% 100%,0,38% 100%,50,
+                            color-stop(.3,rgba(255,0,0,1)),
+                            color-stop(.5,rgba(255,0,0,0)));
+         background-image: radial-gradient(circle farthest-corner at 62% 100%,rgba(255, 0, 0, 1) 22%,rgba(255, 0, 0, 0) 40% ),
+                           radial-gradient(circle farthest-corner at 38% 100%,rgba(255, 0, 0, 1) 22%,rgba(255, 0, 0, 0) 40% )
+    }
+
+    #mouth:before{/*teeth牙齿*/
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 30px;
+        height: 10px;
+        margin: 0 auto;
+        border-radius: 0px 0px 4px 4px;
+
+        background-color: #fff9e4;
+
+        -webkit-background-size: 50%;
+        background-size: 50%;
+
+        background-image: -webkit-gradient(linear,0% 0%,100% 0%,
+                            color-stop(0,rgba(0,0,0,0.4)),
+                            color-stop(.1,rgba(0,0,0,0)),
+                            color-stop(.9,rgba(0,0,0,0)),
+                            color-stop(1,rgba(0,0,0,0.4))
+                          );
+        background-image: linear-gradient(to right, rgba(0,0,0,.4) 0%, rgba(0,0,0,0) 10%, rgba(0,0,0,0) 90%, rgba(0,0,0,.4) 100% );/*background repeat牙缝*/
+
+        -webkit-box-shadow: inset rgba(0,0,0,.8) 0 2px 5px 1px;
+        box-shadow: inset rgba(0,0,0,.8) 0 2px 5px 1px;
+
+        -webkit-transform: perspective(50) translate3d(0, 0, 5px) rotateX(-40deg);/*perspective三维透视*/
+
+    }
+
+    /*states-------------------------*/
+
+    /*sleep*/
+    .sleep .eye{
+        background-position: 0 -40px;
+    }
+    .sleep .lid{
+        -webkit-mask-image:-webkit-gradient(radial, 50% 200%, 20, 50% 200%, 50, 
+                        color-stop(.5, rgba(0,0,0,0)),
+                        color-stop(.6, rgba(0,0,0,1)) 
+                        );
+    }
+    .sleep #mouth{
+        height: 50px;
+        background-position: center bottom;
+        animation: sleep-mouth 2.5s infinite alternate cubic-bezier(.3,0,.5,1);
+    }
+    .sleep #monster{
+        animation: sleep-monster 2.5s infinite alternate cubic-bezier(.3,0,.5,1);
+    }
+    @-webkit-keyframes sleep-mouth{
+        100%{
+            -webkit-transform: scale3d(1.04, 1.05, 1);
+
+        }
+    }
+    @-webkit-keyframes sleep-monster{
+        100%{
+            -webkit-transform: scale3d(1.08, .92, 1);
+
+        }
+    }
+
+    /*hungry*/
+    .hungry #mouth.out{
+        -webkit-transition: height .3s  cubic-bezier(0,0.6,0.2,1);
+        -o-transition: height .3s  cubic-bezier(0,0.6,0.2,1);
+        transition: height .3s  cubic-bezier(0,0.6,0.2,1);
+    }
+    .hungry .lib{/*不支持遮罩的浏览器隐藏眼皮*/
+        -ms-transform: scaleY(0);
+        -o-transform: scaleY(0);
+    }
+
+    .hungry #monster{
+        animation: hungry-monster .3s 1 cubic-bezier(.4,.1,.2,1);
+    }
+    @-webkit-keyframes hungry-monster{
+        20%{
+            -webkit-transform: scale(.8, 1.1);
+        }
+        100%{
+            -webkit-transform: scale(1, 1);
+        }
+    }
+
+    /*eat*/
+    .eat #monster{
+        background-color:#f932a5;
+        animation: eat-swallow-monster .3s 1 cubic-bezier(.4,.1,.2,1),
+                   eat-monster .6s .3s infinite alternate cubic-bezier(.5,.1,.5,.9);
+    }
+
+    .eat .eye:first-child{
+        animation: eat-eye-first .6s infinite cubic-bezier(0,.6,1,.4);
+    }
+    .eat .eye:nth-child(2){
+        animation: eat-eye-second .6s infinite cubic-bezier(0,.6,1,.4);
+    }
+    .eat .lid{
+        display: none;
+    }
+    .eat #mouth{
+        height: 2px;
+        border-radius: 0px 0px 500px 500px/0px 0px 60px 60px;
+        box-shadow: inset rgba(0, 0, 0, .7) 0 -2px 10px 1px,
+                    rgba(0, 0, 0, .7) 0 -2px 10px 2px,
+                    rgba(255, 255, 255,.7) 0 2px 6px 2px;
+        background-position: center 0px;
+        animation: eat-mounth .2s infinite alternate cubic-bezier(.5,.1,.5,.9);
+    }
+    .eat #mouth:before {
+        display: none;
+    }
+    #wrapper.eat {
+        -webkit-transform: scale3d(1.08, 1.08, 1);
+           -moz-transform: scale(1.08, 1.08);
+             -o-transform: scale(1.08, 1.08);
+                transform: scale(1.08, 1.08);
+
+        -webkit-transition: -webkit-transform .1s cubic-bezier(.1, .3, 0, 1);
+           -moz-transition:    -moz-transform .1s cubic-bezier(.1, .3, 0, 1);
+             -o-transition:      -o-transform .1s cubic-bezier(.1, .3, 0, 1);
+                transition:         transform .1s cubic-bezier(.1, .3, 0, 1);
+    }
+    @-webkit-keyframes eat-swallow-monster{
+        20%{
+            -webkit-transform: scale3d(1.2, .9, 1);
+        }100%{
+            -webkit-transform: scale3d(1, 1, 1);
+        }
+
+    }
+    @keyframes eat-swallow-monster{
+        20%{
+            transform: scale3d(1.2, .9, 1);
+        }100%{
+            transform: scale3d(1, 1, 1);
+        }
+    }
+    @-webkit-keyframes eat-monster{
+        100%{
+            -webkit-transform: scale3d(1.08, .92, 1);
+        }
+
+    }
+    @keyframes eat-monster{
+        100%{
+            transform: scale3d(1.08, .92, 1);
+        }
+
+    }
+    @-webkit-keyframes eat-eye-first{
+        0%{
+            background-position: 0 -60px;
+            -webkit-transform: scale3d(.6, .6, 1) translate3d(0, -5px, 0) ;
+        }
+        100%{
+            background-position: 0 60px;
+            -webkit-transform: scale3d(.8, .8, 1) translate3d(0, 5px, 0) ;
+        }
+    }
+    @keyframes eat-eye-first{
+        0%{
+            background-position: 0 -60px;
+            transform: scale3d(.6, .6, 1) translate3d(0, -5px, 0) ;
+        }
+        100%{
+            background-position: 0 60px;
+            transform: scale3d(.8, .8, 1) translate3d(0, 5px, 0) ;
+        }
+    }
+    @-webkit-keyframes eat-eye-second{
+        0%{
+            background-position: 0 60px;
+            -webkit-transform: scale3d(.6, .6, 1) translate3d(0, 0, 0) ;
+        }
+        100%{
+            background-position: 0 -60px;
+            -webkit-transform: scale3d(.8, .8, 1) translate3d(0, 0, 0) ;
+        }
+
+    }
+    @keyframes eat-eye-second{
+        0%{
+            background-position: 0 60px;
+            transform: scale3d(.6, .6, 1) translate3d(0, 0, 0) ;
+        }
+        100%{
+            background-position: 0 -60px;
+            transform: scale3d(.8, .8, 1) translate3d(0, 0, 0) ;
+        }
+
+    }
+    @-webkit-keyframes eat-mounth{
+        0%{
+            -webkit-transform: translateY(10px) ;
+        }
+        100%{
+            -webkit-transform: translateY(15px) scale3d(.9, 1.2, 1) ;
+        }
+
+    }
+    @keyframes eat-mounth{
+        0%{
+            transform: translateY(10px) ;
+        }
+        100%{
+            transform: translateY(15px) scale3d(.9, 1.2, 1) ;
+        }
+
+    }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>can haz ur <span>Cursor?</span></h1>
+    </header>
+    <div id="wrapper" class="sleep">
+        <div id="monster">
+            <div class="eye">
+                <div class="lid"></div>
+            </div>
+            <div class="eye">
+                <div class="lid"></div>
+            </div>
+            <div id="mouth"></div>
+        </div>
+    </div>
+    <audio id="audio-ohh" preload="preload">
+        <source src="http://www.tofei.cc/comments/25_cursor-monster/simurai/audio/ohh.ogg"/>
+    </audio>
+    <audio id="audio-snap" preload="preload">
+        <source src="http://www.tofei.cc/comments/25_cursor-monster/simurai/audio/snap.ogg"/>
+    </audio>
+    <script>      
+        var status="sleep",
+            mouthOpen=false,
+            count=0;
+        var eye=document.querySelectorAll(".eye"),
+            lid=document.querySelectorAll(".lid"),
+            mouth=document.getElementById("mouth"),
+            wrapper=document.getElementById("wrapper");
+        function distance(x1,y1,x2,y2){
+            return Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2));
+        }
+        function playAudio(id){
+            try{
+                var audio=document.getElementById(id);
+                audio.currentTime=0;
+                audio.play();
+
+            }catch(e){
+                console.log(e);
+
+            }
+        }
+        document.onmousemove=cursorMove;
+        document.onmouseleave=cursorLeave;
+        function cursorMove(ev){
+            var ev=ev||window.event;
+
+            //中心的位置
+            var docW=window.innerWidth,
+                docH=window.innerHeight;
+            var diffX = (docW/2) - ev.clientX;
+            var diffY = (docH/2)-100 - ev.clientY;
+            var distM = distance(docW/2,(docH/2)+60, ev.clientX, ev.clientY);
+            if(status == "sleep"){
+                if(distM<200){
+                    wrapper.className="hungry";
+                    status = "hungry";
+                    playAudio("audio-ohh");
+
+                }
+            }else if(status=="hungry"){
+                //eye
+                var eye_background = Math.floor( diffX /-30 ) +'px '+ Math.floor( diffY /-30 ) +'px';       
+                var eye_translate = Math.floor(diffX/-50 )+'px, '+ Math.floor(diffY/-100 )+'px';    
+                eye[1].setAttribute("style","background-position:"+eye_background+"; -webkit-transform:translate3d("+eye_translate+",0); -moz-transform:translate("+eye_translate+");");
+                eye[0].setAttribute("style","background-position:"+eye_background+"; -webkit-transform:translate3d("+eye_translate+",0) scale(.6); -moz-transform:translate("+eye_translate+") scale(.6);");
+
+                //eye lid
+                var eye_lid_p = 100+Math.floor( diffY /-20 );
+                var eye_lid = '-webkit-gradient(radial, 50% '+ eye_lid_p +'%, 20, 50% '+ eye_lid_p +'%, 50, color-stop(.5, rgba(0,0,0,0)), color-stop(.6, rgba(0,0,0,1)))';
+                lid[0].setAttribute("style", "-webkit-mask-image:"+eye_lid+";" );
+                lid[1].setAttribute("style", "-webkit-mask-image:"+eye_lid+";" );
+
+                //mouth
+                if (distM > 200) {
+                    if(mouthOpen) {
+                        mouthOpen = false;
+                        mouth.className="out";
+                        var mouth_height = "20px";
+                        count = 0;
+                    }
+
+                }else{
+                    var mouth_height = 80 - Math.floor(distM /3)+'px';
+                    if(!mouthOpen) {
+                        mouthOpen = true;
+                        mouth.className="";
+                    }
+
+                }
+                var mouth_transform = Math.floor(diffX/-80 )+'px, '+ Math.floor(diffY/-80 )+'px';
+                mouth.setAttribute("style","height:"+mouth_height+";-webkit-transform:translate3d("+mouth_transform+", 0);-moz-transform:translate("+mouth_transform+");");
+                if(distM<30&& status != "eat"){
+                    mouth.removeAttribute("style");
+                    document.body.setAttribute("style","cursor:none");//隐藏鼠标
+                    wrapper.className="eat";
+                    status = "eat";
+                    playAudio("audio-snap");
+                }
+
+            }else if(status == "eat"){
+
+                if(distM>120){
+                    wrapper.className="hungry";
+                    status = "hungry";
+                    playAudio("audio-ohh");
+                    document.body.removeAttribute("style");
+                }
+            }
+        }
+        function cursorLeave(){
+            wrapper.className="sleep";
+            status = "sleep";
+            eye[0].removeAttribute("style");
+            eye[1].removeAttribute("style");
+            lid[0].removeAttribute("style");
+            lid[1].removeAttribute("style");
+            mouth.removeAttribute("style");
+        }
+    </script>
+</body>
+</html>

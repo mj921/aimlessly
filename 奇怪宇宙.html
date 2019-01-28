@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <style>
+        body,canvas{
+            padding: 0;
+            margin: 0;
+        }
+        #bg{
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+        }
+        #canvas{
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="bg">
+        <canvas id="canvas"></canvas>
+    </div>
+    <script>
+        var bg = document.getElementById("bg");
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var bgWidth = bg.offsetWidth;
+        var bgHeight = bg.offsetHeight;
+        canvas.width = bgWidth;
+        canvas.height = bgHeight;
+        window.addEventListener("resize", function(){
+            bgWidth = bg.offsetWidth;
+            bgHeight = bg.offsetHeight;
+            canvas.width = bgWidth;
+            canvas.height = bgHeight;
+        })
+        var x, y;
+        var createStarFlag = false;
+        var starList = [];
+        var galaxyCenter = [];
+        var sumCenter;
+        var galaxyList = []
+        var createStar = function(){
+            if (createStarFlag) {
+                var star = new Star(x, y);
+                starList.push(star);
+                sumCenter.x += x;
+                sumCenter.y += y;
+                galaxyCenter = {
+                    x: Math.floor(sumCenter.x / starList.length),
+                    y: Math.floor(sumCenter.y / starList.length)
+                };
+                setTimeout(createStar, 100);
+            }
+        }
+        var canvasMousemove = function(e){
+            x = e.clientX;
+            y = e.clientY;
+        }
+        var canvasMouseup = function(e){
+            createStarFlag = false;
+            starList.forEach(function(star){
+                star.setCenter(galaxyCenter);
+            })
+            galaxyList.push(starList);
+            starList = [];
+            canvas.removeEventListener("mousemove", canvasMousemove);
+            canvas.removeEventListener("mouseup", canvasMouseup);
+        }
+        canvas.addEventListener("mousedown", function(e){
+            x = e.clientX;
+            y = e.clientY;
+            createStarFlag = true;
+            starList = [];
+            sumCenter = {x: 0, y:0}
+            createStar()
+            canvas.addEventListener("mousemove", canvasMousemove);
+            canvas.addEventListener("mouseup", canvasMouseup);
+        })
+
+        var update = function(){
+            ctx.clearRect(0, 0, bgWidth, bgHeight);
+            galaxyList.forEach(function(galaxy){
+                galaxy.forEach(function(star){
+                    star.move();
+                    star.draw(ctx);
+                })
+            })
+            starList.forEach(function(star){
+                star.draw(ctx);
+                ctx.strokeStyle = "#fff";
+                ctx.beginPath();
+                ctx.moveTo(star.x, star.y);
+                ctx.lineTo(galaxyCenter.x, galaxyCenter.y);
+                ctx.stroke();
+                ctx.closePath();
+            })
+            setTimeout(update, 16);
+        }
+        update();
+
+
+        var Star = function(x, y){
+            this.v = 1;
+            this.x = x;
+            this.y = y;
+            this.shadowBlur = Math.random() > 0.7 ? 20 : 0;
+            this.shadowColor = "#" + Math.random().toString(16).substr(2, 6);
+        }
+        Star.prototype.draw = function(ctx){
+            ctx.fillStyle = "#fff";
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+            // ctx.shadowBlur = this.shadowBlur;
+            // ctx.shadowColor = this.shadowColor;
+            ctx.fill();
+            ctx.closePath();
+        }
+        Star.prototype.move = function(){
+            var h = Math.atan(this.y / this.x) + this.v / 180 * Math.PI / 4;
+            var x1 = this.x - this.center.x;
+            var y1 = this.y - this.center.y;
+            this.x = Math.cos(h) * Math.pow(x1 * x1 + y1 * y1, 0.5);
+            this.y = Math.sin(h) * Math.pow(x1 * x1 + y1 * y1, 0.5);
+        }
+        Star.prototype.setCenter = function(center){
+            this.center = center;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+    <style>
+        canvas{
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        var mainCanvas = document.createElement("canvas");
+        var chessboardCanvas = document.createElement("canvas");
+        var pieceCanvas = document.createElement("canvas");
+        var mainCtx = mainCanvas.getContext("2d");
+        var chessboardCtx = chessboardCanvas.getContext("2d");
+        var pieceCtx = pieceCanvas.getContext("2d");
+
+        var WIDTH = 400;
+        var HEIGHT = 400;
+        var CELL_SIZE = 50;
+        var OFFER_LEFT = 20;
+        var OFFER_TOP = 20;
+        var PIECE_SIZE = 20;
+        var TIP_SIZE = 3;
+        var currPiece = 1;
+
+        mainCanvas.width = WIDTH + OFFER_LEFT * 2;
+        mainCanvas.height = HEIGHT + OFFER_TOP * 2;
+        mainCanvas.style.left = "50%";
+        mainCanvas.style.top = "20px";
+        mainCanvas.style.marginLeft = -HEIGHT / 2 + "px";
+        mainCanvas.style.backgroundColor = "#EEE87F";
+        chessboardCanvas.width = WIDTH + OFFER_LEFT * 2;
+        chessboardCanvas.height = HEIGHT + OFFER_TOP * 2;
+        chessboardCanvas.style.left = "-100%";
+        pieceCanvas.width = WIDTH + OFFER_LEFT * 2;
+        pieceCanvas.height = HEIGHT + OFFER_TOP * 2;
+        pieceCanvas.style.left = "-100%";
+        document.body.appendChild(mainCanvas);
+        document.body.appendChild(chessboardCanvas);
+        document.body.appendChild(pieceCanvas);
+
+        var chessboardList = [];
+
+        function createChessboard () {
+            for (var i = 0; i < 9; i++) {
+                chessboardCtx.beginPath();
+                chessboardCtx.moveTo(0 + OFFER_LEFT, i * CELL_SIZE + OFFER_TOP);
+                chessboardCtx.lineTo(WIDTH + OFFER_LEFT, i * CELL_SIZE + OFFER_TOP);
+                chessboardCtx.stroke();
+            }
+            for (var i = 0; i < 9; i++) {
+                chessboardCtx.beginPath();
+                chessboardCtx.moveTo(i * CELL_SIZE + OFFER_LEFT, 0 + OFFER_TOP);
+                chessboardCtx.lineTo(i * CELL_SIZE + OFFER_LEFT, WIDTH + OFFER_TOP);
+                chessboardCtx.stroke();
+            }
+        }
+        createChessboard();
+        function createTipCell () {
+            for (var i = 0; i < 8; i++) {
+                var flag = 0;
+                for (var j = 0; j < 8; j++) {
+                    if (flag === 2) {
+                        if (chessboardList[i][j] === 0) {
+                            chessboardList[i][j] = 3;
+                            flag = 0;
+                        } else if (chessboardList[i][j] !== 3 - currPiece) {
+                            flag = 0;
+                        }
+                    }
+                    if (flag === 0 && chessboardList[i][j] === currPiece) {
+                        flag = 1;
+                    } else if (flag === 1 && chessboardList[i][j] === 3 - currPiece) {
+                        flag = 2;
+                    }
+                }
+            }
+            for (var i = 0; i < 8; i++) {
+                var flag = 0;
+                for (var j = 7; j >= 0; j--) {
+                    if (flag === 2) {
+                        if (chessboardList[i][j] === 0) {
+                            chessboardList[i][j] = 3;
+                            flag = 0;
+                        } else if (chessboardList[i][j] !== 3 - currPiece) {
+                            flag = 0;
+                        }
+                    }
+                    if (flag === 0 && chessboardList[i][j] === currPiece) {
+                        flag = 1;
+                    } else if (flag === 1 && chessboardList[i][j] === 3 - currPiece) {
+                        flag = 2;
+                    }
+                }
+            }
+            for (var i = 0; i < 8; i++) {
+                var flag = 0;
+                for (var j = 0; j < 8; j++) {
+                    if (flag === 2) {
+                        if (chessboardList[j][i] === 0) {
+                            chessboardList[j][i] = 3;
+                            flag = 0;
+                        } else if (chessboardList[j][i] !== 3 - currPiece) {
+                            flag = 0;
+                        }
+                    }
+                    if (flag === 0 && chessboardList[j][i] === currPiece) {
+                        flag = 1;
+                    } else if (flag === 1 && chessboardList[j][i] === 3 - currPiece) {
+                        flag = 2;
+                    }
+                }
+            }
+            for (var i = 0; i < 8; i++) {
+                var flag = 0;
+                for (var j = 7; j >= 0; j--) {
+                    if (flag === 2) {
+                        if (chessboardList[j][i] === 0) {
+                            chessboardList[j][i] = 3;
+                            flag = 0;
+                        } else if (chessboardList[j][i] !== 3 - currPiece) {
+                            flag = 0;
+                        }
+                    }
+                    if (flag === 0 && chessboardList[j][i] === currPiece) {
+                        flag = 1;
+                    } else if (flag === 1 && chessboardList[j][i] === 3 - currPiece) {
+                        flag = 2;
+                    }
+                }
+            }
+            for (var n = 2; n < 13; n++) {
+                var flag = 0;
+                for (var i = n < 7 ? 0 : n - 7, j = n < 7 ? 7 - n : 0; i < 8 && j < 8; i++, j++) {
+                    if (flag === 2) {
+                        if (chessboardList[i][j] === 0) {
+                            chessboardList[i][j] = 3;
+                            flag = 0;
+                        } else if (chessboardList[i][j] !== 3 - currPiece) {
+                            flag = 0;
+                        }
+                    }
+                    if (flag === 0 && chessboardList[i][j] === currPiece) {
+                        flag = 1;
+                    } else if (flag === 1 && chessboardList[i][j] === 3 - currPiece) {
+                        flag = 2;
+                    }
+                }
+            }
+            for (var n = 2; n < 13; n++) {
+                var flag = 0;
+                for (var i = n < 7 ? 7 - n : 0, j = n < 7 ? 0 : n - 7; i >= 0 && j >= 0; i--, j--) {
+                    if (flag === 2) {
+                        if (chessboardList[i][j] === 0) {
+                            chessboardList[i][j] = 3;
+                            flag = 0;
+                        } else if (chessboardList[i][j] !== 3 - currPiece) {
+                            flag = 0;
+                        }
+                    }
+                    if (flag === 0 && chessboardList[i][j] === currPiece) {
+                        flag = 1;
+                    } else if (flag === 1 && chessboardList[i][j] === 3 - currPiece) {
+                        flag = 2;
+                    }
+                }
+            }
+            for (var n = 2; n < 13; n++) {
+                var flag = 0;
+                for (var i = n < 7 ? 0 : 7 - n, j = n < 7 ? 7 - n : 0; i >= 0 && j >= 0; i--, j--) {
+                    if (flag === 2) {
+                        if (chessboardList[i][j] === 0) {
+                            chessboardList[i][j] = 3;
+                            flag = 0;
+                        } else if (chessboardList[i][j] !== 3 - currPiece) {
+                            flag = 0;
+                        }
+                    }
+                    if (flag === 0 && chessboardList[i][j] === currPiece) {
+                        flag = 1;
+                    } else if (flag === 1 && chessboardList[i][j] === 3 - currPiece) {
+                        flag = 2;
+                    }
+                }
+            }
+        }
+        function init () {
+            for (var i = 0; i < 8; i++) {
+                var arr = [];
+                for (var j = 0; j < 8; j++) {
+                    arr.push(0);
+                }
+                chessboardList.push(arr);
+            }
+            chessboardList[3][3] = 2;
+            chessboardList[3][4] = 1;
+            chessboardList[4][3] = 1;
+            chessboardList[4][4] = 2;
+            createTipCell();
+            draw();
+        }
+
+        function draw () {
+            mainCtx.clearRect(0, 0, WIDTH + OFFER_LEFT * 2, HEIGHT + OFFER_TOP * 2)
+            pieceCtx.clearRect(0, 0, WIDTH + OFFER_LEFT * 2, HEIGHT + OFFER_TOP * 2)
+            mainCtx.drawImage(chessboardCanvas, 0, 0)
+            for (var i = 0; i < 8; i++) {
+                for (var j = 0; j < 8; j++) {
+                    switch (chessboardList[i][j]) {
+                        case 1:
+                            pieceCtx.fillStyle = "#000";
+                            pieceCtx.beginPath();
+                            pieceCtx.arc(i * CELL_SIZE + CELL_SIZE / 2 + OFFER_LEFT, j * CELL_SIZE + CELL_SIZE / 2 + OFFER_TOP, PIECE_SIZE, 0, Math.PI * 2);
+                            pieceCtx.fill();
+                            break;
+                        case 2:
+                            pieceCtx.fillStyle = "#fff";
+                            pieceCtx.beginPath();
+                            pieceCtx.arc(i * CELL_SIZE + CELL_SIZE / 2 + OFFER_LEFT, j * CELL_SIZE + CELL_SIZE / 2 + OFFER_TOP, PIECE_SIZE, 0, Math.PI * 2);
+                            pieceCtx.fill();
+                            break;
+                        case 3:
+                            pieceCtx.fillStyle = "#86B678";
+                            pieceCtx.beginPath();
+                            pieceCtx.arc(i * CELL_SIZE + CELL_SIZE / 2 + OFFER_LEFT, j * CELL_SIZE + CELL_SIZE / 2 + OFFER_TOP, TIP_SIZE, 0, Math.PI * 2);
+                            pieceCtx.fill();
+                            break;
+                    }
+                }
+            }
+            mainCtx.drawImage(pieceCanvas, 0, 0)
+        }
+        function nextRound () {
+            for (var i = 0; i < 8; i++) {
+                for (var j = 0; j < 8; j++) {
+                    if (chessboardList[i][j] === 3) {
+                        chessboardList[i][j] = 0;
+                    }
+                }
+            }
+            createTipCell();
+            draw();
+        }
+        function eat (i, j) {
+            var tempArr = [];
+            var flag = false;
+            for (var k = i + 1; k < 8; k++) {
+                if (chessboardList[k][j] === 3 - currPiece) {
+                    tempArr.push({i: k, j: j});
+                } else {
+                    if (chessboardList[k][j] === currPiece) {
+                        flag = true;
+                    }
+                    break;
+                }
+            }
+            if (flag) {
+                tempArr.forEach(function (item) {
+                    chessboardList[item.i][item.j] = currPiece;
+                })
+            }
+            tempArr = [];
+            flag = false;
+            for (var k = i - 1; k >= 0; k--) {
+                if (chessboardList[k][j] === 3 - currPiece) {
+                    tempArr.push({i: k, j: j});
+                } else {
+                    if (chessboardList[k][j] === currPiece) {
+                        flag = true;
+                    }
+                    break;
+                }
+            }
+            if (flag) {
+                tempArr.forEach(function (item) {
+                    chessboardList[item.i][item.j] = currPiece;
+                })
+            }
+            tempArr = [];
+            flag = false;
+            for (var k = j + 1; k < 8; k++) {
+                if (chessboardList[i][k] === 3 - currPiece) {
+                    tempArr.push({i: i, j: k});
+                } else {
+                    if (chessboardList[i][k] === currPiece) {
+                        flag = true;
+                    }
+                    break;
+                }
+            }
+            if (flag) {
+                tempArr.forEach(function (item) {
+                    chessboardList[item.i][item.j] = currPiece;
+                })
+            }
+            tempArr = [];
+            flag = false;
+            for (var k = j - 1; k >= 0; k--) {
+                if (chessboardList[i][k] === 3 - currPiece) {
+                    tempArr.push({i: i, j: k});
+                } else {
+                    if (chessboardList[i][k] === currPiece) {
+                        flag = true;
+                    }
+                    break;
+                }
+            }
+            if (flag) {
+                tempArr.forEach(function (item) {
+                    chessboardList[item.i][item.j] = currPiece;
+                })
+            }
+        }
+        function mouseClick (e) {
+            var i = Math.floor((e.offsetX - OFFER_TOP) / CELL_SIZE);
+            var j = Math.floor((e.offsetY - OFFER_LEFT) / CELL_SIZE);
+            if (chessboardList[i][j] === 3) {
+                chessboardList[i][j] = currPiece;
+                eat(i, j);
+                currPiece = 3 - currPiece;
+                nextRound();
+            }
+        }
+        mainCanvas.addEventListener("click", mouseClick);
+        init();
+    </script>
+</body>
+</html>

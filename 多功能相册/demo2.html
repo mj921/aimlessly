@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+    <style>
+        #album{
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="album"></div>
+    <script>
+        var Album = function(opt){
+            this._init(opt)
+        }
+        Album.prototype = {
+            constructor: Album,
+            _init: function(opt){
+                this.el = opt.el;
+                this.width = opt.width || 880;
+                this.height = opt.height || 600;
+                this.el.style.width = this.width + "px";
+                this.el.style.height = this.height + "px";
+                this.el.style.overflow = "hidden";
+                this.el.style.position = "relative";
+                this.space = opt.space || 16;
+                this.column = opt.column || 4;
+                this.columnTop = [];
+                this.imgList = opt.imgList;
+                this.imgNum = 0;
+                this.imgAjaxAction = opt.imgAjaxAction;
+                this.imgWidth = (this.width - (this.column + 1) * this.space) / this.column;
+                this.el.addEventListener("scroll", function(e){
+                    console.log(e)
+                })
+                for (var i = 0;i < opt.column;i++) {
+                    this.columnTop.push(0);
+                }
+                this.minCloumn = {n: 0, top: 0};
+                this._initPush()
+            },
+            _initPush: function(){
+                var img = new Image();
+                img.src = imgList[imgNum];
+                img.onload = function(){
+                    while(this.imgNum < this.imgList.length
+                        && (this.minCloumn.top + this.space + img.width / this.imgWidth * img.height) <= this.height){
+                        this.pushToAlbum();
+                    }
+                }
+            },
+            add: function(url) {
+                this.imgList.push(url);
+            },
+            pushToAlbum: function(){
+                var img = document.createElement("img");
+                img.setAttribute("src", this.imgList[this.imgNum]);
+                img.style.position = "absolute";
+                img.style.left = (this.imgWidth + this.space) * this.minCloumn.n + this.space + "px";
+                img.style.top = this.minCloumn.top + this.space + "px";
+                img.style.position = "absolute";
+                this.el.appendChild(img);
+            },
+            getMinColumn: function(){
+                
+            }
+        }
+        var album = document.getElementById("album");
+        var ab = new Album({
+            el: album
+        })
+    </script>
+</body>
+</html>

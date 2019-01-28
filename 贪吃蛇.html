@@ -167,6 +167,9 @@
             this.dy = 0;
             this.length = 1;
         }
+        Snake.dirList = [{
+            
+        }];
         //判断是否吃到食物
         Snake.prototype.isEat = function(food){
             return this.head.x === food.x && this.head.y === food.y;

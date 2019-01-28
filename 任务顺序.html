@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title><!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://cdn.bootcss.com/vue/2.5.17-beta.0/vue.min.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <style>
+        .flex{
+            display: flex;
+        }
+        .flex-item{
+            width: 110px;
+        }
+        .flex-item .el-input{
+            height: 32px;
+        }
+        .flex-item .el-input__inner{
+            height: 32px;
+        }
+        .flex>*:not(:first-child){
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="flex">
+            <el-tag v-for="(tag, i) in tags" closable @close="delTag(i)">{{tag}}</el-tag>
+            <div class="flex-item" v-show="iptVisible">
+                <el-input v-model="iptTag" @keydown.native.enter="newTag" size="medium" width="100px"></el-input>
+            </div>
+            <el-button @click="iptVisible = true" v-show="!iptVisible" size="mini">添加</el-button>
+        </div>
+        <div>
+            <dl v-for="(tag, i) in tags" class="flex">
+                <el-tag>{{tag}}</el-tag>
+                <el-checkbox-group v-model="checkList[i]">
+                    <template v-for="(tag, j) in tags">
+                        <el-checkbox :label="tag" v-if="i !== j"></el-checkbox>
+                    </template>
+                </el-checkbox-group>
+            </dl>
+        </div>
+        <el-button @click="create" type="primary" style="margin-top: 20px;">生成</el-button>
+        {{taskList}}
+    </div>
+    <script>
+        var app = new Vue({
+            el: "#app",
+            data: {
+                tags: [],
+                iptVisible: false,
+                iptTag: "",
+                checkList: [],
+                taskList: ""
+            },
+            methods: {
+                newTag: function(){
+                    if (this.tags.indexOf(this.iptTag) === -1) {
+                        this.tags.push(this.iptTag);
+                        this.checkList.push([])
+                        this.iptVisible = false;
+                        this.iptTag = "";
+                    } else {
+                        this.$message.error("已存在")
+                    }
+                },
+                delTag: function(i){
+                    this.tags.splice(i, 1);
+                    this.checkList.splice(i, 1)
+                },
+                create: function(){
+                    var arr = [];
+                    for (var i = 0;i < this.checkList.length;i++) {
+                        arr.push({tag: this.tags[i], list: [].concat(this.checkList[i])});
+                    }
+                    var result = [];
+                    var n;
+                    while(arr.length > 0) {
+                        console.log(arr.length)
+                        arr.sort(function(a, b){
+                            return a.list .length - b.list.length;
+                        })
+                        if (arr[0].list.length > 0) {
+                            this.$message.error("存在环");
+                            return [];
+                        } else {
+                            result.push(arr[0].tag);
+                            for (var i = 1;i < arr.length;i++){
+                                if ((n = arr[i].list.indexOf(arr[0].tag)) > -1) {
+                                    arr[i].list.splice(n, 1);
+                                }
+                            }
+                            arr.splice(0, 1);
+                        }
+                    }
+                    this.taskList = result.join(" -> ");
+                }
+            }
+        })
+    </script>
+</body>
+</html>

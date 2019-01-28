@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="initial-scale=1.0, minimum-scale=1.0, maximum-scale=2.0, user-scalable=no, width=device-width" name="viewport">
+    <title></title>
+    <style>
+        body,canvas{
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        var world = {
+            width: 750,
+            height: 1334,
+            updateFlag: false,
+            g: 200,
+            elasticity: 0.75,
+            initV: 800,
+            num: 1,
+            init: function(){
+                var p = window.innerWidth / 750;
+                this.p = p > 1 ? 1 : p;
+                this.canvas = document.createElement("canvas");
+                this.canvas.width = this.width * p;
+                this.canvas.height = this.height * p;
+                this.ctx = this.canvas.getContext("2d");
+                document.body.appendChild(this.canvas);
+                this.bgCanvas = document.createElement("canvas");
+                this.bgCanvas.width = this.width * p;
+                this.bgCanvas.height = this.height * p;
+                this.bgCanvas.style.position = "absolute";
+                this.bgCanvas.style.left = "-1000%";
+                this.bgCanvas.style.top = "-1000%";
+                this.bgCtx = this.bgCanvas.getContext("2d");
+                document.body.appendChild(this.bgCanvas);
+                this.updateCanvas = document.createElement("canvas");
+                this.updateCanvas.width = this.width * p;
+                this.updateCanvas.height = this.height * p;
+                this.updateCanvas.style.position = "absolute";
+                this.updateCanvas.style.left = "-1000%";
+                this.updateCanvas.style.top = "-1000%";
+                this.updateCtx = this.updateCanvas.getContext("2d");
+                document.body.appendChild(this.updateCanvas);
+                this.ballList = [];
+                this.blockList = [];
+                this.createBall(375, 100);
+                this.createBlock();
+                this.createBg();
+                this.canvas.addEventListener("mousedown", world.mousedown);
+                this.update()
+            },
+            mousedown: function(e){
+                if (!world.updateFlag) {
+                    var x = e.clientX / world.p;
+                    var y = e.clientY / world.p;
+                    var angle = Math.asin((y - 100) / world.getPointDistance({x: 375, y: 100}, {x: x, y: y})) * 180 / Math.PI;
+                    angle = x - 375 > 0 ? angle : 180 - angle;
+                    var time = 0;
+                    world.ballList.forEach(function(ball){
+                        setTimeout(function(){
+                            ball.status = 1;
+                        }, time)
+                        time += 100;
+                        ball.v = world.initV;
+                        ball.angle = angle;
+                        ball.vx = Math.cos(angle / 180 * Math.PI) * ball.v;
+                        ball.vy = Math.sin(angle / 180 * Math.PI) * ball.v;
+                    })
+                    world.ballList[0].status = 1;
+                    world.updateFlag = true;
+                    world.update()
+                }
+            },
+            createBg: function(){
+                var ctx = this.bgCtx;
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 10 * this.p;
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+                ctx.beginPath();
+                ctx.moveTo(350 * this.p, 100 * this.p);
+                ctx.lineTo(50 * this.p, 50 * this.p);
+                ctx.lineTo(50 * this.p, 1120 * this.p);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(400 * this.p, 100 * this.p);
+                ctx.lineTo(700 * this.p, 50 * this.p);
+                ctx.lineTo(700 * this.p, 1120 * this.p);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(375 * this.p, 20 * this.p, 1230 * this.p, 0, Math.PI * 2);
+                ctx.stroke();
+            },
+            createBall: function(x, y){
+                this.ballList.push(new Ball({x: x, y: y}));
+            },
+            createBlock: function(){
+                var x = 80 + Math.floor(Math.random() * 590);
+                var y = 1015 + Math.floor(Math.random() * 70);
+                var score = world.num + Math.floor(Math.random() * world.num * 5);
+                this.blockList.push(new Block({x: x, y: y, score: score}));
+            },
+            getPointDistance: function(p1, p2){
+                return Math.pow((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y), 0.5);
+            },
+            update: function(){
+                world.ctx.clearRect(0, 0, world.width * world.p, world.height * world.p);
+                world.updateCtx.clearRect(0, 0, world.width * world.p, world.height * world.p);
+                var endBallNum = 0;
+                world.ballList.forEach(function(ball){
+                    ball.move(0.016);
+                    ball.draw(world.updateCtx);
+                    if (ball.status === 1 && ball.y > 1120) {
+                        ball.status = 2;
+                        ball.v = Math.pow(ball.vx * ball.vx + ball.vy * ball.vy, 0.5);
+                    } else if (ball.status === 2 && world.getPointDistance(ball, {x: 375, y: 20}) >= 1224) {
+                        ball.status = 3;
+                    } else if (ball.status === 3 && Math.abs(ball.x - world.width / 2) >= 350) {
+                        ball.status = 4;
+                    } else if (ball.status === 4 && ball.y < 0) {
+                        ball.status = 0;
+                        ball.x = 375;
+                        ball.y = 100;
+                    } else if (ball.status === 0) {
+                        endBallNum++;
+                    }
+                    if (ball.x <= 50 + ball.size || ball.x >= 700 - ball.size) {
+                        ball.vx = -ball.vx;
+                        if (ball.angle > 180) {
+                            ball.angle = 540 - ball.angle;
+                        } else {
+                            ball.angle = 180 - ball.angle;
+                        }
+                    // } else if (ball.x <= 300) {
+                    //     if (ball.x / 6 + 250 / 6 + ball.size >= ball.y) {
+                    //         ball.rebound({x: 0, y: (37 * ball.x + 250) / 6})
+                    //     }
+                    // } else if (ball.x >= 400) {
+                    //     if (ball.x / 6 + 250 / 6 + ball.size >= ball.y) {
+                    //         ball.rebound({x: 0, y: (37 * ball.x + 1000) / 6})
+                    //     }
+                    }
+                    for (var i = 0;i < world.blockList.length;){
+                        var block = world.blockList[i];
+                        if (world.getPointDistance(ball, block) <= block.size + ball.size) {
+                            ball.rebound(block);
+                            if (ball.score >= block.score) {
+                                world.blockList.splice(i, 1);
+                            } else {
+                                block.score -= ball.score;
+                                i++;
+                            }
+                        } else {
+                            i++;
+                        }
+                    }
+                });
+                if (endBallNum === world.ballList.length) {
+                    world.updateFlag = false;
+                    world.blockList.forEach(function(block){
+                        block.y -= 100;
+                    });
+                    world.num++;
+                    world.createBlock();
+                }
+                world.blockList.forEach(function(block){
+                    block.draw(world.updateCtx);
+                });
+                world.ctx.drawImage(world.bgCanvas, 0, 0);
+                world.ctx.drawImage(world.updateCanvas, 0, 0);
+                if (world.updateFlag) {
+                    setTimeout(world.update, 16);
+                }
+            }
+        }
+        var Ball = function(option){
+            this.x = option.x;
+            this.y = option.y;
+            this.size = 10;
+            var status = option.status || 1;
+            this.vx = 0;
+            this.vy = 0;
+            Object.defineProperty(this, "status", {
+                configurable: true,
+                enumerable: true,
+                set: function(val){
+                    status = val;
+                    if (val === 3) {
+                        this.radian = Math.asin(Math.abs(this.x - world.width / 2) / 1230);
+                    }
+                },
+                get: function(){
+                    return status;
+                }
+            })
+            this.score = option.score || 1;
+            this.v = (option.v || world.initV) * world.p;
+            this.angle = option.angle || 90;
+            this.radian = 0;
+        }
+
+        Ball.prototype.draw = function(ctx){
+            ctx.fillStyle = this.status <= 1 ? "#fff" : "#ff0";
+            ctx.beginPath();
+            ctx.arc(this.x * world.p, this.y * world.p, this.size * world.p, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        Ball.prototype.move = function(t){
+            switch (this.status) {
+                case 1:
+                    this.x += this.vx * t;
+                    this.y += 0.5 * world.g * t * t + this.vy * t;
+                    this.vy += world.g * t;
+                    break;
+                case 2:
+                    this.x += this.vx * t;
+                    this.y += 0.5 * world.g * t * t + this.vy * t;
+                    this.vy += world.g * t;
+                    break;
+                case 3:
+                    this.radian += Math.PI / 180 / 3;
+                    this.y = 1230 * Math.cos(this.radian) + 6;
+                    if (this.x < world.width / 2) {
+                        this.x = 375 - Math.sin(this.radian) * 1230;
+                    } else {
+                        this.x = 375 + Math.sin(this.radian) * 1230;
+                    }
+                    break;
+                case 4:
+                    this.y -= world.initV * t;
+                    break;
+            }
+        }
+
+        Ball.prototype.rebound = function(block){
+            this.angle = 180 - this.angle - 2 * (Math.asin(Math.abs(this.y - block.y) / (this.size + block.size)) * 180 / Math.PI);
+            this.v = Math.pow(this.vx * this.vx + this.vy * this.vy, 0.5);
+            this.vx = Math.cos(this.angle / 180 * Math.PI) * this.v * world.elasticity;
+            this.vy = Math.sin(this.angle / 180 * Math.PI) * this.v * world.elasticity;
+            this.x += (this.x - block.x) / Math.abs(this.x - block.x) * this.size;
+            this.y += (this.y - block.y) / Math.abs(this.y - block.y) * this.size;
+        }
+
+        var Block = function(option){
+            this.x = option.x;
+            this.y = option.y;
+            this.size = option.size || 30;
+            this.type = option.type || 1;
+            this.score = option.score || 1;
+        }
+        Block.prototype.draw = function(ctx){
+            if (this.score < Math.pow(2, 3)) {
+                ctx.fillStyle = "#f00";
+            } else if (this.score < Math.pow(2, 4)) {
+                ctx.fillStyle = "#800";
+            } else if (this.score < Math.pow(2, 5)) {
+                ctx.fillStyle = "#0f0";
+            } else if (this.score < Math.pow(2, 6)) {
+                ctx.fillStyle = "#080";
+            } else if (this.score < Math.pow(2, 7)) {
+                ctx.fillStyle = "#00f";
+            } else if (this.score < Math.pow(2, 8)) {
+                ctx.fillStyle = "#008";
+            }
+            ctx.beginPath();
+            ctx.arc(this.x * world.p, this.y * world.p, this.size * world.p, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#fff";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(this.score, this.x * world.p, this.y * world.p);
+        }
+        world.init();
+    </script>
+</body>
+</html>

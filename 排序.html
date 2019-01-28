@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+</head>
+<body>
+    <script>
+        var maopao = function(arr){
+            for(var i = 0;i < arr.length - 1;i++){
+                for(var j = 0;j < arr.length - i - 1;j++){
+                    if (arr[j] > arr[j + 1]) {
+                        arr[j] = arr[j] + arr[j + 1];
+                        arr[j + 1] = arr[j] - arr[j + 1];
+                        arr[j] = arr[j] - arr[j + 1];
+                    }
+                }
+            }
+            return arr;
+        }
+        var xuanze = function(arr){
+            for(var i = 0;i < arr.length - 1;i++){
+                var min = i;
+                for(var j = i + 1;j < arr.length;j++){
+                    if (arr[min] > arr[j]) {
+                        min = j;
+                    }
+                }
+                if (i !== min) {
+                    arr[i] = arr[i] + arr[min];
+                    arr[min] = arr[i] - arr[min];
+                    arr[i] = arr[i] - arr[min];
+                }
+            }
+            return arr;
+        }
+        var charu = function(arr){
+            for(var i = 0;i < arr.length - 1;i++){
+                for(var j = i;j < arr.length;j++){
+                    if (arr[i] > arr[j]) {
+                        arr[i] = arr[i] + arr[j];
+                        arr[j] = arr[i] - arr[j];
+                        arr[i] = arr[i] - arr[j];
+                    }
+                }
+            }
+            return arr;
+        }
+        var guibing = function(arr){
+            var merge = function(left, right){
+                var il = 0;
+                var ir = 0;
+                var result = [];
+                while(il < left.length && ir < right.length) {
+                    if (left[il] < right[ir]) {
+                        result.push(left[il++]);
+                    } else {
+                        result.push(right[ir++]);
+                    }
+                }
+                return result.concat(left.slice(il)).concat(right.slice(ir));
+            }
+            if (arr.length === 1) {
+                return arr;
+            } else {
+                var mid = Math.floor(arr.length / 2);
+                var arrl = arr.slice(0, mid);
+                var arrr = arr.slice(mid, arr.length);
+                return merge(guibing(arrl), guibing(arrr));
+            }
+        }
+        var kuaisu = function(arr){
+            if (arr.length <= 1) {
+                return arr;
+            } else {
+                var i = 0;
+                var j = arr.length - 1;
+                var k = arr[i];
+                while(i < j) {
+                    while(j > i && arr[j] >= k) {
+                        j--;
+                    }
+                    if (j > i) {
+                        arr[i] = arr[i] + arr[j];
+                        arr[j] = arr[i] - arr[j];
+                        arr[i] = arr[i] - arr[j];
+                    }
+                    while(i < j && arr[i] <= k) {
+                        i++;
+                    }
+                    if (i < j) {
+                        arr[i] = arr[i] + arr[j];
+                        arr[j] = arr[i] - arr[j];
+                        arr[i] = arr[i] - arr[j];
+                    }
+                }
+                return kuaisu(arr.slice(0, i)).concat([k]).concat(kuaisu(arr.slice(i + 1)));
+            }
+        }
+        var arr1 = [];
+        var arr2 = [];
+        var arr3 = [];
+        var arr4 = [];
+        var arr5 = [];
+        var len1 = 20000;
+        var len2 = 40000;
+        var len3 = 20000;
+        var len4 = 1000000;
+        var len5 = 10000000;
+        for(var i = 0;i < len1;i++){
+            arr1.push(Math.floor(Math.random() * len1));
+        }
+        for(var i = 0;i < len2;i++){
+            arr2.push(Math.floor(Math.random() * len2));
+        }
+        for(var i = 0;i < len3;i++){
+            arr3.push(Math.floor(Math.random() * len3));
+        }
+        for(var i = 0;i < len4;i++){
+            arr4.push(Math.floor(Math.random() * len4));
+        }
+        for(var i = 0;i < len5;i++){
+            arr5.push(Math.floor(Math.random() * len5));
+        }
+        var arr6 = [].concat(arr5);
+        console.time("maopao")
+        maopao(arr1);
+        console.timeEnd("maopao")
+        console.time("xuanze")
+        xuanze(arr2);
+        console.timeEnd("xuanze")
+        console.time("charu")
+        charu(arr3);
+        console.timeEnd("charu")
+        console.time("guibing")
+        guibing(arr4);
+        console.timeEnd("guibing")
+        console.time("kuaisu")
+        kuaisu(arr5);
+        console.timeEnd("kuaisu")
+        console.time("sort")
+        arr6.sort();
+        console.timeEnd("sort")
+    </script>
+</body>
+</html>

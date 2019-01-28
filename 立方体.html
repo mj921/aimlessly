@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <style>
+        body{
+            padding: 0;
+            margin: 0;
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        var canvas = document.createElement("canvas");
+        var ctx = canvas.getContext("2d");
+        canvas.width = 1200;
+        canvas.height = 800;
+        document.body.appendChild(canvas);
+        ctx.strokeStyle = "#fff";
+
+        var Cube = function(){
+            this.ax = 0;
+            this.ay = 0;
+            this.az = 45;
+            this.points = this.createPoints();
+            console.log(this.points)
+        }
+        Cube.prototype.createPoints = function(){
+            var d = Math.pow(2, 0.5) * 100;
+            return [
+                {x: 300, y: 300 - d * Math.cos((45 - this.az) / 180 * Math.PI)},
+                {x: 500, y: 300 - d * Math.cos((45 - this.az) / 180 * Math.PI)},
+                {x: 500, y: 300 + d * Math.cos((45 + this.az) / 180 * Math.PI)},
+                {x: 300, y: 300 + d * Math.cos((45 + this.az) / 180 * Math.PI)},
+                {x: 300, y: 300 + d * Math.cos((45 + this.az) / 180 * Math.PI)},
+                {x: 500, y: 300 + d * Math.cos((45 + this.az) / 180 * Math.PI)},
+                {x: 500, y: 300 - d * Math.cos((45 - this.az) / 180 * Math.PI)},
+                {x: 300, y: 300 - d * Math.cos((45 - this.az) / 180 * Math.PI)}
+            ]
+        }
+        Cube.prototype.draw = function(){
+            ctx.beginPath();
+            ctx.moveTo(this.points[0].x,this.points[0].y);
+            ctx.lineTo(this.points[1].x,this.points[1].y);
+            ctx.lineTo(this.points[2].x,this.points[2].y);
+            ctx.lineTo(this.points[3].x,this.points[3].y);
+            ctx.moveTo(this.points[0].x,this.points[0].y);
+            ctx.lineTo(this.points[4].x,this.points[4].y);
+            ctx.lineTo(this.points[5].x,this.points[5].y);
+            ctx.lineTo(this.points[6].x,this.points[6].y);
+            ctx.lineTo(this.points[7].x,this.points[7].y);
+            ctx.lineTo(this.points[4].x,this.points[4].y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(this.points[1].x,this.points[1].y);
+            ctx.lineTo(this.points[5].x,this.points[5].y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(this.points[2].x,this.points[2].y);
+            ctx.lineTo(this.points[6].x,this.points[6].y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(this.points[3].x,this.points[3].y);
+            ctx.lineTo(this.points[7].x,this.points[7].y);
+            ctx.stroke();
+        }
+
+        var c = new Cube();
+        c.draw();
+    </script>
+</body>
+</html>

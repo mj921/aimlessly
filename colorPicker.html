@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title><!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://cdn.bootcss.com/vue/2.5.17-beta.0/vue.min.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <style>
+        body,ul,li,dl{
+            padding: 0;
+            margin: 0;
+        }
+        .color{
+            position: relative;
+            margin: 50px auto;
+            width: 600px;
+            height: 512px;
+        }
+        ul{
+            float: left;
+            width: 512px;
+            height: 512px;
+            list-style: none;
+            border: 1px solid #888;
+        }
+        li{
+            width: 360px;
+            height: 3.6px;
+            list-style: none;
+        }
+        ul dl{
+            width: 3.6px;
+            height: 3.6px;
+            float: left;
+        }
+        .h{
+            float: right;
+            width: 50px;
+        }
+        .h dl{
+            width: 50px;
+            height: 1px;
+        }
+        .cirlce{
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            border: 3px solid #f00;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="color">
+            <ul>
+                <li v-for="i in 100">
+                    <dl v-for="j in 100" :style="'background-color: hsl(' + h + ',' + j + '%,'+ (100 - i) + '%);'" @click="selectColor(j, 100 - i)"></dl>
+                </li>
+            </ul>
+            <div class="h">
+                <dl v-for="i in 360" :style="'background-color: hsl(' + Math.floor(i) + ',100%, 50%);'" @click="selectH(i)"></dl>
+            </div>
+            <div class="cirlce" :style="'left:' + (s * 3.6 - 0.7) + 'px;top:' + ((100 - l) * 3.6 - 0.7) + 'px;'"></div>
+        </div>
+        <div :style="'background-color: hsl(' + h + ',' + s + '%,' + l + '%)'">
+            hsl({{h}},{{s}},{{l}})
+        </div>
+    </div>
+    <script>
+        var app = new Vue({
+            el: "#app",
+            data: {
+                h: 0,
+                s: 0,
+                l: 100,
+                slArr: []
+            },
+            methods: {
+                selectColor: function (s, l) {
+                    this.s = s;
+                    this.l = l;
+                },
+                selectH: function (h) {
+                    this.h = h;
+                }
+            }
+        })
+    </script>
+</body>
+</html>

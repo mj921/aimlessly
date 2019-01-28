@@ -38,55 +38,55 @@
 	img2.onload = function(){
 		ctx.drawImage(img2,0,380);
 	}
-	x=0;
-	state=true;
-	speed=5;
-	y=380;
+	x = 0;
+	state = true;
+	speed = 5;
+	y = 380;
 	function moves(){
 		clearTimeout(cha);
 		ctx.clearRect(0,0,1500,740);
 		ctx.drawImage(img1,470,0);
 		ctx.drawImage(img2,x,380);
 		if(state){
-			x+=speed;
+			x += speed;
 		}else{
-			x-=speed;
+			x -= speed;
 		}
-		if(x>=1092){
-			state=false;
+		if(x >= 1092){
+			state = false;
 		}
-		if(x<=0){
-			state=true;
+		if(x <= 0){
+			state = true;
 		}
 	}
 	function start(){
-		x=0;
-		state=true;
-		speed=5;
-		y=380;
-		move=setInterval(function(){
+		x = 0;
+		state = true;
+		speed = 5;
+		y = 380;
+		move = setInterval(function(){
 			moves();
 		},1);
 	}
 	start();
-	n=0;
-	canvas.onclick=function(){
-		if(n%2==0){
+	n = 0;
+	canvas.onclick = function(){
+		if(n % 2 == 0){
 			clearTimeout(move);
-			cha=setInterval(function(){
+			cha = setInterval(function(){
 				ctx.clearRect(0,0,1500,740);
 				ctx.drawImage(img1,470,0);
 				ctx.drawImage(img2,x,y);
-				y-=2;
-				if(y<=188){
+				y -= 2;
+				if(y <= 188){
 					clearTimeout(cha);
-					if(x>515&&x<535||x<675&&x>655){
-						document.getElementById("btn").style.opacity=1;
+					if(x > 515 && x < 535 || x < 675 && x > 655){
+						document.getElementById("btn").style.opacity = 1;
 						setTimeout(function(){
-							document.getElementById("btn").style.opacity=0;
+							document.getElementById("btn").style.opacity = 0;
 						},1000);
 					}else{
-						document.getElementById("btn1").style.opacity=1;
+						document.getElementById("btn1").style.opacity = 1;
 						setTimeout(function(){
 							document.getElementById("btn1").style.opacity=0;
 						},1000);

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+    <style>
+        body{
+            padding: 0;
+            margin: 0;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+        canvas{
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        var canvas = document.createElement("canvas");
+        var ctx = canvas.getContext("2d");
+        var bodyWidth = 1000;
+        var bodyHeight = 500;
+        canvas.width = bodyWidth;
+        canvas.height = bodyHeight;
+        canvas.style.position = "absolute";
+        canvas.style.left = "-1000%";
+        document.body.appendChild(canvas);
+        var mainCanvas = document.createElement("canvas");
+        var mainCtx = mainCanvas.getContext("2d");
+        mainCanvas.width = bodyWidth;
+        mainCanvas.height = bodyHeight;
+        document.body.appendChild(mainCanvas);
+        var ul = document.createElement("li");
+        document.body.appendChild(ul);
+
+        var cellNum = 3;
+
+        var cells = [];
+        var bgCells = [];
+        for(var i = 0;i < bodyWidth;i++) {
+            var arr = [];
+            for(var j = 0;j < bodyHeight;j++) {
+                arr[j] = -1;
+            }
+            bgCells[i] = arr;
+        }
+        
+
+        var Cell = function(x, y, level){
+            this.x = x;
+            this.y = y;
+            this.level = level || 1;
+            this.size = Math.pow(2, this.level - 1);
+            this.alive = true;
+            this.nums = 1;
+            this.color = "#" + Math.random().toString(16).substr(2,6);
+        }
+
+        Cell.prototype.eat = function(cell){
+            cell.alive = false;
+            this.size += cell.size;
+            if (this.size >= Math.pow(2, this.level)) {
+                this.level++;
+            }
+        }
+        Cell.prototype.produce = function(cell){
+            var c = new Cell(Math.floor(Math.random() * bodyWidth), Math.floor(Math.random() * bodyHeight), Math.max(this.level - 1, 1));
+            this.size += 1;
+            cell.size += 1;
+            if (this.size >= Math.pow(2, this.level)) {
+                this.level++;
+            }
+            if (cell.size >= Math.pow(2, cell.level)) {
+                cell.level++;
+            }
+            return c;
+        }
+
+        Cell.prototype.draw = function(){
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.level, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        Cell.prototype.isIntersect = function(cell){
+            return Math.pow(this.x - cell.x, 2) + Math.pow(this.y - cell.y, 2) <= Math.pow(this.level + cell.level, 2);
+        }
+
+        var createCell = function(){
+            return new Cell(Math.floor(Math.random() * bodyWidth), Math.floor(Math.random() * bodyHeight), 1)
+        }
+
+        for(var i = 0;i < cellNum;i++){
+            cells.push(createCell())
+        }
+
+        var update = function(){
+            ctx.clearRect(0,0,bodyWidth,bodyHeight);
+            // mainCtx.clearRect(0,0,bodyWidth,bodyHeight);
+            // if (cells.length < cellNum) {
+            //     for(var i = 0,len = cellNum - cells.lenght;i < len;i++){
+            //         cells.push(createCell())
+            //     }
+            //     console.log(cells.length)
+            // }
+            for (var i = 0; i < cells.length; i++) {
+                // cells[i].x += Math.random() < 0.5 ? -Math.floor(Math.random() * 3 + 1) : Math.floor(Math.random() * 3 + 1);
+                // cells[i].y += Math.random() < 0.5 ? -Math.floor(Math.random() * 3 + 1) : Math.floor(Math.random() * 3 + 1);
+                cells[i].x += Math.random() < 0.5 ? -1 : 1;
+                cells[i].y += Math.random() < 0.5 ? -1 : 1;
+                if (cells[i].x < 0) {
+                    cells[i].x = -cells[i].x;
+                }
+                if (cells[i].x >= bodyWidth) {
+                    cells[i].x = 2 * bodyWidth - cells[i].x - 1;
+                }
+                if (cells[i].y < 0) {
+                    cells[i].y = -cells[i].y;
+                }
+                if (cells[i].y >= bodyHeight) {
+                    cells[i].y = 2 * bodyHeight - cells[i].y - 1;
+                }
+                if (bgCells[cells[i].x][cells[i].y] !== -1) {
+                    cells[bgCells[cells[i].x][cells[i].y]].nums--;
+                }
+                bgCells[cells[i].x][cells[i].y] = i;
+                cells[i].nums++;
+            }
+            // for (var i = 0; i < cells.length - 1;i++) {
+            //     if (cells[i].alive) {
+            //         for (var j = i + 1; j < cells.length;j++) {
+            //             if (cells[j].alive && cells[i].isIntersect(cells[j])) {
+            //                 if (cells[i].level === cells[j].level) {
+            //                     cells.push(cells[i].produce(cells[j]));
+            //                 } else if (cells[i].level > cells[j].level) {
+            //                     cells[i].eat(cells[j]);
+            //                     break;
+            //                 } else {
+            //                     cells[j].eat(cells[i]);
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+            for (var i = 0; i < cells.length;) {
+                if (cells[i].alive) {
+                    cells[i].draw();
+                    i++;
+                } else {
+                    cells.splice(i, 1);
+                }
+            }
+            var arr = [].concat(cells);
+            arr.sort(function(a,b){
+                return b.nums - a.nums;
+            })
+            var ulStr = ""
+            arr.forEach(function(item){
+                ulStr += "<li style='color:"+ item.color + "'>" + item.color + "：" + item.nums + "</li>";
+            })
+            ul.innerHTML = ulStr;
+            mainCtx.drawImage(canvas,0,0)
+            setTimeout(update, 1);
+        }
+        update();
+    </script>
+</body>
+</html>

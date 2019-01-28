@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+<body>
+    <div id="app">
+        总金额： {{money.toString(1)}}
+        <el-table :data="data">
+            <el-table-column label="等级" prop="lv"></el-table-column>
+            <el-table-column label="收入" :formatter="wagesFmt"></el-table-column>
+            <el-table-column label="升级费用" :formatter="upgradeFeeFmt"></el-table-column>
+            <el-table-column label="操作">
+                <template slot-scope="scope">
+                    <el-button type="text" @click="buy(scope.$index)" v-if="scope.row.lv === 0">购买</el-button>
+                    <el-button type="text" @click="updateLevel(scope.$index)" v-else>升级</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+    </div>
+</body>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="fee.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data () {
+                return {
+                    money: new Fee([1]),
+                    data: [
+                        {
+                            lv: 0,
+                            wages: new Fee([1]), // 工资
+                            upgradeFee: new Fee([1]), // 升级费
+                            wagesRate: 2,
+                            updateRate: 3
+                        },
+                        {
+                            lv: 0,
+                            wages: new Fee([10]), // 工资
+                            upgradeFee: new Fee([10]), // 升级费
+                            wagesRate: 2,
+                            updateRate: 3
+                        },
+                        {
+                            lv: 0,
+                            wages: new Fee([100]), // 工资
+                            upgradeFee: new Fee([100]), // 升级费
+                            wagesRate: 2,
+                            updateRate: 3
+                        },
+                        {
+                            lv: 0,
+                            wages: new Fee([0, 1]), // 工资
+                            upgradeFee: new Fee([0, 1]), // 升级费
+                            wagesRate: 2,
+                            updateRate: 3
+                        },
+                        {
+                            lv: 0,
+                            wages: new Fee([0, 10]), // 工资
+                            upgradeFee: new Fee([0, 10]), // 升级费
+                            wagesRate: 2,
+                            updateRate: 3
+                        },
+                        {
+                            lv: 0,
+                            wages: new Fee([0, 100]), // 工资
+                            upgradeFee: new Fee([0, 100]), // 升级费
+                            wagesRate: 2,
+                            updateRate: 3
+                        }
+                    ]
+                }
+            },
+            methods: {
+                wagesFmt (row) {
+                    return row.wages.toString(1);
+                },
+                upgradeFeeFmt (row) {
+                    return row.upgradeFee.toString(1);
+                },
+                buy (i) {
+                    if (this.money.compare(this.data[i].upgradeFee) !== -1) {
+                        this.money = this.money.sub(this.data[i].upgradeFee);
+                        this.data[i].upgradeFee = this.data[i].upgradeFee.mult(this.data[i].updateRate);
+                        this.data[i].lv++;
+                    }
+                },
+                updateLevel (i) {
+                    if (this.money.compare(this.data[i].upgradeFee) !== -1) {
+                        this.money = this.money.sub(this.data[i].upgradeFee);
+                        this.data[i].wages = this.data[i].wages.mult(this.data[i].wagesRate);
+                        this.data[i].upgradeFee = this.data[i].upgradeFee.mult(this.data[i].updateRate);
+                        this.data[i].lv++;
+                    }
+                },
+                addWages () {
+                    let money = this.money.clone();
+                    for (let i = 0; i < this.data.length; i++) {
+                        if (this.data[i].lv > 0) {
+                            money = money.add(this.data[i].wages);
+                        }
+                    }
+                    this.money = money.clone();
+                },
+                loop () {
+                    this.addWages();
+                    setTimeout(this.loop, 1000);
+                }
+            },
+            created () {
+                setTimeout(this.loop, 1000);
+            }
+        })
+    </script>
+</html>
