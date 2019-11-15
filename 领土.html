@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    html,
+    body {
+      padding: 0;
+      margin: 0;
+    }
+
+    #main {
+      position: absolute;
+      left: 0;
+      height: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #app {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 100px;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="main"></canvas>
+  <div id="app">
+    <dl v-for="item in list" :key="item.key" :style="`color: #${item.key.substr(5)};`">{{item.value}}</dl>
+    <!-- <dl style="color: #f00;">{{colorf00}}</dl>
+    <dl style="color: #00f;">{{color00f}}</dl>
+    <dl style="color: #0f0;">{{color0f0}}</dl>
+    <dl style="color: #000;">{{color000}}</dl>
+    <dl style="color: #ff0;">{{colorff0}}</dl>
+    <dl style="color: #f0f;">{{colorf0f}}</dl>
+    <dl style="color: #0ff;">{{color0ff}}</dl>
+    <dl style="color: #080;">{{color080}}</dl>
+    <dl style="color: #fa0;">{{colorfa0}}</dl>
+    <dl style="color: #921;">{{color921}}</dl> -->
+  </div>
+  <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
+  <script>
+    var app = new Vue({
+      el: "#app",
+      data() {
+        return {
+          colorf00: 0,
+          color00f: 0,
+          color0f0: 0,
+          color000: 0,
+          colorff0: 0,
+          colorf0f: 0,
+          color0ff: 0,
+          color080: 0,
+          colorfa0: 0,
+          color921: 0
+        }
+      },
+      computed: {
+        list() {
+          let arr = [
+            { key: "colorf00", value: this.colorf00 },
+            { key: "color00f", value: this.color00f },
+            { key: "color0f0", value: this.color0f0 },
+            { key: "color000", value: this.color000 },
+            { key: "colorff0", value: this.colorff0 },
+            { key: "colorf0f", value: this.colorf0f },
+            { key: "color0ff", value: this.color0ff },
+            { key: "color080", value: this.color080 },
+            { key: "colorfa0", value: this.colorfa0 },
+            { key: "color921", value: this.color921 },
+          ]
+          arr.sort((a, b) => {
+            return b.value - a.value;
+          })
+          return arr;
+        }
+      }
+    })
+    class Group {
+      constructor(color) {
+        this.sto = undefined;
+        this.roundList = [];
+        this.color = color;
+      }
+      next() {
+        clearTimeout(this.sto);
+        let index = Math.floor(this.roundList.length * Math.random());
+        const item = this.roundList[index];
+        this.roundList.splice(index, 1);
+        if (item.color !== bgColor) {
+          app["color" + item.color.substr(1)]--;
+        }
+        item.color = this.color;
+        app["color" + this.color.substr(1)]++;
+        this.roundList = Array.from(new Set(this.roundList.concat(round(item.i, item.j).filter(jtem => jtem.color === bgColor))));
+        if (this.roundList.length > 0) {
+          this.sto = setTimeout(() => {
+            this.next();
+          }, 1000 / 60);
+        } else {
+          num--;
+        }
+      }
+      start() {
+        const startX = Math.floor(Math.random() * col);
+        const startY = Math.floor(Math.random() * row);
+        list[startX][startY].color = this.color;
+        this.roundList = this.roundList.concat(round(startX, startY));
+        app["color" + this.color.substr(1)]++
+        this.sto = setTimeout(() => {
+          this.next();
+        }, 1000 / 60);
+      }
+    }
+    let screenWidth = window.innerWidth;
+    let screenHeight = window.innerHeight;
+    const main = document.getElementById("main");
+    const mainCtx = main.getContext("2d");
+    main.width = screenWidth;
+    main.height = screenHeight;
+    const sqer3 = Math.pow(3, 0.5);
+    const cellSize = 20;
+    const row = 54;
+    const col = 120;
+    const beginLeft = 20;
+    const beginTop = 10;
+    const list = [];
+    const bgColor = "#fff";
+    const isEarth = false;
+    const num = 7;
+    function drawSixLine(x, y, color = bgColor) {
+      mainCtx.fillStyle = color;
+      mainCtx.beginPath();
+      mainCtx.moveTo(x, y)
+      mainCtx.lineTo(x + cellSize / 2, y + cellSize / 6 * sqer3);
+      mainCtx.lineTo(x + cellSize / 2, y + cellSize / 2 * sqer3);
+      mainCtx.lineTo(x, y + cellSize * 2 / 3 * sqer3);
+      mainCtx.lineTo(x - cellSize / 2, y + cellSize / 2 * sqer3);
+      mainCtx.lineTo(x - cellSize / 2, y + cellSize / 6 * sqer3);
+      mainCtx.lineTo(x, y)
+      mainCtx.fill();
+    }
+    for (let i = 0; i < col; i++) {
+      const arr = [];
+      for (let j = 0; j < row; j++) {
+        arr.push({ i, j, color: bgColor });
+        drawSixLine(beginLeft + (j % 2 === 0 ? 0 : cellSize / 2) + cellSize * i, beginTop + cellSize / 2 * sqer3 * j);
+      }
+      list.push(arr);
+    }
+    function round(x, y) {
+      const arr = [];
+      if (x > 0) {
+        arr.push(list[x - 1][y]);
+      } else if (isEarth) {
+        arr.push(list[col - 1][y]);
+      }
+      if (x < col - 1) {
+        arr.push(list[x + 1][y]);
+      } else if (isEarth) {
+        arr.push(list[0][y]);
+      }
+      if (y > 0) {
+        arr.push(list[x][y - 1]);
+        if (y % 2 === 0) {
+          if (x > 0) {
+            arr.push(list[x - 1][y - 1]);
+          } else if (isEarth) {
+            arr.push(list[col - 1][y - 1]);
+          }
+        } else if (y % 2 === 1) {
+          if (x < col - 1) {
+            arr.push(list[x + 1][y - 1]);
+          } else if (isEarth) {
+            arr.push(list[0][y - 1]);
+          }
+        }
+      } else if (isEarth) {
+        arr.push(list[x][row - 1]);
+        if (y % 2 === 0) {
+          if (x > 0) {
+            arr.push(list[x - 1][row - 1]);
+          } else if (isEarth) {
+            arr.push(list[col - 1][row - 1]);
+          }
+        } else if (y % 2 === 1) {
+          if (x < col - 1) {
+            arr.push(list[x + 1][row - 1]);
+          } else if (isEarth) {
+            arr.push(list[0][row - 1]);
+          }
+        }
+      }
+      if (y < row - 1) {
+        arr.push(list[x][y + 1]);
+        if (y % 2 === 0) {
+          if (x > 0) {
+            arr.push(list[x - 1][y + 1]);
+          } else if (isEarth) {
+            arr.push(list[col - 1][y + 1]);
+          }
+        } else if (y % 2 === 1) {
+          if (x < col - 1) {
+            arr.push(list[x + 1][y + 1]);
+          } else if (isEarth) {
+            arr.push(list[0][y + 1]);
+          }
+        }
+      } else if (isEarth) {
+        arr.push(list[x][0]);
+        if (y % 2 === 0) {
+          if (x > 0) {
+            arr.push(list[x - 1][0]);
+          } else if (isEarth) {
+            arr.push(list[col - 1][0]);
+          }
+        } else if (y % 2 === 1) {
+          if (x < col - 1) {
+            arr.push(list[x + 1][0]);
+          } else if (isEarth) {
+            arr.push(list[0][0]);
+          }
+        }
+      }
+      return arr;
+    }
+    function render() {
+      for (let i = 0; i < col; i++) {
+        for (let j = 0; j < row; j++) {
+          drawSixLine(beginLeft + (j % 2 === 0 ? 0 : cellSize / 2) + cellSize * i, beginTop + cellSize / 2 * sqer3 * j, list[i][j].color);
+        }
+      }
+    }
+    function loop() {
+      if (num > 0) {
+        render();
+        setTimeout(loop, 1000 / 60)
+      }
+    }
+    const redGroup = new Group("#f00");
+    const blueGroup = new Group("#00f");
+    const greenGroup = new Group("#0f0");
+    const blackGroup = new Group("#000");
+    const yellowGroup = new Group("#ff0");
+    const ziseGroup = new Group("#f0f");
+    const tianlanGroup = new Group("#0ff");
+    const molvGroup = new Group("#080");
+    const orangeGroup = new Group("#fa0");
+    const anhongGroup = new Group("#921");
+    loop();
+    redGroup.start();
+    blueGroup.start();
+    greenGroup.start();
+    blackGroup.start();
+    yellowGroup.start();
+    ziseGroup.start();
+    tianlanGroup.start();
+    molvGroup.start();
+    orangeGroup.start();
+    anhongGroup.start();
+    // let sto;
+    // let roundList = [];
+    // function next() {
+    //   clearTimeout(sto);
+    //   let index = Math.floor(roundList.length * Math.random());
+    //   const item = roundList[index];
+    //   roundList.splice(index, 1);
+    //   item.color = "#f00";
+    //   roundList = Array.from(new Set(roundList.concat(round(item.i, item.j).filter(jtem => jtem.color === bgColor))));
+    //   render();
+    //   if (roundList.length > 0) {
+    //     sto = setTimeout(next, 1000 / 60);
+    //   }
+    // }
+    // function start() {
+    //   const startX = Math.floor(Math.random() * col);
+    //   const startY = Math.floor(Math.random() * row);
+    //   list[startX][startY].color = "#f00";
+    //   roundList = roundList.concat(round(startX, startY));
+    //   render();
+    //   sto = setTimeout(next, 1000 / 60);
+    // }
+    // start()
+  </script>
+</body>
+
+</html>
