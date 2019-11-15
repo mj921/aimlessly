@@ -1,499 +1,521 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title></title>
-    <style>
-        body,div,dl,dt{
-            padding: 0;
-            margin: 0;
-        }
-        body{
-            text-align: center;
-        }
-        #main{
-            display: inline-block;
-        }
 
-        #panel{
-            position: relative;
-            margin: 10px auto;
-            padding: 4px;
-            width: 500px;
-            border-radius: 3px;
-            border:1px solid #c0c0c0;
-            zoom:1;
-            background-color: #b9ac9f;
-        }
-        #panel:after{
-            content: "";
-            display: block;
-            clear: both;
-        }
-        #panel dl{
-            position: absolute;
-            margin: 4px;
-            width: 42px;
-            height: 42px;
-            line-height: 42px;
-            text-align: center;
-            border-radius: 3px;
-            box-sizing: border-box;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s
-        }
-        #panel dl.bg{
-            float: left;
-            position: relative;
-            background-color: #cbbeb0;
-        }
-        #panel dl.num2{
-            background-color: #2cf2cf;
-            color: #786d63;
-            font-size: 24px;
-        }
-        #panel dl.num4{
-            background-color: #2bf2af;
-            color: #786d63;
-            font-size: 24px;
-        }
-        #panel dl.num8{
-            background-color: #2af289;
-            color: #fff;
-            font-size: 24px;
-        }
-        #panel dl.num16{
-            background-color: #2af256;
-            color: #fff;
-            font-size: 23px;
-        }
-        #panel dl.num32{
-            background-color: #42f22a;
-            color: #fff;
-            font-size: 23px;
-        }
-        #panel dl.num64{
-            background-color: #87f22a;
-            color: #fff;
-            font-size: 23px;
-        }
-        #panel dl.num128{
-            background-color: #b9f22a;
-            color: #fff;
-            font-size: 22px;
-        }
-        #panel dl.num256{
-            background-color: #f10d1e;
-            color: #fff;
-            font-size: 22px;
-        }
-        #panel dl.num512{
-            background-color: #f10d1e;
-            color: #fff;
-            font-size: 22px;
-        }
-        #panel dl.num1024{
-            background-color: #f4d70c;
-            color: #fff;
-            font-size: 21px;
-        }
-        #panel dl.num2048{
-            background-color: #f10d1e;
-            color: #fff;
-            font-size: 21px;
-        }
-    </style>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title></title>
+  <style>
+    body,
+    div,
+    dl,
+    dt {
+      padding: 0;
+      margin: 0;
+    }
+
+    body {
+      text-align: center;
+    }
+
+    #main {
+      display: inline-block;
+    }
+
+    #panel {
+      position: relative;
+      margin: 10px auto;
+      padding: 4px;
+      width: 500px;
+      border-radius: 3px;
+      border: 1px solid #c0c0c0;
+      zoom: 1;
+      background-color: #b9ac9f;
+    }
+
+    #panel:after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+
+    #panel dl {
+      position: absolute;
+      margin: 4px;
+      width: 42px;
+      height: 42px;
+      line-height: 42px;
+      text-align: center;
+      border-radius: 3px;
+      box-sizing: border-box;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s
+    }
+
+    #panel dl.bg {
+      float: left;
+      position: relative;
+      background-color: #cbbeb0;
+    }
+
+    #panel dl.num2 {
+      background-color: #2cf2cf;
+      color: #786d63;
+      font-size: 24px;
+    }
+
+    #panel dl.num4 {
+      background-color: #2bf2af;
+      color: #786d63;
+      font-size: 24px;
+    }
+
+    #panel dl.num8 {
+      background-color: #2af289;
+      color: #fff;
+      font-size: 24px;
+    }
+
+    #panel dl.num16 {
+      background-color: #2af256;
+      color: #fff;
+      font-size: 23px;
+    }
+
+    #panel dl.num32 {
+      background-color: #42f22a;
+      color: #fff;
+      font-size: 23px;
+    }
+
+    #panel dl.num64 {
+      background-color: #87f22a;
+      color: #fff;
+      font-size: 23px;
+    }
+
+    #panel dl.num128 {
+      background-color: #b9f22a;
+      color: #fff;
+      font-size: 22px;
+    }
+
+    #panel dl.num256 {
+      background-color: #f10d1e;
+      color: #fff;
+      font-size: 22px;
+    }
+
+    #panel dl.num512 {
+      background-color: #f10d1e;
+      color: #fff;
+      font-size: 22px;
+    }
+
+    #panel dl.num1024 {
+      background-color: #f4d70c;
+      color: #fff;
+      font-size: 21px;
+    }
+
+    #panel dl.num2048 {
+      background-color: #f10d1e;
+      color: #fff;
+      font-size: 21px;
+    }
+  </style>
 </head>
+
 <body>
-    <div id="main">
-        <dl id="max">最高分:0</dl><dl id="curr">当前分数:0</dl>
-        <div id="panel"></div>
-    </div>
-    <script>
-        var max = document.getElementById("max");
-        var curr = document.getElementById("curr");
-        var Cell = function(x,y,ele,num){
-            this.x = x;
-            this.y = y;
-            this.ele = ele;
-            this.num = num || 2;
-            this.ele.className = "num" + this.num;
-            this.ele.innerText = this.num;
-            this.ele.style.left = this.x * 50 + 4 + "px";
-            this.ele.style.top = this.y * 50 + 4 + "px";
+  <div id="main">
+    <dl id="max">最高分:0</dl>
+    <dl id="curr">当前分数:0</dl>
+    <div id="panel"></div>
+  </div>
+  <script>
+    var max = document.getElementById("max");
+    var curr = document.getElementById("curr");
+    var Cell = function (x, y, ele, num) {
+      this.x = x;
+      this.y = y;
+      this.ele = ele;
+      this.num = num || 2;
+      this.ele.className = "num" + this.num;
+      this.ele.innerText = this.num;
+      this.ele.style.left = this.x * 50 + 4 + "px";
+      this.ele.style.top = this.y * 50 + 4 + "px";
+    }
+    Cell.prototype.setNum = function (num) {
+      this.num = num;
+      this.ele.className = "num" + this.num;
+      this.ele.innerText = this.num;
+    }
+    Cell.prototype.changeEle = function () {
+      this.ele.className = "num" + this.num;
+      this.ele.innerText = this.num;
+      this.ele.style.left = this.x * 50 + 4 + "px";
+      this.ele.style.top = this.y * 50 + 4 + "px";
+    }
+    //面板对象
+    var panel = {
+      cells: [],
+      obj: document.getElementById("panel"),
+      rows: 4,//行数
+      types: 0,//标技数
+      size: 50,//格子大小
+      status: true,
+      score: 0,//分数
+      maxScore: 0,//最高分
+      //创建背景格子
+      createbg: function () {
+        for (var i = 0; i < this.rows * this.rows; i++) {
+          var dl = document.createElement("dl");
+          dl.className = "bg";
+          this.obj.appendChild(dl);
         }
-        Cell.prototype.setNum = function(num){
-            this.num = num;
-            this.ele.className = "num" + this.num;
-            this.ele.innerText = this.num;
+      },
+      //创建空格子数组
+      createCells: function () {
+        for (var i = 0; i < this.rows; i++) {
+          var cs = []
+          for (var j = 0; j < this.rows; j++) {
+            cs[j] = null;
+          }
+          this.cells[i] = cs;
         }
-        Cell.prototype.changeEle = function(){
-            this.ele.className = "num" + this.num;
-            this.ele.innerText = this.num;
-            this.ele.style.left = this.x * 50 + 4 + "px";
-            this.ele.style.top = this.y * 50 + 4 + "px";
+      },
+      //随机创建格子
+      createCell: function () {
+        var x, y;
+        var flag = true;
+        while (flag) {
+          flag = false;
+          x = ~~(Math.random() * this.rows);
+          y = ~~(Math.random() * this.rows);
+          for (var i = 0; i < this.rows; i++) {
+            for (var j = 0; j < this.rows; j++) {
+              if (this.cells[i][j] && this.cells[i][j].x === x && this.cells[i][j].y === y) {
+                flag = true;
+                break;
+              }
+            }
+          }
         }
-        //面板对象
-        var panel = {
-            cells:[],
-            obj:document.getElementById("panel"),
-            rows:4,//行数
-            types:0,//标技数
-            size:50,//格子大小
-            status:true,
-            score:0,//分数
-            maxScore:0,//最高分
-            //创建背景格子
-            createbg:function(){
-                for(var i = 0;i < this.rows * this.rows;i++){
-                    var dl = document.createElement("dl");
-                    dl.className = "bg";
-                    this.obj.appendChild(dl);
+        var ele = document.createElement("dl");
+        this.obj.appendChild(ele);
+        this.cells[x][y] = new Cell(x, y, ele);
+      },
+      getSize: function () {
+        var l = 0;
+        for (var i = 0; i < this.rows; i++) {
+          for (var j = 0; j < this.rows; j++) {
+            this.cells[i][j] && l++;
+          }
+        }
+        return l;
+      },
+      //判断能否移动
+      isMove: function (type) {
+        switch (type) {
+          case 37:
+            for (var j = 0; j < this.rows; j++) {
+              for (var i = this.rows - 1; i > 0; i--) {
+                if (this.cells[i][j] !== null && (this.cells[i - 1][j] === null || this.cells[i][j].num === this.cells[i - 1][j].num)) {
+                  return true;
                 }
-            },
-            //创建空格子数组
-            createCells:function(){
-                for(var i = 0;i < this.rows;i++){
-                    var cs = []
-                    for(var j = 0;j < this.rows;j++){
-                        cs[j] = null;
-                    }
-                    this.cells[i] = cs;
+              }
+            }
+            break;
+          case 38:
+            for (var i = 0; i < this.rows; i++) {
+              for (var j = this.rows - 1; j > 0; j--) {
+                if (this.cells[i][j] !== null && (this.cells[i][j - 1] === null || this.cells[i][j].num === this.cells[i][j - 1].num)) {
+                  return true;
                 }
-            },
-            //随机创建格子
-            createCell:function(){
-                var x,y;
-                var flag = true;
-                while(flag){
-                    flag = false;
-                    x = ~~(Math.random() * this.rows);
-                    y = ~~(Math.random() * this.rows);
-                    for(var i = 0;i < this.rows;i++){
-                        for(var j = 0;j < this.rows;j++){
-                            if(this.cells[i][j] && this.cells[i][j].x === x && this.cells[i][j].y === y){
-                                flag = true;
-                                break;
-                            }
-                        }
-                    }
+              }
+            }
+            break;
+          case 39:
+            for (var j = 0; j < this.rows; j++) {
+              for (var i = 0; i < this.rows - 1; i++) {
+                if (this.cells[i][j] !== null && (this.cells[i + 1][j] === null || this.cells[i][j].num === this.cells[i + 1][j].num)) {
+                  return true;
                 }
-                var ele = document.createElement("dl");
-                this.obj.appendChild(ele);
-                this.cells[x][y] = new Cell(x,y,ele);
-            },
-            getSize:function(){
-                var l = 0;
-                for(var i = 0;i < this.rows;i++){
-                    for(var j = 0;j < this.rows;j++){
-                        this.cells[i][j] && l++;
-                    }
+              }
+            }
+            break;
+          case 40:
+            for (var i = 0; i < this.rows; i++) {
+              for (var j = 0; j < this.rows - 1; j++) {
+                if (this.cells[i][j] !== null && (this.cells[i][j + 1] === null || this.cells[i][j].num === this.cells[i][j + 1].num)) {
+                  return true;
                 }
-                return l;
-            },
-            //判断能否移动
-            isMove:function(type){
-                switch(type){
-                    case 37:
-                        for(var j = 0;j < this.rows;j++){
-                            for(var i = this.rows - 1;i > 0;i--){
-                                if(this.cells[i][j] !== null && (this.cells[i - 1][j] === null || this.cells[i][j].num === this.cells[i - 1][j].num)){
-                                    return true;
-                                }
-                            }
-                        }
-                        break;
-                    case 38:
-                        for(var i = 0;i < this.rows;i++){
-                            for(var j = this.rows - 1;j > 0;j--){
-                                if(this.cells[i][j] !== null && (this.cells[i][j - 1] === null || this.cells[i][j].num === this.cells[i][j - 1].num)){
-                                    return true;
-                                }
-                            }
-                        }
-                        break;
-                    case 39:
-                        for(var j = 0;j < this.rows;j++){
-                            for(var i = 0;i < this.rows - 1;i++){
-                                if(this.cells[i][j] !== null && (this.cells[i + 1][j] === null || this.cells[i][j].num === this.cells[i + 1][j].num)){
-                                    return true;
-                                }
-                            }
-                        }
-                        break;
-                    case 40:
-                        for(var i = 0;i < this.rows;i++){
-                            for(var j = 0;j < this.rows - 1;j++){
-                                if(this.cells[i][j] !== null && (this.cells[i][j + 1] === null || this.cells[i][j].num === this.cells[i][j + 1].num)){
-                                    return true;
-                                }
-                            }
-                        }
-                }
+              }
+            }
+        }
+        return false;
+      },
+      //判断是否死亡
+      isDeath: function () {
+        if (!this.isMove(37) && !this.isMove(38) && !this.isMove(39) && !this.isMove(40)) {
+          for (var i = 0; i < this.rows; i++) {
+            for (var j = 0; j < this.rows; j++) {
+              if (this.cells[i][j] === null) {
                 return false;
-            },
-            //判断是否死亡
-            isDeath: function(){
-                if(!this.isMove(37) && !this.isMove(38) && !this.isMove(39) && !this.isMove(40)){
-                    for(var i = 0;i < this.rows;i++){
-                        for(var j = 0;j < this.rows;j++){
-                            if(this.cells[i][j] === null){
-                                return false;
-                            }
-                        }
-                    }
-                    return true;
-                }else{
-                    return false;
-                }
-            },
-            move: function (type) {
-                if(!this.isMove(type)){
-                    return;
-                }
-                switch(type){
-                    case 37:
-                        for(var j = 0;j < this.rows;j++){
-                            var n = 0;
-                            for(var i = 0;i < this.rows;i++){
-                                if(this.cells[i][j] !== null && n !== i){
-                                    if(this.cells[n][j] === null){
-                                        this.cells[n][j] = new Cell(n,j,this.cells[i][j].ele,this.cells[i][j].num);
-                                        this.cells[i][j] = null;
-                                    }else{
-                                        if(this.cells[n][j].num === this.cells[i][j].num){
-                                            this.cells[n][j].setNum(this.cells[n][j].num * 2);
-                                            this.obj.removeChild(this.cells[i][j].ele);
-                                            this.cells[i][j] = null;
-                                            this.score += this.cells[n][j].num;
-                                        }else if(this.cells[i][j] !== null){
-                                            n++;
-                                            if(n !== i){
-                                                this.cells[n][j] = new Cell(n,j,this.cells[i][j].ele,this.cells[i][j].num);
-                                                this.cells[i][j] = null;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    case 38:
-                        for(var i = 0;i < this.rows;i++){
-                            var n = 0;
-                            for(var j = 0;j < this.rows;j++){
-                                if(this.cells[i][j] !== null && n !== j){
-                                    if(this.cells[i][n] === null){
-                                        this.cells[i][n] = new Cell(i,n,this.cells[i][j].ele,this.cells[i][j].num);
-                                        this.cells[i][j] = null;
-                                    }else{
-                                        if(this.cells[i][n].num === this.cells[i][j].num){
-                                            this.cells[i][n].setNum(this.cells[i][n].num * 2);
-                                            this.obj.removeChild(this.cells[i][j].ele);
-                                            this.cells[i][j] = null;
-                                            this.score += this.cells[i][n].num;
-                                        }else if(this.cells[i][j] !== null){
-                                            n++;
-                                            if(n !== j){
-                                                this.cells[i][n] = new Cell(i,n,this.cells[i][j].ele,this.cells[i][j].num);
-                                                this.cells[i][j] = null;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    case 39:
-                        for(var j = 0;j < this.rows;j++){
-                            var n = this.rows - 1;
-                            for(var i = this.rows - 1;i >= 0;i--){
-                                if(this.cells[i][j] !== null && n !== i){
-                                    if(this.cells[n][j] === null){
-                                        this.cells[n][j] = new Cell(n,j,this.cells[i][j].ele,this.cells[i][j].num);
-                                        this.cells[i][j] = null;
-                                    }else{
-                                        if(this.cells[n][j].num === this.cells[i][j].num){
-                                            this.cells[n][j].setNum(this.cells[n][j].num * 2);
-                                            this.obj.removeChild(this.cells[i][j].ele);
-                                            this.cells[i][j] = null;
-                                            this.score += this.cells[n][j].num;
-                                        }else if(this.cells[i][j] !== null){
-                                            n--;
-                                            if(n !== i){
-                                                this.cells[n][j] = new Cell(n,j,this.cells[i][j].ele,this.cells[i][j].num);
-                                                this.cells[i][j] = null;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    case 40:
-                        for(var i = 0;i < this.rows;i++){
-                            var n = this.rows - 1;
-                            for(var j = this.rows - 1;j >= 0;j--){
-                                if(this.cells[i][j] !== null && n !== j){
-                                    if(this.cells[i][n] === null){
-                                        this.cells[i][n] = new Cell(i,n,this.cells[i][j].ele,this.cells[i][j].num);
-                                        this.cells[i][j] = null;
-                                    }else{
-                                        if(this.cells[i][n].num === this.cells[i][j].num){
-                                            this.cells[i][n].setNum(this.cells[i][n].num * 2);
-                                            this.obj.removeChild(this.cells[i][j].ele);
-                                            this.cells[i][j] = null;
-                                            this.score += this.cells[i][n].num;
-                                        }else if(this.cells[i][j] !== null){
-                                            n--;
-                                            if(n !== j){
-                                                this.cells[i][n] = new Cell(i,n,this.cells[i][j].ele,this.cells[i][j].num);
-                                                this.cells[i][j] = null;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                }
-                this.createCell();
-                this.status = false;
-                var ms = +(localStorage.getItem("maxScore") || 0);
-                this.maxScore = ms > this.score ? ms : this.score;
-                localStorage.setItem("maxScore",this.maxScore);
-                max.innerText = "最高分:" + this.maxScore;
-                curr.innerText = "当前分数:" + this.score;
-                if(this.isDeath()){
-                    alert("游戏结束");
-                }else{
-                    let me = this;
-                    setTimeout(function(){
-                        me.status = true;
-                    },300);
-                }
-            },
-            //开始监听键盘事件
-            startKeyLinster:function(){
-                var self = this;
-                document.onkeydown = function(e){
-                    if(self.status && e.keyCode > 36 && e.keyCode < 41){
-                        self.move(e.keyCode);
-                    }
-                }
-            },
-            init:function(){
-                this.status = true,
-                this.score = 0;
-                this.maxScore = +(localStorage.getItem("maxScore") || 0);
-                max.innerText = "最高分:" + this.maxScore;
-                this.obj.innerHTML = "";
-                this.obj.style.width = this.rows * this.size + "px";
-                this.obj.style.height = this.rows * this.size + "px";
-                this.createbg();
-                this.createCells();
-                this.createCell();
-                this.startKeyLinster();
-            },
-            clone: function () {
-                const copy = function (obj) {
-                    let o = obj instanceof Array ? [] : {};
-                    for (let k in obj) {
-                        if (typeof o[k] === "[object]") {
-                            o[k] = copy(obj[k]);
-                        } else {
-                            o[k] = obj[k];                            
-                        }
-                    }
-                    return o;
-                }
-                return copy(this);
-            },
-            hasWon: function () {
-                for(var i = 0;i < this.rows;i++){
-                    for(var j = 0;j < this.rows;j++){
-                        if (this.cells[i][j] && this.cells[i][j].num && this.cells[i][j].num === 2048) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            },
-            hasLost: function () {
-                return this.isDeath();
+              }
             }
+          }
+          return true;
+        } else {
+          return false;
         }
-        panel.init();
-        var MCM = function (board) {
-            this.originalBoard = board;
-            this.statistic = [];
+      },
+      move: function (type) {
+        if (!this.isMove(type)) {
+          return;
         }
-        MCM.prototype.run = function (interations) {
-            let count = Number(interations);
-            while (count--) {
-                this.simulate();
+        switch (type) {
+          case 37:
+            for (var j = 0; j < this.rows; j++) {
+              var n = 0;
+              for (var i = 0; i < this.rows; i++) {
+                if (this.cells[i][j] !== null && n !== i) {
+                  if (this.cells[n][j] === null) {
+                    this.cells[n][j] = new Cell(n, j, this.cells[i][j].ele, this.cells[i][j].num);
+                    this.cells[i][j] = null;
+                  } else {
+                    if (this.cells[n][j].num === this.cells[i][j].num) {
+                      this.cells[n][j].setNum(this.cells[n][j].num * 2);
+                      this.obj.removeChild(this.cells[i][j].ele);
+                      this.cells[i][j] = null;
+                      this.score += this.cells[n][j].num;
+                    } else if (this.cells[i][j] !== null) {
+                      n++;
+                      if (n !== i) {
+                        this.cells[n][j] = new Cell(n, j, this.cells[i][j].ele, this.cells[i][j].num);
+                        this.cells[i][j] = null;
+                      }
+                    }
+                  }
+                }
+              }
             }
-            return this.getBaseAction();
-        }
-        MCM.prototype.getBaseAction = function () {
-            return this.statistic.reduce((best, current) => {
-                return current.score > best.score ? current : best;
-            }).action;
-        }
-        MCM.prototype.simulate = function () {
-            let board = this.originalBoard.clone();
-            let actions = board.getActions();
-            let path = [];
-            while (actions.length) {
-                let action = actions[Math.floor(Math.random() * actions.length)];
-                path.push(action);
-                board.doAction(action);
-                actions = board.getActions();
+            break;
+          case 38:
+            for (var i = 0; i < this.rows; i++) {
+              var n = 0;
+              for (var j = 0; j < this.rows; j++) {
+                if (this.cells[i][j] !== null && n !== j) {
+                  if (this.cells[i][n] === null) {
+                    this.cells[i][n] = new Cell(i, n, this.cells[i][j].ele, this.cells[i][j].num);
+                    this.cells[i][j] = null;
+                  } else {
+                    if (this.cells[i][n].num === this.cells[i][j].num) {
+                      this.cells[i][n].setNum(this.cells[i][n].num * 2);
+                      this.obj.removeChild(this.cells[i][j].ele);
+                      this.cells[i][j] = null;
+                      this.score += this.cells[i][n].num;
+                    } else if (this.cells[i][j] !== null) {
+                      n++;
+                      if (n !== j) {
+                        this.cells[i][n] = new Cell(i, n, this.cells[i][j].ele, this.cells[i][j].num);
+                        this.cells[i][j] = null;
+                      }
+                    }
+                  }
+                }
+              }
             }
-            this.updateStatistic(path[0], board.getResult());
+            break;
+          case 39:
+            for (var j = 0; j < this.rows; j++) {
+              var n = this.rows - 1;
+              for (var i = this.rows - 1; i >= 0; i--) {
+                if (this.cells[i][j] !== null && n !== i) {
+                  if (this.cells[n][j] === null) {
+                    this.cells[n][j] = new Cell(n, j, this.cells[i][j].ele, this.cells[i][j].num);
+                    this.cells[i][j] = null;
+                  } else {
+                    if (this.cells[n][j].num === this.cells[i][j].num) {
+                      this.cells[n][j].setNum(this.cells[n][j].num * 2);
+                      this.obj.removeChild(this.cells[i][j].ele);
+                      this.cells[i][j] = null;
+                      this.score += this.cells[n][j].num;
+                    } else if (this.cells[i][j] !== null) {
+                      n--;
+                      if (n !== i) {
+                        this.cells[n][j] = new Cell(n, j, this.cells[i][j].ele, this.cells[i][j].num);
+                        this.cells[i][j] = null;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            break;
+          case 40:
+            for (var i = 0; i < this.rows; i++) {
+              var n = this.rows - 1;
+              for (var j = this.rows - 1; j >= 0; j--) {
+                if (this.cells[i][j] !== null && n !== j) {
+                  if (this.cells[i][n] === null) {
+                    this.cells[i][n] = new Cell(i, n, this.cells[i][j].ele, this.cells[i][j].num);
+                    this.cells[i][j] = null;
+                  } else {
+                    if (this.cells[i][n].num === this.cells[i][j].num) {
+                      this.cells[i][n].setNum(this.cells[i][n].num * 2);
+                      this.obj.removeChild(this.cells[i][j].ele);
+                      this.cells[i][j] = null;
+                      this.score += this.cells[i][n].num;
+                    } else if (this.cells[i][j] !== null) {
+                      n--;
+                      if (n !== j) {
+                        this.cells[i][n] = new Cell(i, n, this.cells[i][j].ele, this.cells[i][j].num);
+                        this.cells[i][j] = null;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            break;
         }
-        MCM.prototype.updateStatistic = function (action, score) {
-            let target = this.statistic.find(item => item.action === action);
-            if (!target) {
-                this.statistic.push({
-                    action: action,
-                    score: score
-                });
+        this.createCell();
+        this.status = false;
+        var ms = +(localStorage.getItem("maxScore") || 0);
+        this.maxScore = ms > this.score ? ms : this.score;
+        localStorage.setItem("maxScore", this.maxScore);
+        max.innerText = "最高分:" + this.maxScore;
+        curr.innerText = "当前分数:" + this.score;
+        if (this.isDeath()) {
+          alert("游戏结束");
+        } else {
+          let me = this;
+          setTimeout(function () {
+            me.status = true;
+          }, 300);
+        }
+      },
+      //开始监听键盘事件
+      startKeyLinster: function () {
+        var self = this;
+        document.onkeydown = function (e) {
+          if (self.status && e.keyCode > 36 && e.keyCode < 41) {
+            self.move(e.keyCode);
+          }
+        }
+      },
+      init: function () {
+        this.status = true,
+          this.score = 0;
+        this.maxScore = +(localStorage.getItem("maxScore") || 0);
+        max.innerText = "最高分:" + this.maxScore;
+        this.obj.innerHTML = "";
+        this.obj.style.width = this.rows * this.size + "px";
+        this.obj.style.height = this.rows * this.size + "px";
+        this.createbg();
+        this.createCells();
+        this.createCell();
+        this.startKeyLinster();
+      },
+      clone: function () {
+        const copy = function (obj) {
+          let o = obj instanceof Array ? [] : {};
+          for (let k in obj) {
+            if (typeof o[k] === "[object]") {
+              o[k] = copy(obj[k]);
             } else {
-                target.score += score;
+              o[k] = obj[k];
             }
+          }
+          return o;
         }
-        function adapter (board) {
-            console.log(board, board.clone)
-            function clone() {
-                return adapter(board.clone());
+        return copy(this);
+      },
+      hasWon: function () {
+        for (var i = 0; i < this.rows; i++) {
+          for (var j = 0; j < this.rows; j++) {
+            if (this.cells[i][j] && this.cells[i][j].num && this.cells[i][j].num === 2048) {
+              return true;
             }
-            function getActions() {
-                if (!board.hasWon() && !board.hasLost()) {
-                    return [37, 38, 39, 40];
-                } else {
-                    return [];
-                }
-            }
-            function doAction (action) {
-                board.move();
-            }
-            let startScore = board.score;
-            function getResult () {
-                return board.score - startScore;
-            }
-            return {
-                clone,
-                getActions,
-                doAction,
-                getResult
-            }
+          }
         }
-        var mcm = new MCM(adapter(panel))
-        mcm.run(1);
-    </script>
+        return false;
+      },
+      hasLost: function () {
+        return this.isDeath();
+      }
+    }
+    panel.init();
+    var MCM = function (board) {
+      this.originalBoard = board;
+      this.statistic = [];
+    }
+    MCM.prototype.run = function (interations) {
+      let count = Number(interations);
+      while (count--) {
+        this.simulate();
+      }
+      return this.getBaseAction();
+    }
+    MCM.prototype.getBaseAction = function () {
+      return this.statistic.reduce((best, current) => {
+        return current.score > best.score ? current : best;
+      }).action;
+    }
+    MCM.prototype.simulate = function () {
+      let board = this.originalBoard.clone();
+      let actions = board.getActions();
+      let path = [];
+      while (actions.length) {
+        let action = actions[Math.floor(Math.random() * actions.length)];
+        path.push(action);
+        board.doAction(action);
+        actions = board.getActions();
+      }
+      this.updateStatistic(path[0], board.getResult());
+    }
+    MCM.prototype.updateStatistic = function (action, score) {
+      let target = this.statistic.find(item => item.action === action);
+      if (!target) {
+        this.statistic.push({
+          action: action,
+          score: score
+        });
+      } else {
+        target.score += score;
+      }
+    }
+    function adapter(board) {
+      function clone() {
+        return adapter(board.clone());
+      }
+      function getActions() {
+        if (!board.hasWon() && !board.hasLost()) {
+          return [37, 38, 39, 40];
+        } else {
+          return [];
+        }
+      }
+      function doAction(action) {
+        board.move();
+      }
+      let startScore = board.score;
+      function getResult() {
+        return board.score - startScore;
+      }
+      return {
+        clone,
+        getActions,
+        doAction,
+        getResult
+      }
+    }
+    // var mcm = new MCM(adapter(panel))
+    // mcm.run(1);
+  </script>
 </body>
+
 </html>
