@@ -88,7 +88,7 @@
       },
       methods: {
         setMax() {
-          if (this.list[0].value > max.value) {
+          if (this.list[0].value > this.max.value) {
             this.max = {
               color: "#" + this.list[0].key.substr(5),
               value: this.list[0].value
@@ -120,6 +120,7 @@
             this.next();
           }, 1000 / 60);
         } else {
+          console.log(this.roundList.length, num)
           num--;
         }
       }
@@ -149,7 +150,7 @@
     const list = [];
     const bgColor = "#fff";
     const isEarth = false;
-    let num = 7;
+    let num = 10;
     function drawSixLine(x, y, color = bgColor) {
       mainCtx.fillStyle = color;
       mainCtx.beginPath();
