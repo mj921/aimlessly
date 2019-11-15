@@ -33,6 +33,7 @@
 <body>
   <canvas id="main"></canvas>
   <div id="app">
+    <dl :style="`color: ${imax.color)};`">最大领土:{{max.value}}</dl>
     <dl v-for="item in list" :key="item.key" :style="`color: #${item.key.substr(5)};`">{{item.value}}</dl>
     <!-- <dl style="color: #f00;">{{colorf00}}</dl>
     <dl style="color: #00f;">{{color00f}}</dl>
@@ -50,7 +51,9 @@
     var app = new Vue({
       el: "#app",
       data() {
+        const max = localStorage.getItem("maxColor") ? JSON.parse(localStorage.getItem("maxColor")) : {color: "#fff", value: 0}
         return {
+          max,
           colorf00: 0,
           color00f: 0,
           color0f0: 0,
@@ -81,6 +84,17 @@
             return b.value - a.value;
           })
           return arr;
+        }
+      },
+      methods: {
+        setMax() {
+          if (this.list[0].value > max.value) {
+            this.max = {
+              color: "#" + this.list[0].key.substr(5),
+              value: this.list[0].value
+            }
+            localStorage.setItem("maxColor", JSON.stringify(this.max));
+          }
         }
       }
     })
@@ -243,6 +257,8 @@
       if (num > 0) {
         render();
         setTimeout(loop, 1000 / 60)
+      } else {
+        app.setMax();
       }
     }
     const redGroup = new Group("#f00");
