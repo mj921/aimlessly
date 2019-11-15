@@ -34,6 +34,7 @@
   <canvas id="main"></canvas>
   <div id="app">
     <dl :style="`color: ${max.color};`">最大领土:{{max.value}}</dl>
+    <dl :style="`color: ${min.color};`">最小领土:{{min.value}}</dl>
     <dl v-for="item in list" :key="item.key" :style="`color: #${item.key.substr(5)};`">{{item.value}}</dl>
   </div>
   <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
@@ -41,9 +42,11 @@
     var app = new Vue({
       el: "#app",
       data() {
-        const max = localStorage.getItem("maxColor") ? JSON.parse(localStorage.getItem("maxColor")) : {color: "#fff", value: 0}
+        const max = localStorage.getItem("maxColor") ? JSON.parse(localStorage.getItem("maxColor")) : {color: "#fff", value: 0};
+        const min = localStorage.getItem("minColor") ? JSON.parse(localStorage.getItem("minColor")) : {color: "#fff", value: 999999};
         return {
           max,
+          min,
           colorf00: 0,
           color00f: 0,
           color0f0: 0,
@@ -77,13 +80,20 @@
         }
       },
       methods: {
-        setMax() {
+        setMaxMin() {
           if (this.list[0].value > this.max.value) {
             this.max = {
               color: "#" + this.list[0].key.substr(5),
               value: this.list[0].value
             }
             localStorage.setItem("maxColor", JSON.stringify(this.max));
+          }
+          if (this.list[this.list.length - 1].value < this.min.value) {
+            this.min = {
+              color: "#" + this.list[this.list.length - 1].key.substr(5),
+              value: this.list[this.list.length - 1].value
+            }
+            localStorage.setItem("minColor", JSON.stringify(this.min));
           }
         }
       }
@@ -248,7 +258,7 @@
         render();
         setTimeout(loop, 1000 / 60)
       } else {
-        app.setMax();
+        app.setMaxMin();
       }
     }
     const redGroup = new Group("#f00");
