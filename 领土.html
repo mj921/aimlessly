@@ -35,16 +35,6 @@
   <div id="app">
     <dl :style="`color: ${max.color};`">最大领土:{{max.value}}</dl>
     <dl v-for="item in list" :key="item.key" :style="`color: #${item.key.substr(5)};`">{{item.value}}</dl>
-    <!-- <dl style="color: #f00;">{{colorf00}}</dl>
-    <dl style="color: #00f;">{{color00f}}</dl>
-    <dl style="color: #0f0;">{{color0f0}}</dl>
-    <dl style="color: #000;">{{color000}}</dl>
-    <dl style="color: #ff0;">{{colorff0}}</dl>
-    <dl style="color: #f0f;">{{colorf0f}}</dl>
-    <dl style="color: #0ff;">{{color0ff}}</dl>
-    <dl style="color: #080;">{{color080}}</dl>
-    <dl style="color: #fa0;">{{colorfa0}}</dl>
-    <dl style="color: #921;">{{color921}}</dl> -->
   </div>
   <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
   <script>
@@ -120,7 +110,6 @@
             this.next();
           }, 1000 / 60);
         } else {
-          console.log(this.roundList.length, num)
           num--;
         }
       }
@@ -283,29 +272,6 @@
     molvGroup.start();
     orangeGroup.start();
     anhongGroup.start();
-    // let sto;
-    // let roundList = [];
-    // function next() {
-    //   clearTimeout(sto);
-    //   let index = Math.floor(roundList.length * Math.random());
-    //   const item = roundList[index];
-    //   roundList.splice(index, 1);
-    //   item.color = "#f00";
-    //   roundList = Array.from(new Set(roundList.concat(round(item.i, item.j).filter(jtem => jtem.color === bgColor))));
-    //   render();
-    //   if (roundList.length > 0) {
-    //     sto = setTimeout(next, 1000 / 60);
-    //   }
-    // }
-    // function start() {
-    //   const startX = Math.floor(Math.random() * col);
-    //   const startY = Math.floor(Math.random() * row);
-    //   list[startX][startY].color = "#f00";
-    //   roundList = roundList.concat(round(startX, startY));
-    //   render();
-    //   sto = setTimeout(next, 1000 / 60);
-    // }
-    // start()
   </script>
 </body>
 
