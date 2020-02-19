@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>瘟疫模拟</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@4.6.0/dist/echarts.common.min.js"></script>
+  <style>
+    .people dl {
+      display: flex;
+      margin: 0;
+    }
+    .people dl dd {
+      margin: 1px;
+      width: 10px;
+      height: 10px;
+    }
+    .nums, .setting {
+      display: flex;
+    }
+    .nums dl, .setting dl {
+      margin: 0;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <button @click="start">开始</button>
+    <div class="nums">
+      <dl>周期：{{ round }}</dl>
+      <dl>总人口：{{ size * size }}</dl>
+      <dl>总感染：{{ num }}</dl>
+      <dl>当前感染：{{ ganranCurr }}</dl>
+      <dl>治愈：{{ zhiyuNum }}</dl>
+      <dl>死亡：{{ dieNum }}</dl>
+      <dl>死亡率：{{ (dieNum / num * 100).toFixed(2) }}%</dl>
+      <dl>治愈率：{{ (zhiyuNum / num * 100).toFixed(2) }}%</dl>
+      <dl>得病率：{{ (num / size / size * 100).toFixed(2) }}%</dl>
+    </div>
+    <div class="setting">
+      <dl>传染率：<input v-model="ganran">%</dl>
+      <dl>死亡率：<input v-model="die">%</dl>
+      <dl>治愈率：<input v-model="zhiyu">%</dl>
+      <dl>戴口罩：<input v-model="kouzhao" type="checkbox"></dl>
+      <dl>交通管制：<input v-model="jiaotong" type="checkbox"></dl>
+      <dl>不出门：<input v-model="chumen" type="checkbox"></dl>
+      <dl>大小：<input v-model="size"></dl>
+      <dl>开始点：<input v-model="startP"></dl>
+      <dl>潜伏期：<input v-model="startDay"></dl>
+      <dl>速度：<input v-model="speed"></dl>
+    </div>
+    <div class="people" :style="{width: 12 * size + 'px'}">
+      <dl v-for="(item, i) in people">
+        <dd v-for="(jtem, j) in item" :style="'background-color:' + getColor(jtem.type)"></dd>
+      </dl>
+    </div>
+  </div>
+  <div id="main" style="display: inline-block;width: 900px;height:380px;"></div>
+  <div id="change" style="display: inline-block;width: 900px;height:380px;"></div>
+  <script>
+    var mainChart = echarts.init(document.getElementById('main'));
+    var changeChart = echarts.init(document.getElementById('change'));
+    const app = new Vue({
+      el: "#app",
+      data() {
+        return {
+          people: [],
+          ganran: 10,
+          die: 2.58,
+          zhiyu: 17.54,
+          num: 0,
+          disabled: false,
+          round: 0,
+          dieNum: 0,
+          qianfuNum: 0,
+          qianfuCurr: 0,
+          ganranNum: 0,
+          ganranCurr: 0,
+          zhiyuNum: 0,
+          changeList: {},
+          roundList: [],
+          kouzhao: false,
+          jiaotong: false,
+          chumen: false,
+          size: 41,
+          startP: 20,
+          startDay: 14,
+          speed: 5
+        }
+      },
+      created() {
+        const people = [];
+        for(let i = 0; i < this.size; i++) {
+          const arr = [];
+          for(let j = 0; j < this.size; j++) {
+            arr.push({
+              type: 0
+            })
+          }
+          people.push(arr);
+        }
+        this.people = people;
+      },
+      methods: {
+        getColor(type) {
+          switch (type) {
+            // 正常
+            case 0:
+              return "green";
+            // 感染
+            case 1:
+              return "red";
+            // 死亡
+            case 2:
+              return "black";
+            // 治愈
+            case 3:
+              return "blue";
+            // 潜伏
+            case 4:
+              return "yellow";
+          }
+        },
+        start() {
+          const people = [];
+          for(let i = 0; i < this.size; i++) {
+            const arr = [];
+            for(let j = 0; j < this.size; j++) {
+              arr.push({
+                type: 0,
+                nextType: 0,
+                day: 0
+              })
+            }
+            people.push(arr);
+          }
+          this.people = people;
+          this.people[this.startP][this.startP].type = 4;
+          this.people[this.startP][this.startP].nextType = 4;
+          this.people[this.startP][this.startP].day = 1;
+          this.round = 1;
+          this.num = 1;
+          this.qianfuNum = 1;
+          this.ganranCurr = 0;
+          this.dieNum = 0;
+          this.zhiyuNum = 0;
+          this.disabled = true;
+          setTimeout(this.change, 1000 / this.speed);
+          this.roundList = [1];
+          this.changeList.ganranAdd = [0];
+          this.changeList.zhiyuAdd = [0];
+          this.changeList.dieAdd = [0];
+          this.changeList.ganranNum = [0];
+          this.changeList.ganranCurr = [0];
+          this.changeList.zhiyuNum = [0];
+          this.changeList.dieNum = [0];
+        },
+        change() {
+          this.round++;
+          for(let i = 0; i < this.size; i++) {
+            for(let j = 0; j < this.size; j++) {
+              if (this.people[i][j].type === 1 || this.people[i][j].type === 4) {
+                this.people[i][j].day++;
+                if (this.people[i][j].type === 1) {
+                  if (this.round > this.startDay) {
+                    const zy = this.zhiyu;
+                    const sw = this.die;
+                    const r = Math.random() * 100;
+                    if (r < zy) {
+                      this.people[i][j].nextType = 3;
+                    } else if (r < (zy + sw)) {
+                      this.people[i][j].nextType = 2;
+                    }
+                  }
+                } else if (this.people[i][j].day >= 14) {
+                  this.people[i][j].nextType = 1;
+                }
+                let ganran = this.ganran;
+                if (this.kouzhao) {
+                  ganran /= 2;
+                }
+                if (this.chumen) {
+                  ganran /= 2;
+                }
+                if (i > 0 && this.people[i - 1][j].type === 0 && Math.random() * 100 < ganran) {
+                  this.people[i - 1][j].nextType = 4;
+                }
+                if (i < this.size - 1 && this.people[i + 1][j].type === 0 && Math.random() * 100 < ganran) {
+                  this.people[i + 1][j].nextType = 4;
+                }
+                if (j > 0 && this.people[i][j - 1].type === 0 && Math.random() * 100 < ganran) {
+                  this.people[i][j - 1].nextType = 4;
+                }
+                if (j < this.size - 1 && this.people[i][j + 1].type === 0 && Math.random() * 100 < ganran) {
+                  this.people[i][j + 1].nextType = 4;
+                }
+                if (!this.jiaotong) {
+                  if (i > 0 && j > 0 && this.people[i - 1][j - 1].type === 0 && Math.random() * 100 < ganran) {
+                    this.people[i - 1][j - 1].nextType = 4;
+                  }
+                  if (i < this.size - 1 && j < this.size - 1 && this.people[i + 1][j + 1].type === 0 && Math.random() * 100 < ganran) {
+                    this.people[i + 1][j + 1].nextType = 4;
+                  }
+                  if (i < this.size - 1 && j > 0 && this.people[i + 1][j - 1].type === 0 && Math.random() * 100 < ganran) {
+                    this.people[i + 1][j - 1].nextType = 4;
+                  }
+                  if (i > 0 && j < this.size - 1 && this.people[i - 1][j + 1].type === 0 && Math.random() * 100 < ganran) {
+                    this.people[i - 1][j + 1].nextType = 4;
+                  }
+                }
+              }
+            }
+          }
+          let ganranAdd = 0;
+          let dieAdd = 0;
+          let zhiyuAdd = 0;
+          for(let i = 0; i < this.size; i++) {
+            for(let j = 0; j < this.size; j++) {
+                // if (this.people[i][j].type !== 0 && this.people[i][j].type !== 1 && this.people[i][j].nextType === 1) {
+                //   console.log("aaa", this.people[i][j].type)
+                // }
+                // if (this.people[i][j].type !== 1 && this.people[i][j].type !== 2 && this.people[i][j].nextType === 2) {
+                //   console.log("bbb")
+                // }
+                // if (this.people[i][j].type !== 1 && this.people[i][j].type !== 3 && this.people[i][j].nextType === 3) {
+                //   console.log("ccc")
+                // }
+              if (this.people[i][j].type === 0 && this.people[i][j].nextType === 4){
+                this.people[i][j].day = 1;
+                this.num++;
+                this.qianfuNum++;
+                // ganranAdd++;
+              }
+              if (this.people[i][j].type === 4 && this.people[i][j].nextType === 1){
+                // this.num++;
+                this.ganranCurr++;
+                this.qianfuNum--;
+                ganranAdd++;
+              }
+              if (this.people[i][j].type === 1 && this.people[i][j].nextType === 2){
+                dieAdd++;
+                this.ganranCurr--;
+                this.dieNum++;
+              }
+              if (this.people[i][j].type === 1 && this.people[i][j].nextType === 3){
+                zhiyuAdd++;
+                this.ganranCurr--;
+                this.zhiyuNum++;
+              }
+              this.people[i][j].type = this.people[i][j].nextType;
+            }
+          }
+          this.roundList.push(this.round);
+          this.changeList.ganranAdd.push(ganranAdd);
+          this.changeList.zhiyuAdd.push(zhiyuAdd);
+          this.changeList.dieAdd.push(dieAdd);
+          this.changeList.ganranNum.push(this.num);
+          this.changeList.ganranCurr.push(this.ganranCurr);
+          this.changeList.zhiyuNum.push(this.zhiyuNum);
+          this.changeList.dieNum.push(this.dieNum);
+          mainChart.setOption({
+            tooltip: {},
+            legend: {
+                data:['感染总数', "当前感染", "治愈", "死亡"]
+            },
+            xAxis: {
+                data: this.roundList
+            },
+            yAxis: {},
+            series: [
+            {
+                name: '感染总数',
+                type: 'line',
+                data: this.changeList.ganranNum
+            }, 
+            {
+                name: '当前感染',
+                type: 'line',
+                data: this.changeList.ganranCurr
+            },
+            {
+                name: '治愈',
+                type: 'line',
+                data: this.changeList.zhiyuNum
+            },
+            {
+                name: '死亡',
+                type: 'line',
+                data: this.changeList.dieNum
+            }]
+          })
+          changeChart.setOption({
+            tooltip: {},
+            legend: {
+                data:['新增感染', "新增治愈", "新增死亡"]
+            },
+            xAxis: {
+                data: this.roundList
+            },
+            yAxis: {},
+            series: [{
+                name: '新增感染',
+                type: 'line',
+                data: this.changeList.ganranAdd
+            },{
+                name: '新增治愈',
+                type: 'line',
+                data: this.changeList.zhiyuAdd
+            },{
+                name: '新增死亡',
+                type: 'line',
+                data: this.changeList.dieAdd
+            }]
+          })
+          if (this.size * this.size > this.num && (this.ganranCurr + this.qianfuNum) > 0) {
+            setTimeout(this.change, 1000 / this.speed);
+          } else {
+            this.disabled = false;
+          }
+        }
+      }
+    })
+  </script>
+</body>
+</html>
