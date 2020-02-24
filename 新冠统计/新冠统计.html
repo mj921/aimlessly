@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新冠统计</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@4.6.0/dist/echarts.common.min.js"></script>
+  <style>
+    .people dl {
+      display: flex;
+      margin: 0;
+    }
+    .people dl dd {
+      margin: 1px;
+      width: 10px;
+      height: 10px;
+    }
+    .nums, .setting {
+      display: flex;
+    }
+    .nums dl, .setting dl {
+      margin: 0;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <select v-model="dataDate">
+      <option value="20200221">2020-02-21</option>
+      <option value="20200224">2020-02-24</option>
+    </select>
+  </div>
+  <div id="confirmed" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="confirmedNotHB" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="confirmed20" style="display: inline-block;width: 2200px;height:380px;"></div>
+  <div id="confirmedCurr" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="confirmedCurrNotHB" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="confirmedCurr20" style="display: inline-block;width: 2200px;height:380px;"></div>
+  <div id="cured" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="curedNotHB" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="dead" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="deadNotHB" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="dead20" style="display: inline-block;width: 2200px;height:380px;"></div>
+  <div id="curedRatio" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="curedRatio1" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="curedRatio20" style="display: inline-block;width: 2200px;height:380px;"></div>
+  <div id="curedRatioProvince" style="display: inline-block;width: 2200px;height:760px;"></div>
+  <div id="deadRatio" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="deadRatio1" style="display: inline-block;width: 1100px;height:380px;"></div>
+  <div id="deadRatioProvince" style="display: inline-block;width: 2200px;height:760px;"></div>
+  <div id="sum" style="display: inline-block;width: 2200px;height:760px;"></div>
+  <script src="./20200224.js"></script>
+  <script src="./20200221.js"></script>
+  <script>
+    const app = new Vue({
+      el: "#app",
+      data() {
+        return {
+          dataDate: "20200224"
+        }
+      },
+      methods: {
+        dateChange(val) {
+          create(val);
+        }
+      },
+      watch: {
+        dataDate() {
+          this.dateChange(this.dataDate);
+        }
+      },
+      created() {
+        this.dateChange(this.dataDate);
+      }
+    })
+    // function hslToRgb(h){
+    //   var r, g, b;
+    //   var hue2rgb = function hue2rgb(t){
+    //     if(t < 0) t += 1;
+    //     if(t > 1) t -= 1;
+    //     if(t < 1/6) return 6 * t;
+    //     if(t < 1/2) return 1;
+    //     if(t < 2/3) return (2/3 - t) * 6;
+    //     return 0;
+    //   }
+    //   r = hue2rgb(h + 1/3);
+    //   g = hue2rgb(h);
+    //   b = hue2rgb(h - 1/3);
+    //   return "#" + ("0" + Math.round(r * 255).toString(16)).substr(-2, 2) + ("0" + Math.round(g * 255).toString(16)).substr(-2, 2) + ("0" + Math.round(b * 255).toString(16)).substr(-2, 2);
+    // }
+    function hslToRgb(h, s, l){
+
+        var r, g, b;
+
+        if(s == 0){
+
+            r = g = b = l; // achromatic
+
+        }else{
+
+            var hue2rgb = function hue2rgb(p, q, t){
+
+                if(t < 0) t += 1;
+
+                if(t > 1) t -= 1;
+
+                if(t < 1/6) return p + (q - p) * 6 * t;
+
+                if(t < 1/2) return q;
+
+                if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+
+                return p;
+
+            }
+
+            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+
+            var p = 2 * l - q;
+
+            r = hue2rgb(p, q, h + 1/3);
+
+            g = hue2rgb(p, q, h);
+
+            b = hue2rgb(p, q, h - 1/3);
+
+        }
+      return "#" + ("0" + Math.round(r * 255).toString(16)).substr(-2, 2) + ("0" + Math.round(g * 255).toString(16)).substr(-2, 2) + ("0" + Math.round(b * 255).toString(16)).substr(-2, 2);
+    }
+    function create(date) {
+      const data = window["data" + date];
+      console.log(window)
+      const cities = [];
+      const citiesNotHB = []
+      const provinces = []
+      data.forEach((item, i) => {
+        item.cities.forEach(jtem => {
+          jtem.provinceName = item.provinceName;
+          jtem.provinceName = item.provinceName;
+          jtem.curedRatio = ((jtem.confirmedCount > 0 ? (jtem.curedCount / jtem.confirmedCount) : 0) * 100).toFixed(2);
+          jtem.deadRatio = ((jtem.confirmedCount > 0 ? (jtem.deadCount / jtem.confirmedCount) : 0) * 100).toFixed(2);
+          // jtem.color = "#" + (item.locationId + "").substr(0, 2) + ("0000" + (i * 1927).toString(16)).substr(-4, 4);
+          // jtem.color = "#" + ("000000" + (i * 493425).toString(16)).substr(-6, 6);
+          // jtem.color = hslToRgb((i + 1) / 36);
+          jtem.color = hslToRgb((i + 1) / 36, 1, (i + 1) % 3 * 0.25 + 0.25);
+          console.log(jtem.color, item.provinceName, (i + 1) / 40, (i + 1) % 4 * 0.25)
+          cities.push(jtem);
+          if (jtem.provinceName !== "湖北省") {
+            citiesNotHB.push(jtem);
+          }
+        })
+        provinces.push({
+          provinceName: item.provinceName,
+          confirmedCount: item.confirmedCount,
+          currentConfirmedCount: item.currentConfirmedCount,
+          curedCount: item.curedCount,
+          deadCount: item.deadCount,
+          curedRatio: (item.curedCount / item.confirmedCount * 100).toFixed(2),
+          deadRatio: (item.deadCount / item.confirmedCount * 100).toFixed(2),
+          // color: "#" + (item.locationId + "").substr(0, 2) + ("0000" + (i * 1927).toString(16)).substr(-4, 4)
+          // color: "#" + ("000000" + (i * 493425).toString(16)).substr(-6, 6)
+          // color: hslToRgb((i + 1) / 36)
+          color: hslToRgb((i + 1) / 36, 1, (i + 1) % 3 * 0.25 + 0.25)
+        })
+      })
+      console.log(provinces)
+
+      const confirmedNum = [];
+      const confirmedName = [];
+      cities.sort((a, b) => b.confirmedCount - a.confirmedCount).slice(0, 10).forEach(item => {
+        confirmedNum.push({value: item.confirmedCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        confirmedName.push(item.cityName);
+      });
+      var confirmedChart = echarts.init(document.getElementById('confirmed'));
+      confirmedChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: confirmedName
+        },
+        yAxis: {},
+        series: [{
+            name: '确诊人数',
+            type: 'bar',
+            data: confirmedNum
+        }]
+      })
+
+      const confirmedNotHBNum = [];
+      const confirmedNotHBName = [];
+      citiesNotHB.sort((a, b) => b.confirmedCount - a.confirmedCount).slice(0, 10).forEach(item => {
+        confirmedNotHBNum.push({value: item.confirmedCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        confirmedNotHBName.push(item.cityName);
+      });
+      var confirmedNotHBChart = echarts.init(document.getElementById('confirmedNotHB'));
+      confirmedNotHBChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: confirmedNotHBName
+        },
+        yAxis: {},
+        series: [{
+            name: '确诊人数(除湖北)',
+            type: 'bar',
+            data: confirmedNotHBNum
+        }]
+      })
+
+      const confirmedNum20 = [];
+      const confirmedName20 = [];
+      cities.filter(item => item.cityName !== "武汉").sort((a, b) => b.confirmedCount - a.confirmedCount).slice(0, 20).forEach(item => {
+        confirmedNum20.push({value: item.confirmedCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        confirmedName20.push(item.cityName);
+      });
+      var confirmed20Chart = echarts.init(document.getElementById('confirmed20'));
+      confirmed20Chart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: confirmedName20
+        },
+        yAxis: {},
+        series: [{
+            name: '确诊人数(除武汉)',
+            type: 'bar',
+            data: confirmedNum20
+        }]
+      })
+      
+      const confirmedCurrNum = [];
+      const confirmedCurrName = [];
+      cities.sort((a, b) => b.currentConfirmedCount - a.currentConfirmedCount).slice(0, 10).forEach(item => {
+        confirmedCurrNum.push({value: item.currentConfirmedCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        confirmedCurrName.push(item.cityName);
+      });
+      var confirmedCurrChart = echarts.init(document.getElementById('confirmedCurr'));
+      confirmedCurrChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: confirmedCurrName
+        },
+        yAxis: {},
+        series: [{
+            name: '现存确诊人数',
+            type: 'bar',
+            data: confirmedCurrNum
+        }]
+      })
+      
+      const confirmedCurrNotHBNum = [];
+      const confirmedCurrNotHBName = [];
+      citiesNotHB.sort((a, b) => b.currentConfirmedCount - a.currentConfirmedCount).slice(0, 10).forEach(item => {
+        confirmedCurrNotHBNum.push({value: item.currentConfirmedCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        confirmedCurrNotHBName.push(item.cityName);
+      });
+      var confirmedCurrNotHBChart = echarts.init(document.getElementById('confirmedCurrNotHB'));
+      confirmedCurrNotHBChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: confirmedCurrNotHBName
+        },
+        yAxis: {},
+        series: [{
+            name: '现存确诊人数(除湖北)',
+            type: 'bar',
+            data: confirmedCurrNotHBNum
+        }]
+      })
+
+      const currentConfirmedNum20 = [];
+      const currentConfirmedName20 = [];
+      cities.filter(item => item.cityName !== "武汉").sort((a, b) => b.currentConfirmedCount - a.currentConfirmedCount).slice(0, 20).forEach(item => {
+        currentConfirmedNum20.push({value: item.currentConfirmedCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        currentConfirmedName20.push(item.cityName);
+      });
+      var currentConfirmed20Chart = echarts.init(document.getElementById('confirmedCurr20'));
+      currentConfirmed20Chart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: currentConfirmedName20
+        },
+        yAxis: {},
+        series: [{
+            name: '现存确诊人数(除武汉)',
+            type: 'bar',
+            data: currentConfirmedNum20
+        }]
+      })
+
+      const curedNum = [];
+      const curedName = [];
+      cities.sort((a, b) => b.curedCount - a.curedCount).slice(0, 10).forEach(item => {
+        curedNum.push({value: item.curedCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        curedName.push(item.cityName);
+      });
+      var curedChart = echarts.init(document.getElementById('cured'));
+      curedChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: curedName
+        },
+        yAxis: {},
+        series: [{
+            name: '治愈人数',
+            type: 'bar',
+            data: curedNum
+        }]
+      })
+
+      const curedNotHBNum = [];
+      const curedNotHBName = [];
+      citiesNotHB.sort((a, b) => b.curedCount - a.curedCount).slice(0, 10).forEach(item => {
+        curedNotHBNum.push({value: item.curedCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        curedNotHBName.push(item.cityName);
+      });
+      var curedNotHBChart = echarts.init(document.getElementById('curedNotHB'));
+      curedNotHBChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: curedNotHBName
+        },
+        yAxis: {},
+        series: [{
+            name: '治愈人数(除湖北)',
+            type: 'bar',
+            data: curedNotHBNum
+        }]
+      })
+      
+      const deadNum = [];
+      const deadName = [];
+      cities.sort((a, b) => b.deadCount - a.deadCount).slice(0, 10).forEach(item => {
+        deadNum.push({value: item.deadCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        deadName.push(item.cityName);
+      });
+      var deadChart = echarts.init(document.getElementById('dead'));
+      deadChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: deadName
+        },
+        yAxis: {},
+        series: [{
+            name: '死亡人数',
+            type: 'bar',
+            data: deadNum
+        }]
+      })
+
+      const deadNotHBNum = [];
+      const deadNotHBName = [];
+      citiesNotHB.sort((a, b) => b.deadCount - a.deadCount).slice(0, 10).forEach(item => {
+        deadNotHBNum.push({value: item.deadCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        deadNotHBName.push(item.cityName);
+      });
+      var deadNotHBChart = echarts.init(document.getElementById('deadNotHB'));
+      deadNotHBChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: deadNotHBName
+        },
+        yAxis: {},
+        series: [{
+            name: '死亡人数(除湖北)',
+            type: 'bar',
+            data: deadNotHBNum
+        }]
+      })
+      
+      const deadNum20 = [];
+      const deadName20 = [];
+      cities.filter(item => item.cityName !== "武汉").sort((a, b) => b.deadCount - a.deadCount).slice(0, 20).forEach(item => {
+        deadNum20.push({value: item.deadCount, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        deadName20.push(item.cityName);
+      });
+      var dead20Chart = echarts.init(document.getElementById('dead20'));
+      dead20Chart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}<br/>${res.data.label}`;
+          }
+        },
+        xAxis: {
+            data: deadName20
+        },
+        yAxis: {},
+        series: [{
+            name: '死亡人数(除武汉)',
+            type: 'bar',
+            data: deadNum20
+        }]
+      })
+      
+      const curedRatioNum = [];
+      const curedRatioName = [];
+      cities.filter(item => item.confirmedCount > 50).sort((a, b) => b.curedRatio - a.curedRatio).slice(0, 10).forEach(item => {
+        curedRatioNum.push({value: item.curedRatio, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}, num: item.confirmedCount});
+        curedRatioName.push(item.cityName);
+      });
+      var curedRatioChart = echarts.init(document.getElementById('curedRatio'));
+      curedRatioChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}%<br/>${res.data.label}<br/>确诊人数：${res.data.num}`;
+          }
+        },
+        xAxis: {
+            data: curedRatioName
+        },
+        yAxis: {},
+        series: [{
+            name: '治愈率(确诊人数大于50)',
+            type: 'bar',
+            data: curedRatioNum
+        }]
+      })
+      
+      const curedRatioNum1 = [];
+      const curedRatioName1 = [];
+      cities.filter(item => item.confirmedCount > 10 && item.curedCount > 0).sort((a, b) => a.curedRatio - b.curedRatio).slice(0, 10).forEach(item => {
+        curedRatioNum1.push({value: item.curedRatio, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}, num: item.confirmedCount});
+        curedRatioName1.push(item.cityName);
+      });
+      var curedRatioChart1 = echarts.init(document.getElementById('curedRatio1'));
+      curedRatioChart1.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}%<br/>${res.data.label}<br/>确诊人数：${res.data.num}`;
+          }
+        },
+        xAxis: {
+            data: curedRatioName1
+        },
+        yAxis: {},
+        series: [{
+            name: '治愈率(确诊人数大于10)',
+            type: 'bar',
+            data: curedRatioNum1
+        }]
+      })
+
+      const curedRatioNum20 = [];
+      const curedRatioName20 = [];
+      cities.filter(item => item.confirmedCount > 50).sort((a, b) => b.curedRatio - a.curedRatio).slice(0, 20).forEach(item => {
+        curedRatioNum20.push({value: item.curedRatio, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}, num: item.confirmedCount});
+        curedRatioName20.push(item.cityName);
+      });
+      var curedRatioChart20 = echarts.init(document.getElementById('curedRatio20'));
+      curedRatioChart20.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}%<br/>${res.data.label}<br/>确诊人数：${res.data.num}`;
+          }
+        },
+        xAxis: {
+            data: curedRatioName20
+        },
+        yAxis: {},
+        series: [{
+            name: '治愈率(确诊人数大于50)',
+            type: 'bar',
+            data: curedRatioNum20
+        }]
+      })
+      
+      const curedRatioProvinceNum = [];
+      const curedRatioProvinceName = [];
+      provinces.sort((a, b) => b.curedRatio - a.curedRatio).forEach(item => {
+        curedRatioProvinceNum.push({value: item.curedRatio, num: item.confirmedCount, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        curedRatioProvinceName.push(item.provinceName);
+      });
+      var curedRatioProvinceChart = echarts.init(document.getElementById('curedRatioProvince'), {});
+      curedRatioProvinceChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}%<br/>确诊人数：${res.data.num}`;
+          }
+        },
+        xAxis: {
+            data: curedRatioProvinceName
+        },
+        yAxis: {},
+        series: [{
+            name: '治愈率(省)',
+            type: 'bar',
+            data: curedRatioProvinceNum
+        }]
+      })
+      const deadRatioNum = [];
+      const deadRatioName = [];
+      cities.filter(item => item.confirmedCount > 40).sort((a, b) => b.deadRatio - a.deadRatio).slice(0, 10).forEach(item => {
+        deadRatioNum.push({value: item.deadRatio, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}, num: item.confirmedCount});
+        deadRatioName.push(item.cityName);
+      });
+      var deadRatioChart = echarts.init(document.getElementById('deadRatio'));
+      deadRatioChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}%<br/>${res.data.label}<br/>确诊人数：${res.data.num}`;
+          }
+        },
+        xAxis: {
+            data: deadRatioName
+        },
+        yAxis: {},
+        series: [{
+            name: '死亡率(确诊人数大于40)',
+            type: 'bar',
+            data: deadRatioNum
+        }]
+      })
+      
+      const deadRatioNum1 = [];
+      const deadRatioName1 = [];
+      cities.filter(item => item.deadRatio > 0).sort((a, b) => a.deadRatio - b.deadRatio).slice(0, 10).forEach(item => {
+        console.log(item)
+        deadRatioNum1.push({value: item.deadRatio, label: item.provinceName, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}, num: item.confirmedCount});
+        deadRatioName1.push(item.cityName);
+      });
+      var deadRatioChart1 = echarts.init(document.getElementById('deadRatio1'));
+      deadRatioChart1.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}%<br/>${res.data.label}<br/>确诊人数：${res.data.num}`;
+          }
+        },
+        xAxis: {
+            data: deadRatioName1
+        },
+        yAxis: {},
+        series: [{
+            name: '死亡率',
+            type: 'bar',
+            data: deadRatioNum1
+        }]
+      })
+      
+      const deadRatioProvinceNum = [];
+      const deadRatioProvinceName = [];
+      provinces.sort((a, b) => b.deadRatio - a.deadRatio).forEach(item => {
+        deadRatioProvinceNum.push({value: item.deadRatio, num: item.confirmedCount, itemStyle: { color: item.color}, emphasis: {itemStyle: {color: "#fe0123"}}});
+        deadRatioProvinceName.push(item.provinceName);
+      });
+      var deadRatioProvinceChart = echarts.init(document.getElementById('deadRatioProvince'), {});
+      deadRatioProvinceChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          formatter(res) {
+            return `${res.seriesName}<br/>${res.name}：${res.data.value}%<br/>确诊人数：${res.data.num}`;
+          }
+        },
+        xAxis: {
+            data: deadRatioProvinceName
+        },
+        yAxis: {},
+        series: [{
+            name: '死亡率(省)',
+            type: 'bar',
+            data: deadRatioProvinceNum
+        }]
+      })
+      
+      const sumDeadNum = [];
+      const sumCuredNum = [];
+      const sumCurrNum = [];
+      const sumName = [];
+      provinces.sort((a, b) => b.confirmedCount - a.confirmedCount).slice(1).forEach(item => {
+        sumDeadNum.push({value: item.deadCount, num: item.confirmedCount});
+        sumCuredNum.push({value: item.curedCount, num: item.confirmedCount});
+        sumCurrNum.push({value: item.currentConfirmedCount, num: item.confirmedCount});
+        sumName.push(item.provinceName);
+      });
+      var sumChart = echarts.init(document.getElementById('sum'), {});
+      sumChart.setOption({
+        grid: {
+          left: "50px",
+          right: "50px"
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+              type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+          }
+        },
+        xAxis: {
+            data: sumName
+        },
+        yAxis: {},
+        series: [{
+            name: '当前确诊人数',
+            type: 'bar',
+            stack: "确诊人数",
+            data: sumCurrNum
+        },{
+            name: '治愈人数',
+            type: 'bar',
+            stack: "确诊人数",
+            data: sumCuredNum
+        },{
+            name: '死亡人数',
+            type: 'bar',
+            stack: "确诊人数",
+            data: sumDeadNum
+        }]
+      })
+    }
+  </script>
+</body>
+</html>
