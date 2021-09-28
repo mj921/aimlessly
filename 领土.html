@@ -25,7 +25,8 @@
       position: absolute;
       right: 0;
       top: 0;
-      width: 100px;
+      width: 200px;
+      background-color: rgba(255, 255, 255, 0.3);
     }
   </style>
 </head>
@@ -35,7 +36,7 @@
   <div id="app">
     <dl :style="`color: ${max.color};`">最大领土:{{max.value}}</dl>
     <dl :style="`color: ${min.color};`">最小领土:{{min.value}}</dl>
-    <dl v-for="item in list" :key="item.key" :style="`color: #${item.key.substr(5)};`">{{item.value}}</dl>
+    <dl v-for="item in list" :key="item.key" :style="`color: #${item.key.substr(5)};`">{{item.value}} ## {{item.type || 'normal'}}</dl>
   </div>
   <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
   <script>
@@ -62,10 +63,10 @@
       computed: {
         list() {
           let arr = [
-            { key: "colorf00", value: this.colorf00 },
-            { key: "color00f", value: this.color00f },
-            { key: "color0f0", value: this.color0f0 },
-            { key: "color000", value: this.color000 },
+            { key: "colorf00", value: this.colorf00, type: 'radical' },
+            { key: "color00f", value: this.color00f, type: 'conservative' },
+            { key: "color0f0", value: this.color0f0, type: 'extreme' },
+            { key: "color000", value: this.color000, type: 'stubborn' },
             { key: "colorff0", value: this.colorff0 },
             { key: "colorf0f", value: this.colorf0f },
             { key: "color0ff", value: this.color0ff },
@@ -99,14 +100,35 @@
       }
     })
     class Group {
-      constructor(color) {
+      /**
+       * type radical 激进 conservative 保守 extreme 极端 stubborn 顽固
+       */
+      constructor(color, type = 'normal') {
         this.sto = undefined;
         this.roundList = [];
         this.color = color;
+        this.type = type;
       }
       next() {
         clearTimeout(this.sto);
-        let index = Math.floor(this.roundList.length * Math.random());
+        let index, mid;
+        switch (this.type) {
+          case 'radical':
+            mid = Math.floor(this.roundList.length / 2);
+            index = Math.floor(mid * Math.random()) + this.roundList.length - mid;
+          case 'conservative':
+            mid = Math.floor(this.roundList.length / 2);
+            index = Math.floor(mid * Math.random());
+            break;
+          case 'extreme':
+            mid = Math.min(this.roundList.length, 6);
+            index = Math.floor(mid * Math.random()) + this.roundList.length - mid;
+          case 'stubborn':
+            mid = Math.min(this.roundList.length, 6);
+            index = Math.floor(mid * Math.random());
+          default:
+            index = Math.floor(this.roundList.length * Math.random());
+        }
         const item = this.roundList[index];
         this.roundList.splice(index, 1);
         if (item.color !== bgColor) {
@@ -141,9 +163,9 @@
     main.width = screenWidth;
     main.height = screenHeight;
     const sqer3 = Math.pow(3, 0.5);
-    const cellSize = 20;
-    const row = 54;
-    const col = 120;
+    const cellSize = 10;
+    const row = 108;
+    const col = 108;
     const beginLeft = 20;
     const beginTop = 10;
     const list = [];
@@ -261,10 +283,10 @@
         app.setMaxMin();
       }
     }
-    const redGroup = new Group("#f00");
-    const blueGroup = new Group("#00f");
-    const greenGroup = new Group("#0f0");
-    const blackGroup = new Group("#000");
+    const redGroup = new Group("#f00", "radical");
+    const blueGroup = new Group("#00f", "conservative");
+    const greenGroup = new Group("#0f0", "extreme");
+    const blackGroup = new Group("#000", "stubborn");
     const yellowGroup = new Group("#ff0");
     const ziseGroup = new Group("#f0f");
     const tianlanGroup = new Group("#0ff");
