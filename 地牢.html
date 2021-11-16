@@ -20,12 +20,14 @@
         var maxH = 800;
         var numH = ~~(maxH / size);
         var numW = ~~(maxW / size);
+        /** 墙 */
         var walls = [];
         var cells = [];
         var createN = 1000;
         var createI = 0;
         var roomSizes = [5,7,9];
         var rooms = [];
+        /** 当前x */
         var nowX = numW / 2;
         var nowY = numH / 2
         for(var i = 0;i < numW;i++){

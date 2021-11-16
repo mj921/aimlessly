@@ -34,17 +34,30 @@
 <body>
   <canvas id="main"></canvas>
   <div id="app">
-    <dl :style="`color: ${max.color};`">最大领土:{{max.value}}</dl>
-    <dl :style="`color: ${min.color};`">最小领土:{{min.value}}</dl>
-    <dl v-for="item in list" :key="item.key" :style="`color: #${item.key.substr(5)};`">{{item.value}} ## {{item.type || 'normal'}}</dl>
+    <dl :style="`color: ${max.color};`">最大领土:{{max.value}} ## {{max.type || 'normal'}}</dl>
+    <dl :style="`color: ${min.color};`">最小领土:{{min.value}} ## {{min.type || 'normal'}}</dl>
+    <dl v-for="item in list" :key="item.key" :style="`color: ${item.key};`">{{item.value}} ## {{item.type || 'normal'}}</dl>
   </div>
   <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
   <script>
+    const groupList = [
+      { color: "#f00", type: 'radical' },
+      { color: "#00f", type: 'conservative' },
+      { color: "#0f0", type: 'extreme' },
+      { color: "#000", type: 'stubborn' },
+      { color: "#ff0", type: 'normal' },
+      { color: "#f0f", type: 'radical'  },
+      { color: "#0ff", type: 'conservative'  },
+      { color: "#080", type: 'extreme'  },
+      { color: "#fa0", type: 'stubborn' },
+      { color: "#921", type: 'normal'  },
+    ]
     var app = new Vue({
       el: "#app",
       data() {
-        const max = localStorage.getItem("maxColor") ? JSON.parse(localStorage.getItem("maxColor")) : {color: "#fff", value: 0};
-        const min = localStorage.getItem("minColor") ? JSON.parse(localStorage.getItem("minColor")) : {color: "#fff", value: 999999};
+        const max = localStorage.getItem("maxColor") ? JSON.parse(localStorage.getItem("maxColor")) : {color: "#fff", value: 0, type: ''};
+        const min = localStorage.getItem("minColor") ? JSON.parse(localStorage.getItem("minColor")) : {color: "#fff", value: 999999, type: ''};
+        const history = localStorage.getItem("history") ? JSON.parse(localStorage.getItem("history")) : [];
         return {
           max,
           min,
@@ -57,23 +70,17 @@
           color0ff: 0,
           color080: 0,
           colorfa0: 0,
-          color921: 0
+          color921: 0,
+          history
         }
       },
       computed: {
         list() {
-          let arr = [
-            { key: "colorf00", value: this.colorf00, type: 'radical' },
-            { key: "color00f", value: this.color00f, type: 'conservative' },
-            { key: "color0f0", value: this.color0f0, type: 'extreme' },
-            { key: "color000", value: this.color000, type: 'stubborn' },
-            { key: "colorff0", value: this.colorff0 },
-            { key: "colorf0f", value: this.colorf0f },
-            { key: "color0ff", value: this.color0ff },
-            { key: "color080", value: this.color080 },
-            { key: "colorfa0", value: this.colorfa0 },
-            { key: "color921", value: this.color921 },
-          ]
+          let arr = groupList.map(item => ({
+            key: item.color,
+            value: this['color' + item.color.substring(1)],
+            type: item.type
+          }));
           arr.sort((a, b) => {
             return b.value - a.value;
           })
@@ -84,18 +91,22 @@
         setMaxMin() {
           if (this.list[0].value > this.max.value) {
             this.max = {
-              color: "#" + this.list[0].key.substr(5),
-              value: this.list[0].value
+              color: this.list[0].key,
+              value: this.list[0].value,
+              type: this.list[0].type
             }
             localStorage.setItem("maxColor", JSON.stringify(this.max));
           }
           if (this.list[this.list.length - 1].value < this.min.value) {
             this.min = {
-              color: "#" + this.list[this.list.length - 1].key.substr(5),
-              value: this.list[this.list.length - 1].value
+              color: this.list[this.list.length - 1].key,
+              value: this.list[this.list.length - 1].value,
+              type: this.list[this.list.length - 1].type
             }
             localStorage.setItem("minColor", JSON.stringify(this.min));
           }
+          this.history.push(JSON.parse(JSON.stringify(this.list)));
+          localStorage.setItem("history", JSON.stringify(this.history));
         }
       }
     })
@@ -283,27 +294,30 @@
         app.setMaxMin();
       }
     }
-    const redGroup = new Group("#f00", "radical");
-    const blueGroup = new Group("#00f", "conservative");
-    const greenGroup = new Group("#0f0", "extreme");
-    const blackGroup = new Group("#000", "stubborn");
-    const yellowGroup = new Group("#ff0");
-    const ziseGroup = new Group("#f0f");
-    const tianlanGroup = new Group("#0ff");
-    const molvGroup = new Group("#080");
-    const orangeGroup = new Group("#fa0");
-    const anhongGroup = new Group("#921");
+    const groups = groupList.map(item => new Group(item.color, item.type));
+    // const redGroup = new Group("#f00", "radical");
+    // const blueGroup = new Group("#00f", "conservative");
+    // const greenGroup = new Group("#0f0", "extreme");
+    // const blackGroup = new Group("#000", "stubborn");
+    // const yellowGroup = new Group("#ff0");
+    // const ziseGroup = new Group("#f0f");
+    // const tianlanGroup = new Group("#0ff");
+    // const molvGroup = new Group("#080");
+    // const orangeGroup = new Group("#fa0");
+    // const anhongGroup = new Group("#921");
     loop();
-    redGroup.start();
-    blueGroup.start();
-    greenGroup.start();
-    blackGroup.start();
-    yellowGroup.start();
-    ziseGroup.start();
-    tianlanGroup.start();
-    molvGroup.start();
-    orangeGroup.start();
-    anhongGroup.start();
+    groups.forEach(item => item.start());
+    console.log(groups);
+    // redGroup.start();
+    // blueGroup.start();
+    // greenGroup.start();
+    // blackGroup.start();
+    // yellowGroup.start();
+    // ziseGroup.start();
+    // tianlanGroup.start();
+    // molvGroup.start();
+    // orangeGroup.start();
+    // anhongGroup.start();
   </script>
 </body>
 
