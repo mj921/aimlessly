@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #main {
+      border: 1px solid #000;
+      box-sizing: content-box;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="main" width="500" height="500"></canvas>
+  <script>
+    const baseWidth = 500;
+    const baseHeight = 500;
+    const maxSize = 10;
+    const mainCanvas = document.getElementById('main');
+    const mainCtx = mainCanvas.getContext('2d');
+    const createCanvas = function(){
+      const canvas = document.createElement("canvas");
+      canvas.style.position = 'absolute';
+      canvas.style.left = '-1000%';
+      canvas.width = baseWidth;
+      canvas.height = baseHeight;
+      document.body.appendChild(canvas);
+      return canvas;
+    }
+    const enemyCanvas = createCanvas();
+    const enemyCtx = enemyCanvas.getContext('2d');
+
+    const Tower = function() {
+      this.attack = 1;
+      this.speed = 20;
+      this.range = 150;
+      this.currSpeedTotal = 0;
+    }
+    const Game = {
+      enemyCreateSpeed: 20,
+      currEnemyCreateSpeed: 0
+    }
+    const Enemy = function() {
+      this.speed = 0.3 * Math.floor(Math.random() * 5 + 1);
+      this.size = Math.floor(Math.random() * 3) + 2;
+      this.hp = 1;
+      const direction = Math.floor(Math.random() * 4);
+      switch (direction) {
+        case 0:
+          this.x = -maxSize * 2;
+          this.y = Math.random() * baseHeight;
+          break;
+        case 1:
+          this.x = Math.random() * baseWidth;
+          this.y = -maxSize * 2;
+          break;
+        case 2:
+          this.x = baseWidth + maxSize * 2;
+          this.y = Math.random() * baseHeight;
+          break;
+        case 3:
+          this.x = Math.random() * baseWidth;
+          this.y = baseHeight + maxSize * 2;
+          break;
+      }
+      const dx = baseWidth / 2 - this.x;
+      const dy = baseHeight / 2 - this.y;
+      this.distance = Math.sqrt(dx * dx + dy * dy)
+    };
+    Enemy.prototype.draw = function() {
+      enemyCtx.beginPath();
+      enemyCtx.fillStyle = '#000';
+      enemyCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      enemyCtx.fill();
+      enemyCtx.closePath();
+    }
+    Enemy.prototype.move = function() {
+      let dx = baseWidth / 2 - this.x;
+      let dy = baseHeight / 2 - this.y;
+      if (this.distance > 6 + this.size) {
+        this.x += dx / this.distance * this.speed;
+        this.y += dy / this.distance * this.speed;
+      }
+      dx = baseWidth / 2 - this.x;
+      dy = baseHeight / 2 - this.y;
+      this.distance = Math.sqrt(dx * dx + dy * dy);
+    }
+    const enemies = [];
+    const towers = [new Tower()];
+    const update = function() {
+      enemies.sort((a, b) => {
+        return a.distance - b.distance;
+      })
+      towers.forEach(tower => {
+        if (tower.currSpeedTotal < tower.speed) {
+          tower.currSpeedTotal++;
+        }
+        if (tower.currSpeedTotal >= tower.speed) {
+          if (enemies.length > 0 && enemies[0].distance < tower.range) {
+            tower.currSpeedTotal -= tower.speed;
+            enemies[0].hp -= tower.attack;
+            if (enemies[0].hp <= 0) {
+              enemies.shift();
+            }
+          }
+        }
+      })
+      if (enemies.length < 20) {
+        enemies.push(new Enemy());
+      }
+      mainCtx.clearRect(0, 0, baseWidth, baseHeight);
+      mainCtx.save();
+      mainCtx.strokeStyle = '#000';
+      mainCtx.fillStyle = '#fff';
+      mainCtx.arc(250, 250, 5, 0, Math.PI * 2);
+      mainCtx.stroke();
+      mainCtx.fill();
+      mainCtx.globalCompositeOperation = 'source-atop';
+      mainCtx.fillStyle = '#000';
+      mainCtx.fillRect(245, 250, 10, 5);
+      mainCtx.restore();
+      enemyCtx.clearRect(0, 0, baseWidth, baseHeight);
+      enemies.forEach(e => {
+        e.move();
+        e.draw();
+      })
+      mainCtx.drawImage(enemyCanvas, 0, 0);
+      setTimeout(update, 1000 / 60);
+    }
+    update();
+  </script>
+</body>
+</html>
