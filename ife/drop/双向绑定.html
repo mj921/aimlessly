@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <label>姓名:</label><input type="text" id="name" onchange="changeName()">
+  <button onclick="changeInput()">恢复姓名为rose</button>
+  <script>
+    var person = {
+      name: ''
+    }
+    var nameEl = document.getElementById('name');
+    function changeName () {
+      console.log(person.name);
+    }
+
+    Object.defineProperty(person, 'name', {
+      get() {
+        return nameEl.value;    
+      },
+      set(value) {
+        nameEl.value = value;
+      }
+    })
+    function addID (id) {
+      Object.defineProperty(person, 'id', {
+        enumerable: false,
+        configurable: false,
+        writable: false,
+        value: id        
+      })
+    }
+
+    function changeInput () {
+      person.name = 'rose';
+    }
+  </script>
+</body>
+</html>

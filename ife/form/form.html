@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #form {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-item {
+      display: flex;
+      margin-bottom: 24px;
+    }
+    .form-item__label {
+      width: 200px;
+      flex-shrink: 1;
+      text-align: right;
+      padding-right: 16px;
+      font-size: 16px;
+      line-height: 40px;
+      color: #333;
+    }
+    .form-item__content {
+      position: relative;
+      height: 40px;
+    }
+    .form-item__tip {
+      position: absolute;
+      left: 0;
+      top: 40px;
+      height: 24px;
+      font-size: 14px;
+      line-height: 24px;
+      color: #ccc;
+    }
+    .form-item__tip.success {
+      color: #74c660;
+    }
+    .form-item__tip.error {
+      color: #df111d;
+    }
+    input {
+      padding: 0 10px;
+      width: 200px;
+      height: 40px;
+      box-sizing: border-box;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      color: #333;
+      outline: none;
+    }
+    input:focus {
+      border-color: #70b5ee;
+      box-shadow: 0 0 5px 0 #70b5ee;
+    }
+    input.success {
+      border-color: #74c660;
+    }
+    input.error {
+      border-color: #df111d;
+    }
+  </style>
+</head>
+
+<body>
+  <form id="form"></form>
+  <button id="submit">提交</button>
+  <script>
+    const configs = [{
+      label: '名称', // 表单标签
+      type: 'input', // 表单类型
+      validator: function (value) {
+        return value && /^.{4,16}$/.test(value);
+      }, // 表单验证规
+      rules: '必填，长度为4-16个字符', // 填写规则提示
+      success: '格式正确', // 验证通过提示
+      fail: '名称不能为空' // 验证失败提示
+    }, {
+      label: '密码', // 表单标签
+      type: 'password', // 表单类型
+      validator: function (value) {
+        return value && /^.{4,16}$/.test(value);
+      }, // 表单验证规
+      rules: '必填，长度为4-16个字符', // 填写规则提示
+      success: '格式正确', // 验证通过提示
+      fail: '密码不能为空' // 验证失败提示
+    }]
+    const formEl = document.getElementById('form');
+    const submitEl = document.getElementById('submit');
+    for (let i = 0; i < configs.length; i++) {
+      const config = configs[i];
+      const itemEl = document.createElement('div');
+      const labelEl = document.createElement('label');
+      const contextEl = document.createElement('div');
+      const infoEl = document.createElement('span');
+      let iptEl;
+      itemEl.className = 'form-item';
+      labelEl.className = 'form-item__label';
+      labelEl.innerText = config.label;
+      contextEl.className = 'form-item__content';
+      infoEl.className = 'form-item__tip';
+      switch (config.type) {
+        case 'input':
+        case 'password':
+          iptEl = document.createElement('input');
+          if (config.type !== 'input') {
+            iptEl.setAttribute('type', config.type);
+          }
+          iptEl.addEventListener('focus', function () {
+            iptEl.className = '';
+            infoEl.className = 'form-item__tip';
+            infoEl.innerText = config.rules;
+          })
+          config.validHandler = function () {
+            if (config.validator(iptEl.value)) {
+              iptEl.className = 'success';
+              infoEl.className = 'form-item__tip success';
+              infoEl.innerText = config.success;
+              return true;
+            } else {
+              iptEl.className = 'error';
+              infoEl.className = 'form-item__tip error';
+              infoEl.innerText = config.fail;
+              return config.fail;
+            }
+          }
+          iptEl.addEventListener('blur', config.validHandler)
+          break;
+      }
+      contextEl.appendChild(iptEl);
+      contextEl.appendChild(infoEl);
+      itemEl.appendChild(labelEl);
+      itemEl.appendChild(contextEl);
+      formEl.appendChild(itemEl);
+    }
+    submitEl.addEventListener('click', function () {
+      if (configs.every(item => item.validHandler() === true)) {
+        alert('提交成功')
+      } else {
+        alert('提交失败');
+      }
+    })
+  </script>
+</body>
+
+</html>

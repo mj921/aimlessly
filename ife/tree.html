@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tree</title>
+  <style>
+    .tree {
+      display: flex;
+      border: 1px solid #000;
+      padding: 10px;
+      flex-grow: 1;
+      background-color: #fff;
+    }
+    .tree:not(:last-child) {
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <button id="breadthOrder">广度</button>
+    <button id="depthOrder">深度</button>
+    <button id="del">删除</button>
+    <button id="add">添加</button>
+    <input type="text" id="input" />
+  </div>
+  <div id="root"></div>
+  <script>
+    const breadthOrder = document.getElementById('breadthOrder');
+    const depthOrder = document.getElementById('depthOrder');
+    const del = document.getElementById('del');
+    const add = document.getElementById('add');
+    const input = document.getElementById('input');
+    const root = document.getElementById('root');
+
+    let current = {
+      loop: null,
+      selected: null
+    };
+    root.addEventListener('click', function (e) {
+      if (!e.target || e.target.getAttribute('id') === 'root') return;
+      setCurrent(e.target, 'selected', 'red');
+    })
+    const setCurrent = function (el, type = 'loop', color = 'blue') {
+      if (current[type]) {
+        current[type].style.backgroundColor = 'white';
+      }
+      current[type] = current[type] === el ? null : el;
+      if (current[type]) {
+        current[type].style.backgroundColor = color;
+      }
+    }
+    add.addEventListener('click', function () {
+      if (input.value) {
+        const child = document.createElement('div');
+        child.className = 'tree';
+        child.innerText = input.value;
+        if (current.selected) {
+          current.selected.appendChild(child);
+        } else {
+          root.appendChild(child);
+        }
+      }
+    })
+    del.addEventListener('click', function () {
+      if (current.selected) {
+        const parent = current.selected.parentNode;
+        parent.removeChild(current.selected);
+        current.selected = null;
+      }
+    })
+    const order = function (type) {
+      return function (e) {
+        const list = [];
+        const setNode = function (node) {
+          if (node.nodeType !== 1) return;
+          let children  = [];
+          if (node.childNodes && node.childNodes.length) {
+            children = [].filter.call(node.childNodes, el => el.nodeType === 1 && (el.className === 'tree' || id === 'root'));
+          }
+          if (children.length) {
+            children.forEach(setNode);
+            list.push(node);
+          } else {
+            list.push(node);
+          }
+        }
+        const setNodes = function (nodes) {
+          if (!nodes.length) return;
+          let children = [];
+          nodes = [].filter.call(nodes, el => {
+            if (el.nodeType === 1 && el.className === 'tree') {
+              children.push(...el.childNodes);
+              return true;
+            }
+            return false;
+          });
+          [].push.apply(list, nodes);
+          setNodes(children)
+        }
+        const loop = function (i = 0) {
+          setCurrent(list[i]);
+          if (i < list.length - 1) {
+            setTimeout(() => { loop(i + 1) }, 500);
+          } else {
+            setTimeout(() => { setCurrent() }, 500);
+          }
+        }
+        if (type === 'breadth') {
+          setNodes(root.childNodes);
+        } else if (type === 'depth') {
+          setNode(root);
+        }
+        loop();
+      }
+    }
+    breadthOrder.addEventListener('click', order('breadth'));
+    depthOrder.addEventListener('click', order('depth'));
+  </script>
+</body>
+</html>
