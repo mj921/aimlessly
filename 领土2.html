@@ -152,8 +152,10 @@
       status: GroupStatus.CREATE_BALL,
       ballInfo: {},
     }]
-    let maxCellNum = 0;
-    let minCellNum = 0;
+    let maxCellNum = { cellNum: 0, type: '' };
+    let minCellNum = { cellNum: 0, type: '' };
+    let maxBallNum = { ballNum: 0, type: '' };
+    let maxTotalNum = 0;
     const ctxClear = ctx => {
       ctx.clearRect(0, 0, screenWidth, screenHeight);
     }
@@ -216,6 +218,8 @@
           <dl>time: ${time}</dl>
           <dl style="color: ${maxCellNum.type || '#000'}">max: ${maxCellNum.cellNum}</dl>
           <dl style="color: ${minCellNum.type || '#000'}">min: ${minCellNum.cellNum}</dl>
+          <dl style="color: ${maxBallNum.type || '#000'}">maxBall: ${maxBallNum.ballNum}, bl：${maxBallNum.bl}</dl>
+          <dl>max: ${maxTotalNum}</dl>
         </div><ul>`;
       const arr = Object.keys(groupMap).map(key => groupMap[key]);
       arr.sort((a, b) => b.cellNum - a.cellNum);
@@ -291,7 +295,14 @@
               r = Math.random() - Math.min(bl / 1000, 0.1);
             }
             ballInfo.total *= Math.pow(2, bl - 1);
-            ballInfo.total = Math.min(mapSize * mapSize / 2, ballInfo.total);
+            if (maxBallNum.ballNum < ballInfo.total) {
+              maxBallNum = {
+                ballNum: ballInfo.total,
+                bl,
+                type,
+              };
+            }
+            ballInfo.total = Math.min(Math.pow(Math.floor(mapSize / 2), 2), ballInfo.total);
             point.status = GroupStatus.BALL_MOVE;
             const ballNum = ballInfo.total;
             for (let i = 0; i < ballNum; i++) {
@@ -306,7 +317,10 @@
             }
           }
         }
-      })
+      });
+
+      maxTotalNum = Math.max(maxTotalNum, ballList.length);
+
       for (let i = 0; i < ballList.length;) {
         const ball = ballList[i];
         ball.time++;
