@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <canvas id="main"></canvas>
+  <script>
+    var canvas = document.getElementById('main');
+    var ctx = canvas.getContext('2d');
+    var width = canvas.width = window.innerWidth;
+    var height = canvas.height = window.innerHeight;
+    var particles = [];
+    var particleCount = 100;
+    var mouse = {
+      x: width / 2,
+      y: height / 2
+    };
+    window.addEventListener('mousemove', function(e) {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    window.addEventListener('click', function(e) {
+      particles.push(new Particle(e.clientX, e.clientY));
+    });
+    var colors = ['#2185C5', '#7ECEFD', '#FFF6E5', '#FF7F66'];
+    for (var i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+    function Particle() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = -1 + Math.random() * 2;
+      this.vy = -1 + Math.random() * 2;
+      this.radius = Math.random() * 3;
+      this.color = colors[Math.floor(Math.random() * colors.length)];
+      this.draw = function() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      };
+      this.update = function() {
+        if (this.x > width + this.radius || this.x < 0 - this.radius) {
+          this.vx = -this.vx;
+        }
+        if (this.y > height + this.radius || this.y < 0 - this.radius) {
+          this.vy = -this.vy;
+        }
+        this.x += this.vx;
+        this.y += this.vy;
+        this.draw();
+      };
+    }
+    function animate() {
+      requestAnimationFrame(animate);
+      ctx.clearRect(0, 0, width, height);
+      for (var i = 0; i < particles.length; i++) {
+        for (var j = 0; j < particles.length; j++) {
+          if (i != j) {
+            var dx = particles[i].x - particles[j].x;
+            var dy = particles[i].y - particles[j].y;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < particles[i].radius + particles[j].radius) {
+              particles[i].vx += dx / dist * 0.01;
+              particles[i].vy += dy / dist * 0.01;
+              particles[j].vx -= dx / dist * 0.01;
+              particles[j].vy -= dy / dist * 0.01;
+            }
+          }
+        }
+        particles[i].update();
+      }
+    }
+    animate();
+  </script>
+</body>
+</html>

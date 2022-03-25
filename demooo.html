@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <canvas id="main"></canvas>
+  <script>
+    // 迷宫
+    var canvas = document.getElementById('main');
+    var ctx = canvas.getContext('2d');
+    var width = canvas.width = window.innerWidth;
+    var height = canvas.height = window.innerHeight;
+    var maze = [];
+    var cellSize = 10;
+    var cellCount = {
+      x: Math.floor(width / cellSize),
+      y: Math.floor(height / cellSize)
+    };
+    var start = {
+      x: 0,
+      y: 0
+    };
+
+    function init() {
+      for (var i = 0; i < cellCount.x; i++) {
+        maze[i] = [];
+        for (var j = 0; j < cellCount.y; j++) {
+          maze[i][j] = 1;
+        }
+      }
+      generate();
+      draw();
+    }
+    
+    function generate() {
+      var stack = [];
+      stack.push(start);
+      while (stack.length > 0) {
+        var cell = stack[stack.length - 1];
+        var neighbors = getNeighbors(cell);
+        if (neighbors.length > 0) {
+          var next = neighbors[Math.floor(Math.random() * neighbors.length)];
+          maze[next.x][next.y] = 0;
+          stack.push(next);
+        } else {
+          stack.pop();
+        }
+      }
+    }
+
+    function getNeighbors(cell) {
+      var neighbors = [];
+      for (var i = -1; i <= 1; i++) {
+        for (var j = -1; j <= 1; j++) {
+          if (i == 0 && j == 0) {
+            continue;
+          }
+          var x = cell.x + i;
+          var y = cell.y + j;
+          if (x >= 0 && x < cellCount.x && y >= 0 && y < cellCount.y && maze[x][y] == 1) {
+            neighbors.push({
+              x: x,
+              y: y
+            });
+          }
+        }
+      }
+      return neighbors;
+    }
+
+    function draw() {
+      for (var i = 0; i < cellCount.x; i++) {
+        for (var j = 0; j < cellCount.y; j++) {
+          if (maze[i][j] == 1) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+    }
+
+    init();
+    console.log(maze);
+
+
+  </script>
+</body>
+</html>

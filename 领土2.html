@@ -51,8 +51,8 @@
       cellCanvas.height = screenHeight;
     }
     let time = 0;
-    const mapSize = 40;
-    const cellSize = 10;
+    const mapSize = 101;
+    const cellSize = 4;
     const ballSpeed = 3;
     const ballSize = 2;
     let mapCells = [];
@@ -69,8 +69,8 @@
         maxCellNum: 0,
         minCellNum: 0,
       },
-      yellow: {
-        type: 'yellow',
+      gold: {
+        type: 'gold',
         cellNum: 0,
         maxCellNum: 0,
         minCellNum: 0,
@@ -89,29 +89,29 @@
       }
     }
     const launchPoint = [{
-      x: 1,
-      y: 1,
+      x: 0,
+      y: 0,
       startAngle: 0,
       range: 90,
       status: GroupStatus.CREATE_BALL,
       ballInfo: {},
     }, {
-      x: mapSize - 2,
-      y: 1,
+      x: mapSize - 1,
+      y: 0,
       startAngle: 90,
       range: 90,
       status: GroupStatus.CREATE_BALL,
       ballInfo: {},
     }, {
-      x: 1,
-      y: mapSize - 2,
+      x: 0,
+      y: mapSize - 1,
       startAngle: 270,
       range: 90,
       status: GroupStatus.CREATE_BALL,
       ballInfo: {},
     }, {
-      x: mapSize - 2,
-      y: mapSize - 2,
+      x: mapSize - 1,
+      y: mapSize - 1,
       startAngle: 180,
       range: 90,
       status: GroupStatus.CREATE_BALL,
@@ -144,6 +144,13 @@
       range: 360,
       status: GroupStatus.CREATE_BALL,
       ballInfo: {},
+    }, {
+      x: (mapSize - 1) / 2,
+      y: (mapSize - 1) / 2,
+      startAngle: 0,
+      range: 360,
+      status: GroupStatus.CREATE_BALL,
+      ballInfo: {},
     }]
     let maxCellNum = 0;
     let minCellNum = 0;
@@ -154,7 +161,7 @@
       ctxClear(mainCtx);
       mapCells = [];
       ballList = [];
-      const cellNum = Math.pow((mapSize / 2), 2);
+      const cellNum = Math.pow(((mapSize - 1) / 2), 2);
       maxCellNum = { cellNum, type: '' };
       minCellNum = { cellNum, type: '' };
       Object.keys(groupMap).forEach(key => {
@@ -172,29 +179,35 @@
         const cells = [];
         for (let j = 0; j < mapSize; j++) {
           let type;
-          if (i < mapSize / 2) {
-            if (j < mapSize / 2) {
+          if (i < (mapSize - 1) / 2) {
+            if (j < (mapSize - 1) / 2) {
               type = 'red';
-            } else {
-              type = 'yellow';
+            } else if (j > (mapSize - 1) / 2) {
+              type = 'gold';
             }
-          } else {
-            if (j < mapSize / 2) {
+          } else if (i > (mapSize - 1) / 2) {
+            if (j < (mapSize - 1) / 2) {
               type = 'blue';
-            } else {
+            } else if (j > (mapSize - 1) / 2) {
               type = 'green';
             }
           }
-          cells.push({
+          const cell = {
             x: j,
             y: i,
             type,
-          })
-          cellCtx.fillStyle = type;
+          };
+          cells.push(cell);
+          drawCell(cell);
+          cellCtx.fillStyle = type || 'white';
           cellCtx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
         }
         mapCells.push(cells);
       }
+      launchPoint.forEach(point => {
+        mapCells[point.y][point.x].isLaunch = true;
+        drawCell(mapCells[point.y][point.x]);
+      });
       mainCtx.drawImage(cellCanvas, 0, 0);
       createDataHtml();
     }
@@ -233,6 +246,14 @@
         };
       }
     }
+    const drawCell = cell => {
+      cellCtx.fillStyle = cell.type || 'white';
+      cellCtx.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
+      if (cell.isLaunch) {
+        cellCtx.strokeStyle = 'white';
+        cellCtx.strokeRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
+      }
+    }
     const loop = () => {
       time++;
       ctxClear(mainCtx);
@@ -240,7 +261,9 @@
       ballCtx.fillStyle = '#000';
       launchPoint.forEach(point => {
         const { position, startAngle, x, y, range } = point;
-        if (point.status === GroupStatus.BALL_MOVE && point.ballInfo.total === 0) {
+        const type = mapCells[y][x].type;
+        if (!type) return;
+        if (point.status === GroupStatus.BALL_MOVE && point.ballInfo.total <= 0) {
           point.status = GroupStatus.CREATE_BALL;
           point.ballInfo = {
             wait: 1,
@@ -262,7 +285,7 @@
             let r = Math.random();
             let val = 0.5;
             let bl = 1;
-            while (r < val && bl <= 1024) {
+            while (r < val && bl <= 2048) {
               bl *= 2;
               val /= 2;
               r = Math.random() - Math.min(bl / 1000, 0.1);
@@ -271,7 +294,6 @@
             ballInfo.total = Math.min(mapSize * mapSize / 2, ballInfo.total);
             point.status = GroupStatus.BALL_MOVE;
             const ballNum = ballInfo.total;
-            const type = mapCells[y][x].type;
             for (let i = 0; i < ballNum; i++) {
               ballList.push({
                 x: (x + 0.5) * cellSize,
@@ -315,13 +337,12 @@
         }
         ball.angle %= 360;
         if (collisionCell && collisionCell.type !== ball.type) {
-          groupMap[collisionCell.type].cellNum--;
+          collisionCell.type && groupMap[collisionCell.type].cellNum--;
           groupMap[ball.type].cellNum++;
-          setMinMax(collisionCell.type, groupMap[collisionCell.type].cellNum)
+          collisionCell.type && setMinMax(collisionCell.type, groupMap[collisionCell.type].cellNum)
           setMinMax(ball.type, groupMap[ball.type].cellNum)
           collisionCell.type = ball.type;
-          cellCtx.fillStyle = ball.type;
-          cellCtx.fillRect(collisionCell.x * cellSize, collisionCell.y * cellSize, cellSize, cellSize);
+          drawCell(collisionCell);
           ballList.splice(i, 1);
           ball.launchPoint.ballInfo.total--;
           continue;
@@ -341,7 +362,6 @@
       createDataHtml();
       raf = requestAnimationFrame(loop);
     }
-    window.addEventListener('resize', resizeHandle)
     resizeHandle();
     init();
     loop();
