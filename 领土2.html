@@ -68,24 +68,28 @@
         cellNum: 0,
         maxCellNum: 0,
         minCellNum: 0,
+        launchPointNum: 2,
       },
       gold: {
         type: 'gold',
         cellNum: 0,
         maxCellNum: 0,
         minCellNum: 0,
+        launchPointNum: 2,
       },
       blue: {
         type: 'blue',
         cellNum: 0,
         maxCellNum: 0,
         minCellNum: 0,
+        launchPointNum: 2,
       },
       green: {
         type: 'green',
         cellNum: 0,
         maxCellNum: 0,
         minCellNum: 0,
+        launchPointNum: 2,
       }
     }
     const launchPoint = [{
@@ -223,9 +227,9 @@
         </div><ul>`;
       const arr = Object.keys(groupMap).map(key => groupMap[key]);
       arr.sort((a, b) => b.cellNum - a.cellNum);
-      arr.forEach(({ type, cellNum, maxCellNum: max, minCellNum: min }) => {
+      arr.forEach(({ type, cellNum, maxCellNum: max, minCellNum: min, launchPointNum }) => {
         html += `<li style="color: ${type};">
-          <dt>${type}：${cellNum}</dt>
+          <dt>${type}：${cellNum}， ${launchPointNum}</dt>
           <dl>max: ${max} min: ${min}</dl>
         </li>`;
       })
@@ -351,9 +355,15 @@
         }
         ball.angle %= 360;
         if (collisionCell && collisionCell.type !== ball.type) {
-          collisionCell.type && groupMap[collisionCell.type].cellNum--;
+          if (collisionCell.type) {
+            if (collisionCell.isLaunch) {
+              groupMap[collisionCell.type].launchPointNum--;
+              groupMap[ball.type].launchPointNum++;
+            }
+            groupMap[collisionCell.type].cellNum--;
+            setMinMax(collisionCell.type, groupMap[collisionCell.type].cellNum);
+          };
           groupMap[ball.type].cellNum++;
-          collisionCell.type && setMinMax(collisionCell.type, groupMap[collisionCell.type].cellNum)
           setMinMax(ball.type, groupMap[ball.type].cellNum)
           collisionCell.type = ball.type;
           drawCell(collisionCell);
