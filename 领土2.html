@@ -356,13 +356,13 @@
         ball.angle %= 360;
         if (collisionCell && collisionCell.type !== ball.type) {
           if (collisionCell.type) {
-            if (collisionCell.isLaunch) {
-              groupMap[collisionCell.type].launchPointNum--;
-              groupMap[ball.type].launchPointNum++;
-            }
             groupMap[collisionCell.type].cellNum--;
             setMinMax(collisionCell.type, groupMap[collisionCell.type].cellNum);
           };
+          if (collisionCell.isLaunch) {
+            collisionCell.type && groupMap[collisionCell.type].launchPointNum--;
+            groupMap[ball.type].launchPointNum++;
+          }
           groupMap[ball.type].cellNum++;
           setMinMax(ball.type, groupMap[ball.type].cellNum)
           collisionCell.type = ball.type;
