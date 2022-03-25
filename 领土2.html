@@ -285,7 +285,7 @@
             let r = Math.random();
             let val = 0.5;
             let bl = 1;
-            while (r < val && bl <= 2048) {
+            while (r < val && bl <= 1024) {
               bl *= 2;
               val /= 2;
               r = Math.random() - Math.min(bl / 1000, 0.1);
