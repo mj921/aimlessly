@@ -21,15 +21,15 @@
             <li>F:{{F}} <button :disabled="FLock" @click="saleAllOne('F')">卖</button> <button @click="toBetter('F')">合</button> <button :disabled="FLock" @click="saleAllOne('F')">全卖</button> <button @click="FLock = !FLock">{{ FLock ? '解锁' : '锁定' }}</button></li>
         </ul>
         <ul>
-            <li>SSR:{{SSR1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (SSR1 / n * 100).toFixed(2) : 0}}%</li>
-            <li>SS:{{SS1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (SS1 / n * 100).toFixed(2) : 0}}%</li>
-            <li>S:{{S1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (S1 / n * 100).toFixed(2) : 0}}%</li>
-            <li>A:{{A1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (A1 / n * 100).toFixed(2) : 0}}%</li>
-            <li>B:{{B1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (B1 / n * 100).toFixed(2) : 0}}%</li>
-            <li>C:{{C1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (C1 / n * 100).toFixed(2) : 0}}%</li>
-            <li>D:{{D1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (D1 / n * 100).toFixed(2) : 0}}%</li>
-            <li>E:{{E1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (E1 / n * 100).toFixed(2) : 0}}%</li>
-            <li>F:{{F1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (F1 / n * 100).toFixed(2) : 0}}%</li>
+            <li>SSR:{{SSR1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (SSR1 / n * 100).toFixed(5) : 0}}%</li>
+            <li>SS:{{SS1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (SS1 / n * 100).toFixed(5) : 0}}%</li>
+            <li>S:{{S1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (S1 / n * 100).toFixed(5) : 0}}%</li>
+            <li>A:{{A1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (A1 / n * 100).toFixed(5) : 0}}%</li>
+            <li>B:{{B1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (B1 / n * 100).toFixed(5) : 0}}%</li>
+            <li>C:{{C1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (C1 / n * 100).toFixed(5) : 0}}%</li>
+            <li>D:{{D1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (D1 / n * 100).toFixed(5) : 0}}%</li>
+            <li>E:{{E1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (E1 / n * 100).toFixed(5) : 0}}%</li>
+            <li>F:{{F1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (F1 / n * 100).toFixed(5) : 0}}%</li>
         </ul>
     </div>
     <script src="http://cdn.bootcss.com/vue/2.4.2/vue.js"></script>
