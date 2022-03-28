@@ -8,17 +8,17 @@
 </head>
 <body>
     <div id="app">
-        <button @click="ck">抽</button> <button @click="levelUp">升</button> 钱：{{money}} 次数：{{n}} lv：{{level}} <button @click="moreCkSale(10)">抽卖10</button> <button @click="moreCk(+lc)">{{lc}}连抽</button> <input v-model="lc" /> <button @click="saleAll()">全卖</button> <button @click="levelUpAll()">一键升级</button>
+        <button @click="ck">抽</button> <button @click="levelUp">升</button> 钱：{{money}} 次数：{{n}} lv：{{level}} <button @click="moreCkSale(10)">抽卖10</button> <button @click="moreCk(+lc)">{{lc}}连抽</button> <input v-model="lc" /> <button @click="saleAll()">全卖</button> <button @click="levelUpAll()">一键升级</button> <button @click="save">保存</button> <button @click="load">加载</button>
         <ul>
-            <li>SSR:{{SSR}} <button @click="sale('SSR')">卖</button> <button @click="saleAllOne('SSR')">全卖</button></li>
-            <li>SS:{{SS}} <button @click="sale('SS')">卖</button> <button @click="toBetter('SS')">合</button> <button @click="saleAllOne('SS')">全卖</button></li>
-            <li>S:{{S}} <button @click="sale('S')">卖</button> <button @click="toBetter('S')">合</button> <button @click="saleAllOne('S')">全卖</button></li>
-            <li>A:{{A}} <button @click="sale('A')">卖</button> <button @click="toBetter('A')">合</button> <button @click="saleAllOne('A')">全卖</button></li>
-            <li>B:{{B}} <button @click="sale('B')">卖</button> <button @click="toBetter('B')">合</button> <button @click="saleAllOne('B')">全卖</button></li>
-            <li>C:{{C}} <button @click="sale('C')">卖</button> <button @click="toBetter('C')">合</button> <button @click="saleAllOne('C')">全卖</button></li>
-            <li>D:{{D}} <button @click="sale('D')">卖</button> <button @click="toBetter('D')">合</button> <button @click="saleAllOne('D')">全卖</button></li>
-            <li>E:{{E}} <button @click="sale('E')">卖</button> <button @click="toBetter('E')">合</button> <button @click="saleAllOne('E')">全卖</button></li>
-            <li>F:{{F}} <button @click="sale('F')">卖</button> <button @click="toBetter('F')">合</button> <button @click="saleAllOne('F')">全卖</button></li>
+            <li>SSR:{{SSR}} <button :disabled="SSRLock" @click="saleAllOne('SSR')">卖</button> <button :disabled="SSRLock" @click="saleAllOne('SSR')">全卖</button> <button @click="SSRLock = !SSRLock">{{ SSRLock ? '解锁' : '锁定' }}</button></li>
+            <li>SS:{{SS}} <button :disabled="SSLock" @click="saleAllOne('SS')">卖</button> <button @click="toBetter('SS')">合</button> <button :disabled="SSLock" @click="saleAllOne('SS')">全卖</button> <button @click="SSLock = !SSLock">{{ SSLock ? '解锁' : '锁定' }}</button></li>
+            <li>S:{{S}} <button :disabled="SLock" @click="saleAllOne('S')">卖</button> <button @click="toBetter('S')">合</button> <button :disabled="SLock" @click="saleAllOne('S')">全卖</button> <button @click="SLock = !SLock">{{ SLock ? '解锁' : '锁定' }}</button></li>
+            <li>A:{{A}} <button :disabled="ALock" @click="saleAllOne('A')">卖</button> <button @click="toBetter('A')">合</button> <button :disabled="ALock" @click="saleAllOne('A')">全卖</button> <button @click="ALock = !ALock">{{ ALock ? '解锁' : '锁定' }}</button></li>
+            <li>B:{{B}} <button :disabled="BLock" @click="saleAllOne('B')">卖</button> <button @click="toBetter('B')">合</button> <button :disabled="BLock" @click="saleAllOne('B')">全卖</button> <button @click="BLock = !BLock">{{ BLock ? '解锁' : '锁定' }}</button></li>
+            <li>C:{{C}} <button :disabled="CLock" @click="saleAllOne('C')">卖</button> <button @click="toBetter('C')">合</button> <button :disabled="CLock" @click="saleAllOne('C')">全卖</button> <button @click="CLock = !CLock">{{ CLock ? '解锁' : '锁定' }}</button></li>
+            <li>D:{{D}} <button :disabled="DLock" @click="saleAllOne('D')">卖</button> <button @click="toBetter('D')">合</button> <button :disabled="DLock" @click="saleAllOne('D')">全卖</button> <button @click="DLock = !DLock">{{ DLock ? '解锁' : '锁定' }}</button></li>
+            <li>E:{{E}} <button :disabled="ELock" @click="saleAllOne('E')">卖</button> <button @click="toBetter('E')">合</button> <button :disabled="ELock" @click="saleAllOne('E')">全卖</button> <button @click="ELock = !ELock">{{ ELock ? '解锁' : '锁定' }}</button></li>
+            <li>F:{{F}} <button :disabled="FLock" @click="saleAllOne('F')">卖</button> <button @click="toBetter('F')">合</button> <button :disabled="FLock" @click="saleAllOne('F')">全卖</button> <button @click="FLock = !FLock">{{ FLock ? '解锁' : '锁定' }}</button></li>
         </ul>
         <ul>
             <li>SSR:{{SSR1}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{n > 0 ? (SSR1 / n * 100).toFixed(2) : 0}}%</li>
@@ -59,6 +59,15 @@
                 D1:0,
                 E1:0,
                 F1:0,
+                SSRLock: false,
+                SSLock: false,
+                SLock: false,
+                ALock: false,
+                BLock: false,
+                CLock: false,
+                DLock: false,
+                ELock: false,
+                FLock: false,
             },
             methods:{
                 ck:function() {
@@ -121,11 +130,17 @@
                     }
                 },
                 saleAllOne:function(type){
+                    if (this[`${type}Lock`]) {
+                        return false;
+                    }
                     var arr = {"F":8,"E":16,"D":32,"C":64,"B":128,"A":256,"S":512,"SS":1024,"SSR":2048};
                     this.money += arr[type] * this[type];
                     this[type] = 0;
                 },
                 sale:function(type){
+                    if (this[`${type}Lock`]) {
+                        return false;
+                    }
                     var arr = {"F":8,"E":16,"D":32,"C":64,"B":128,"A":256,"S":512,"SS":1024,"SSR":2048};
                     if(this[type] > 0){
                         this.money += arr[type];
@@ -197,7 +212,9 @@
                 moreCk:function(n){
                     if(n > 1000000){
                         this.moreCk(1000000);
-                        this.moreCk(n - 1000000);
+                        setTimeout(function(){
+                            self.moreCkSale(n - 1000000);
+                        }, 0);
                     }else{
                         while(n-- > 0 && this.ck()){}
                     }
@@ -214,7 +231,83 @@
                             self.moreCkSale(n);
                         },10);
                     }
-                }
+                },
+                save: function() {
+                    var self = this;
+                    var data = {
+                        money: this.money,
+                        level: this.level,
+                        F: this.F,
+                        E: this.E,
+                        D: this.D,
+                        C: this.C,
+                        B: this.B,
+                        A: this.A,
+                        S: this.S,
+                        SS: this.SS,
+                        SSR: this.SSR,
+                        F1: this.F1,
+                        E1: this.E1,
+                        D1: this.D1,
+                        C1: this.C1,
+                        B1: this.B1,
+                        A1: this.A1,
+                        S1: this.S1,
+                        SS1: this.SS1,
+                        SSR1: this.SSR1,
+                        n: this.n,
+                        FLock: this.FLock,
+                        ELock: this.ELock,
+                        DLock: this.DLock,
+                        CLock: this.CLock,
+                        BLock: this.BLock,
+                        ALock: this.ALock,
+                        SLock: this.SLock,
+                        SSLock: this.SSLock,
+                        SSRLock: this.SSRLock,
+                    };
+                    localStorage.setItem('aimlesslyCkData', JSON.stringify(data));
+                },
+                load: function() {
+                    const dataStr = localStorage.getItem('aimlesslyCkData');
+                    try {
+                        const data = JSON.parse(dataStr);
+                        if (data) {
+                            this.money = data.money;
+                            this.level = data.level;
+                            this.F = data.F;
+                            this.E = data.E;
+                            this.D = data.D;
+                            this.C = data.C;
+                            this.B = data.B;
+                            this.A = data.A;
+                            this.S = data.S;
+                            this.SS = data.SS;
+                            this.SSR = data.SSR;
+                            this.F1 = data.F1;
+                            this.E1 = data.E1;
+                            this.D1 = data.D1;
+                            this.C1 = data.C1;
+                            this.B1 = data.B1;
+                            this.A1 = data.A1;
+                            this.S1 = data.S1;
+                            this.SS1 = data.SS1;
+                            this.SSR1 = data.SSR1;
+                            this.n = data.n;
+                            this.FLock = data.FLock;
+                            this.ELock = data.ELock;
+                            this.DLock = data.DLock;
+                            this.CLock = data.CLock;
+                            this.BLock = data.BLock;
+                            this.ALock = data.ALock;
+                            this.SLock = data.SLock;
+                            this.SSLock = data.SSLock;
+                            this.SSRLock = data.SSRLock;
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                },
             },
             mounted:function(){
 
