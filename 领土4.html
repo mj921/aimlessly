@@ -60,7 +60,7 @@
       BALL_MOVE: 2,
       END: 3,
     }
-    const groupList = ['red', 'blue', 'green', 'yellow'];
+    const groupList = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown'];
     let groupMap = {}
     let launchPoint = []
     let maxCellNum = { cellNum: 0, type: '' };
@@ -100,7 +100,8 @@
         mapCells.push(cells);
       }
       launchPoint = [];
-      const launchPointNum = 12;
+      const groupNum = Math.max(Math.floor(Math.random() * groupList.length), 3);
+      const launchPointNum = Math.floor(Math.random() * 20) + groupNum;
       groupMap = {};
       groupList.forEach(key => {
         groupMap[key] = {
