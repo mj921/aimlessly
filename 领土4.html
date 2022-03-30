@@ -23,12 +23,22 @@
     #data {
       position: absolute;
       right: 10px;
+      font-weight: bold;
+      -webkit-text-stroke: 0.5px #000;
+    }
+    .btns {
+      position: fixed;
+      bottom: 0;
     }
   </style>
 </head>
 
 <body>
   <canvas id="main"></canvas>
+  <div class="btns">
+    <button id="save">save</button>
+    <button id="load">load</button>
+  </div>
   <div id="data"></div>
   <script>
     const main = document.getElementById('main');
@@ -38,6 +48,8 @@
     const cellCanvas = document.createElement('canvas');
     const cellCtx = cellCanvas.getContext('2d');
     const dataEl = document.getElementById('data');
+    const saveBtn = document.getElementById('save');
+    const loadBtn = document.getElementById('load');
     let screenWidth = 700;
     let screenHeight = 700;
     const resizeHandle = () => {
@@ -49,10 +61,10 @@
       cellCanvas.height = screenHeight;
     }
     let time = 0;
-    const mapSize = 301;
-    const cellSize = 2;
-    const ballSpeed = 3;
-    const ballSize = 1;
+    let mapSize = 301;
+    let cellSize = 2;
+    let ballSpeed = 4;
+    let ballSize = 1;
     let mapCells = [];
     let ballList = [];
     const GroupStatus = {
@@ -79,84 +91,117 @@
         return getRandomCell(isEmpty);
       }
     }
-    const init = () => {
+    const init = (loadFlag = false) => {
+      cancelAnimationFrame(raf);
+      raf = null;
       ctxClear(mainCtx);
-      mapCells = [];
-      ballList = [];
-      const cellNum = 1;
-      maxCellNum = { cellNum, type: '' };
-      minCellNum = { cellNum, type: '' };
-      for (let i = 0; i < mapSize; i++) {
-        const cells = [];
-        for (let j = 0; j < mapSize; j++) {
-          const cell = {
-            x: j,
-            y: i,
-            type: '',
-          };
-          cells.push(cell);
-          drawCell(cell);
+      ctxClear(cellCtx);
+      if (loadFlag) {
+        const data = JSON.parse(localStorage.getItem('lingtu4Save') || '{}');
+        if (data.maxBallNum) {
+          maxBallNum = data.maxBallNum;
+          maxTotalNum = data.maxTotalNum;
+          groupMap = data.groupMap;
+          mapSize = data.mapSize;
+          cellSize = data.cellSize;
+          ballSize = data.ballSize;
+          ballSpeed = data.ballSpeed;
+          ballList = [];
+          launchPoint = data.launchPoint;
+          maxCellNum = data.maxCellNum;
+          minCellNum = data.minCellNum;
+          mapCells = data.mapCells;
+          for (let i = 0; i < mapSize; i++) {
+            for (let j = 0; j < mapSize; j++) {
+              drawCell(mapCells[i][j]);
+            }
+          }
+          launchPoint.forEach(el => {
+            el.ballInfo = {
+              wait: 1,
+              total: 1,
+            };
+            el.status = GroupStatus.CREATE_BALL;
+          });
         }
-        mapCells.push(cells);
-      }
-      launchPoint = [];
-      const groupNum = Math.max(Math.floor(Math.random() * groupList.length), 3);
-      const launchPointNum = Math.floor(Math.random() * 20) + groupNum;
-      groupMap = {};
-      groupList.forEach(key => {
-        groupMap[key] = {
-          type: key,
-          cellNum: cellNum,
-          maxCellNum: cellNum,
-          minCellNum: cellNum,
-          launchPointNum: 1,
-          time: 0,
-          launchPointTime: 0,
-        };
-        const cellItem = getRandomCell(randomCell => randomCell.type === '');
-        cellItem.type = key;
-        cellItem.isLaunch = true;
-        launchPoint.push({
-          x: cellItem.x,
-          y: cellItem.y,
-          startAngle: 0,
-          range: 360,
-          status: GroupStatus.CREATE_BALL,
-          ballInfo: {
-            wait: 1,
-            total: 1,
-          },
-        });
-        drawCell(cellItem);
-      })
-      for (let i = 4; i < launchPointNum; i++) {
-        const cellItem = getRandomCell(randomCell => !randomCell.launchPoint);
-        cellItem.isLaunch = true;
-        launchPoint.push({
-          x: cellItem.x,
-          y: cellItem.y,
-          startAngle: 0,
-          range: 360,
-          status: GroupStatus.CREATE_BALL,
-          ballInfo: {
-            wait: 1,
-            total: 1,
-          },
-        });
+      } else {
+        ballList = [];
+        const cellNum = 1;
+        maxCellNum = { cellNum, type: '' };
+        minCellNum = { cellNum, type: '' };
+        mapCells = [];
+        for (let i = 0; i < mapSize; i++) {
+          const cells = [];
+          for (let j = 0; j < mapSize; j++) {
+            const cell = {
+              x: j,
+              y: i,
+              type: '',
+            };
+            cells.push(cell);
+            drawCell(cell);
+          }
+          mapCells.push(cells);
+        }
+        launchPoint = [];
+        const groupNum = Math.max(Math.floor(Math.random() * groupList.length), 3);
+        const launchPointNum = Math.floor(Math.random() * 20) + groupNum;
+        groupMap = {};
+        groupList.slice(0, groupNum).forEach(key => {
+          groupMap[key] = {
+            type: key,
+            cellNum: cellNum,
+            maxCellNum: cellNum,
+            minCellNum: cellNum,
+            launchPointNum: 1,
+            time: 0,
+            launchPointTime: 0,
+          };
+          const cellItem = getRandomCell(randomCell => randomCell.type === '');
+          cellItem.type = key;
+          cellItem.isLaunch = true;
+          launchPoint.push({
+            x: cellItem.x,
+            y: cellItem.y,
+            startAngle: 0,
+            range: 360,
+            status: GroupStatus.CREATE_BALL,
+            ballInfo: {
+              wait: 1,
+              total: 1,
+            },
+          });
+          drawCell(cellItem);
+        })
+        for (let i = 4; i < launchPointNum; i++) {
+          const cellItem = getRandomCell(randomCell => !randomCell.launchPoint);
+          cellItem.isLaunch = true;
+          launchPoint.push({
+            x: cellItem.x,
+            y: cellItem.y,
+            startAngle: 0,
+            range: 360,
+            status: GroupStatus.CREATE_BALL,
+            ballInfo: {
+              wait: 1,
+              total: 1,
+            },
+          });
+        }
       }
       mainCtx.drawImage(cellCanvas, 0, 0);
       createDataHtml();
     }
     const createDataHtml = () => {
       let html = `<div>
-          <dl>time: ${time}</dl>
+          <dl>time: ${time} lpTotal：${launchPoint.length}</dl>
           <dl style="color: ${maxCellNum.type || '#000'}">max: ${maxCellNum.cellNum}</dl>
           <dl style="color: ${minCellNum.type || '#000'}">min: ${minCellNum.cellNum}</dl>
           <dl style="color: ${maxBallNum.type || '#000'}">maxBall: ${maxBallNum.ballNum}, bl：${maxBallNum.bl}</dl>
           <dl>max: ${maxTotalNum}</dl>
         </div><ul>`;
       const arr = Object.keys(groupMap).map(key => groupMap[key]);
-      arr.sort((a, b) => b.cellNum - a.cellNum);
+      arr.sort((a, b) => b.cellNum === a.cellNum ? b.time - a.time : b.cellNum - a.cellNum);
       arr.forEach(({ type, cellNum, maxCellNum: max, minCellNum: min, launchPointNum, time, launchPointTime }) => {
         html += `<li style="color: ${type};">
           <dt>${type}：${cellNum}， ${launchPointNum}</dt>
@@ -244,7 +289,14 @@
                 type,
               };
             }
-            ballInfo.total = Math.min(Math.floor(10000 / launchPoint.length) * 4, ballInfo.total);
+
+            let max = Math.floor(10000 / launchPoint.length) * 4;
+            let p = 0.1;
+            while (max < 10000 && Math.random() < p) {
+              max *= 2;
+              p /= 2;
+            }
+            ballInfo.total = Math.min(max, ballInfo.total);
             point.status = GroupStatus.BALL_MOVE;
             const ballNum = ballInfo.total;
             for (let i = 0; i < ballNum; i++) {
@@ -322,11 +374,51 @@
       mainCtx.drawImage(cellCanvas, 0, 0);
       mainCtx.drawImage(ballCanvas, 0, 0);
       createDataHtml();
-      raf = requestAnimationFrame(loop);
+      if (Object.keys(groupMap).some(key => groupMap[key].cellNum === mapSize * mapSize)) {
+        cancelAnimationFrame(raf);
+        raf = null;
+        createDataHtml();
+        const history = JSON.parse(localStorage.getItem('lingtu4History') || '[]');
+        history.push({
+          maxBallNum,
+          maxTotalNum,
+          groupMap,
+          mapSize,
+          cellSize,
+          ballSize,
+          ballSpeed,
+          launchPoint,
+          maxCellNum,
+          minCellNum,
+        });
+        localStorage.setItem('lingtu4History', JSON.stringify(history));
+      } else {
+        raf = requestAnimationFrame(loop);
+      }
     }
     resizeHandle();
     init();
     loop();
+    saveBtn.addEventListener('click', () => {
+      const data = {
+        maxBallNum,
+        maxTotalNum,
+        groupMap,
+        mapSize,
+        cellSize,
+        ballSize,
+        ballSpeed,
+        launchPoint,
+        maxCellNum,
+        minCellNum,
+        mapCells,
+      };
+      localStorage.setItem('lingtu4Save', JSON.stringify(data));
+    });
+    loadBtn.addEventListener('click', (e) => {
+      init(true);
+      loop();
+    });
   </script>
 </body>
 
