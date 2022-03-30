@@ -30,6 +30,28 @@
       position: fixed;
       bottom: 0;
     }
+    #createDialog {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 160px;
+      background-color: #fff;
+      box-shadow: 0 0 1px 3px rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #createDialog > * {
+      margin-bottom: 10px;
+    }
+    .hide {
+      display: none !important;
+    }
   </style>
 </head>
 
@@ -39,6 +61,15 @@
     <button id="save">save</button>
     <button id="load">load</button>
     <button id="start">start</button>
+    <button id="create">create</button>
+  </div>
+  <div id="createDialog" class="hide">
+    <input type="number" id="createGroupNum" placeholder="groupNum" max="9">
+    <input type="number" id="createLaunchPointNum" placeholder="launchPointNum">
+    <div>
+      <button id="createConfirm">confirm</button>
+      <button id="createCancel">cancel</button>
+    </div>
   </div>
   <div id="data"></div>
   <script>
@@ -52,6 +83,12 @@
     const saveBtn = document.getElementById('save');
     const loadBtn = document.getElementById('load');
     const startBtn = document.getElementById('start');
+    const createBtn = document.getElementById('create');
+    const createGroupNumEl = document.getElementById('createGroupNum');
+    const createLaunchPointNumEl = document.getElementById('createLaunchPointNum');
+    const createDialog = document.getElementById('createDialog');
+    const createConfirmBtn = document.getElementById('createConfirm');
+    const createCancelBtn = document.getElementById('createCancel');
     let screenWidth = 700;
     let screenHeight = 700;
     const resizeHandle = () => {
@@ -94,12 +131,12 @@
         return getRandomCell(isEmpty);
       }
     }
-    const init = (loadFlag = false) => {
+    const init = (initType = '') => {
       cancelAnimationFrame(raf);
       raf = null;
       ctxClear(mainCtx);
       ctxClear(cellCtx);
-      if (loadFlag) {
+      if (initType === 'load') {
         const data = JSON.parse(localStorage.getItem('lingtu4Save') || '{}');
         if (data.maxBallNum) {
           maxBallNum = data.maxBallNum;
@@ -148,8 +185,16 @@
           mapCells.push(cells);
         }
         launchPoint = [];
-        const groupNum = Math.max(Math.floor(Math.random() * groupList.length), 7);
-        const launchPointNum = Math.floor(Math.random() * 30) + groupNum;
+        let groupNum = Math.max(Math.floor(Math.random() * groupList.length), 7);
+        let launchPointNum = Math.floor(Math.random() * 30) + groupNum;
+        if (initType === 'create') {
+          if (createGroupNumEl.value) {
+            groupNum = parseInt(createGroupNumEl.value);
+          } 
+          if (createLaunchPointNumEl.value) {
+            launchPointNum = parseInt(createLaunchPointNumEl.value);
+          }
+        }
         groupMap = {};
         groupList.slice(0, groupNum).forEach(key => {
           groupMap[key] = {
@@ -428,12 +473,22 @@
       localStorage.setItem('lingtu4Save', JSON.stringify(data));
     });
     loadBtn.addEventListener('click', (e) => {
-      init(true);
+      init('load');
       loop();
     });
     startBtn.addEventListener('click', () => {
       toggle();
       startBtn.innerText = status === 'play' ? '暂停' : '开始';
+    });
+    createBtn.addEventListener('click', () => {
+      createDialog.className = '';
+    });
+    createCancelBtn.addEventListener('click', () => {
+      createDialog.className = 'hide';
+    });
+    createConfirmBtn.addEventListener('click', () => {
+      init('create');
+      createDialog.className = 'hide';
     });
   </script>
 </body>
