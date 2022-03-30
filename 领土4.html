@@ -38,6 +38,7 @@
   <div class="btns">
     <button id="save">save</button>
     <button id="load">load</button>
+    <button id="start">start</button>
   </div>
   <div id="data"></div>
   <script>
@@ -50,6 +51,7 @@
     const dataEl = document.getElementById('data');
     const saveBtn = document.getElementById('save');
     const loadBtn = document.getElementById('load');
+    const startBtn = document.getElementById('start');
     let screenWidth = 700;
     let screenHeight = 700;
     const resizeHandle = () => {
@@ -72,13 +74,14 @@
       BALL_MOVE: 2,
       END: 3,
     }
-    const groupList = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown'];
+    const groupList = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'gray'];
     let groupMap = {}
     let launchPoint = []
     let maxCellNum = { cellNum: 0, type: '' };
     let minCellNum = { cellNum: 0, type: '' };
     let maxBallNum = { ballNum: 0, type: '' };
     let maxTotalNum = 0;
+    let status = "pause";
     const ctxClear = ctx => {
       ctx.clearRect(0, 0, screenWidth, screenHeight);
     }
@@ -106,6 +109,7 @@
           cellSize = data.cellSize;
           ballSize = data.ballSize;
           ballSpeed = data.ballSpeed;
+          time = data.time;
           ballList = [];
           launchPoint = data.launchPoint;
           maxCellNum = data.maxCellNum;
@@ -144,8 +148,8 @@
           mapCells.push(cells);
         }
         launchPoint = [];
-        const groupNum = Math.max(Math.floor(Math.random() * groupList.length), 3);
-        const launchPointNum = Math.floor(Math.random() * 20) + groupNum;
+        const groupNum = Math.max(Math.floor(Math.random() * groupList.length), 7);
+        const launchPointNum = Math.floor(Math.random() * 30) + groupNum;
         groupMap = {};
         groupList.slice(0, groupNum).forEach(key => {
           groupMap[key] = {
@@ -392,13 +396,20 @@
           minCellNum,
         });
         localStorage.setItem('lingtu4History', JSON.stringify(history));
-      } else {
+      } else if (status === 'play') {
         raf = requestAnimationFrame(loop);
+      }
+    }
+    const toggle = () => {
+      if (status === 'play') {
+        status = 'pause';
+      } else {
+        status = 'play';
+        loop();
       }
     }
     resizeHandle();
     init();
-    loop();
     saveBtn.addEventListener('click', () => {
       const data = {
         maxBallNum,
@@ -412,12 +423,17 @@
         maxCellNum,
         minCellNum,
         mapCells,
+        time,
       };
       localStorage.setItem('lingtu4Save', JSON.stringify(data));
     });
     loadBtn.addEventListener('click', (e) => {
       init(true);
       loop();
+    });
+    startBtn.addEventListener('click', () => {
+      toggle();
+      startBtn.innerText = status === 'play' ? '暂停' : '开始';
     });
   </script>
 </body>
