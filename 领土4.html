@@ -62,8 +62,13 @@
     <button id="load">load</button>
     <button id="start">start</button>
     <button id="create">create</button>
+    <button id="export">export</button>
+    <input id="import" type="file">import</input>
   </div>
   <div id="createDialog" class="hide">
+    <input type="number" id="createMapSizeNum" value="301" placeholder="mapSizeNum">
+    <input type="number" id="createCellSizeNum" value="2" placeholder="cellSizeNum">
+    <input type="number" id="createBallSpeedNum" value="4" placeholder="ballSpeedNum">
     <input type="number" id="createGroupNum" placeholder="groupNum" max="9">
     <input type="number" id="createLaunchPointNum" placeholder="launchPointNum">
     <div>
@@ -84,8 +89,13 @@
     const loadBtn = document.getElementById('load');
     const startBtn = document.getElementById('start');
     const createBtn = document.getElementById('create');
+    const exportBtn = document.getElementById('export');
+    const importBtn = document.getElementById('import');
     const createGroupNumEl = document.getElementById('createGroupNum');
     const createLaunchPointNumEl = document.getElementById('createLaunchPointNum');
+    const createMapSizeNumEl = document.getElementById('createMapSizeNum');
+    const createCellSizeNumEl = document.getElementById('createCellSizeNum');
+    const createBallSpeedNumEl = document.getElementById('createBallSpeedNum');
     const createDialog = document.getElementById('createDialog');
     const createConfirmBtn = document.getElementById('createConfirm');
     const createCancelBtn = document.getElementById('createCancel');
@@ -132,6 +142,7 @@
       }
     }
     const init = (initType = '') => {
+      setBtnDisabled();
       cancelAnimationFrame(raf);
       raf = null;
       ctxClear(mainCtx);
@@ -171,6 +182,28 @@
         maxCellNum = { cellNum, type: '' };
         minCellNum = { cellNum, type: '' };
         mapCells = [];
+        mapSize = 301;
+        cellSize = 2;
+        ballSpeed = 4;
+        let groupNum = Math.max(Math.floor(Math.random() * groupList.length), 7);
+        let launchPointNum = Math.floor(Math.random() * 30) + groupNum;
+        if (initType === 'create') {
+          if (createGroupNumEl.value) {
+            groupNum = parseInt(createGroupNumEl.value);
+          } 
+          if (createLaunchPointNumEl.value) {
+            launchPointNum = parseInt(createLaunchPointNumEl.value);
+          }
+          if (createMapSizeNumEl.value) {
+            mapSize = parseInt(createMapSizeNumEl.value);
+          }
+          if (createCellSizeNumEl.value) {
+            cellSize = parseInt(createCellSizeNumEl.value);
+          }
+          if (createBallSpeedNumEl.value) {
+            ballSpeed = parseInt(createBallSpeedNumEl.value);
+          }
+        }
         for (let i = 0; i < mapSize; i++) {
           const cells = [];
           for (let j = 0; j < mapSize; j++) {
@@ -185,16 +218,6 @@
           mapCells.push(cells);
         }
         launchPoint = [];
-        let groupNum = Math.max(Math.floor(Math.random() * groupList.length), 7);
-        let launchPointNum = Math.floor(Math.random() * 30) + groupNum;
-        if (initType === 'create') {
-          if (createGroupNumEl.value) {
-            groupNum = parseInt(createGroupNumEl.value);
-          } 
-          if (createLaunchPointNumEl.value) {
-            launchPointNum = parseInt(createLaunchPointNumEl.value);
-          }
-        }
         groupMap = {};
         groupList.slice(0, groupNum).forEach(key => {
           groupMap[key] = {
@@ -445,6 +468,13 @@
         raf = requestAnimationFrame(loop);
       }
     }
+    const setBtnDisabled = () => {
+      saveBtn.disabled = status !== 'pause';
+      loadBtn.disabled = status !== 'pause';
+      exportBtn.disabled = status !== 'pause';
+      importBtn.disabled = status !== 'pause';
+      createBtn.disabled = status !== 'pause';
+    }
     const toggle = () => {
       if (status === 'play') {
         status = 'pause';
@@ -452,10 +482,12 @@
         status = 'play';
         loop();
       }
+      setBtnDisabled();
     }
     resizeHandle();
     init();
     saveBtn.addEventListener('click', () => {
+      if (status !== 'pause') return;
       const data = {
         maxBallNum,
         maxTotalNum,
@@ -473,8 +505,54 @@
       localStorage.setItem('lingtu4Save', JSON.stringify(data));
     });
     loadBtn.addEventListener('click', (e) => {
+      if (status !== 'pause') return;
       init('load');
       loop();
+    });
+    exportBtn.addEventListener('click', () => {
+      if (status !== 'pause') return;
+      const data = {
+        maxBallNum,
+        maxTotalNum,
+        groupMap,
+        mapSize,
+        cellSize,
+        ballSize,
+        ballSpeed,
+        launchPoint,
+        maxCellNum,
+        minCellNum,
+        mapCells,
+        time,
+      };
+      const blob = new Blob([JSON.stringify(data)], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `lingtu4_${new Date().getTime()}.json`;
+      a.click();
+    });
+    importBtn.addEventListener('change', (e) => {
+      if (status !== 'pause') return;
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = JSON.parse(e.target.result);
+        maxBallNum = data.maxBallNum;
+        maxTotalNum = data.maxTotalNum;
+        groupMap = data.groupMap;
+        mapSize = data.mapSize;
+        cellSize = data.cellSize;
+        ballSize = data.ballSize;
+        ballSpeed = data.ballSpeed;
+        launchPoint = data.launchPoint;
+        maxCellNum = data.maxCellNum;
+        minCellNum = data.minCellNum;
+        mapCells = data.mapCells;
+        time = data.time;
+        init('load');
+        loop();
+      };
+      reader.readAsText(file);
     });
     startBtn.addEventListener('click', () => {
       toggle();
