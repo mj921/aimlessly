@@ -63,7 +63,7 @@
     <button id="start">start</button>
     <button id="create">create</button>
     <button id="export">export</button>
-    <input id="import" type="file">import</input>
+    <input id="import" type="file" />
   </div>
   <div id="createDialog" class="hide">
     <input type="number" id="createMapSizeNum" value="301" placeholder="mapSizeNum">
@@ -395,6 +395,7 @@
         const { x, y } = ball;
         const cellX = Math.floor(x / cellSize);
         const cellY = Math.floor(y / cellSize);
+        const collisionCellList = [];
         let collisionCell = null;
         if (cellX < 0) {
           ball.angle = ball.angle > 180 ? (540 - ball.angle) : (180 - ball.angle);
@@ -404,18 +405,23 @@
           ball.angle = (ball.angle > 180 ? 360 : 180) - ball.angle;
         } else if(cellY > mapSize - 1) {
           ball.angle = (ball.angle > 180 ? 180 : 360) - ball.angle;
-        } else if (mapCells[cellY][cellX].type !== ball.type) {
-          collisionCell = mapCells[cellY][cellX];
-        } else if (cellX > 0 && x % cellSize <= ballSize) {
-          collisionCell = mapCells[cellY][cellX - 1];
-        } else if (cellY > 0 && y % cellSize <= ballSize) {
-          collisionCell = mapCells[cellY - 1][cellX];
-        } else if ((x + ballSize) / cellSize >= cellX) {
-          collisionCell = mapCells[cellY][cellX + 1];
-        } else if ((y + ballSize) / cellSize >= cellY) {
-          collisionCell = mapCells[cellY + 1][cellX];
+        } else {
+          collisionCellList.push(mapCells[cellY][cellX]);
+          if (cellX > 0 && x % cellSize <= ballSize) {
+            collisionCellList.push(mapCells[cellY][cellX - 1]);
+          }
+          if (cellY > 0 && y % cellSize <= ballSize) {
+            collisionCellList.push(mapCells[cellY - 1][cellX]);
+          }
+          if ((x + ballSize) / cellSize >= cellX) {
+            collisionCellList.push(mapCells[cellY][cellX + 1]);
+          }
+          if ((y + ballSize) / cellSize >= cellY) {
+            collisionCellList.push(mapCells[cellY + 1][cellX]);
+          }
         }
         ball.angle %= 360;
+        collisionCell = collisionCellList.find(collisionCellEl => collisionCellEl && collisionCellEl.type !== ball.type);
         if (collisionCell && collisionCell.type !== ball.type) {
           if (collisionCell.type) {
             groupMap[collisionCell.type].cellNum--;
@@ -507,7 +513,6 @@
     loadBtn.addEventListener('click', (e) => {
       if (status !== 'pause') return;
       init('load');
-      loop();
     });
     exportBtn.addEventListener('click', () => {
       if (status !== 'pause') return;
@@ -550,7 +555,6 @@
         mapCells = data.mapCells;
         time = data.time;
         init('load');
-        loop();
       };
       reader.readAsText(file);
     });
