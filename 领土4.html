@@ -109,6 +109,11 @@
       cellCanvas.width = screenWidth;
       cellCanvas.height = screenHeight;
     }
+    const setCanvasSize = size => {
+      screenWidth = size;
+      screenHeight = size;
+      resizeHandle();
+    }
     let time = 0;
     let mapSize = 301;
     let cellSize = 2;
@@ -163,6 +168,7 @@
           maxCellNum = data.maxCellNum;
           minCellNum = data.minCellNum;
           mapCells = data.mapCells;
+          setCanvasSize(mapSize * cellSize);
           for (let i = 0; i < mapSize; i++) {
             for (let j = 0; j < mapSize; j++) {
               drawCell(mapCells[i][j]);
@@ -204,6 +210,8 @@
             ballSpeed = parseInt(createBallSpeedNumEl.value);
           }
         }
+        setCanvasSize(mapSize * cellSize);
+        ballSize = cellSize / 4;
         for (let i = 0; i < mapSize; i++) {
           const cells = [];
           for (let j = 0; j < mapSize; j++) {
@@ -245,7 +253,7 @@
           });
           drawCell(cellItem);
         })
-        for (let i = 4; i < launchPointNum; i++) {
+        for (let i = groupNum; i < launchPointNum; i++) {
           const cellItem = getRandomCell(randomCell => !randomCell.launchPoint);
           cellItem.isLaunch = true;
           launchPoint.push({
@@ -261,7 +269,7 @@
           });
         }
       }
-      mainCtx.drawImage(cellCanvas, 0, 0);
+      mainCtx.drawImage(cellCanvas, 0, 0, screenWidth, screenHeight);
       createDataHtml();
     }
     const createDataHtml = () => {
@@ -395,7 +403,6 @@
         const { x, y } = ball;
         const cellX = Math.floor(x / cellSize);
         const cellY = Math.floor(y / cellSize);
-        const collisionCellList = [];
         let collisionCell = null;
         if (cellX < 0) {
           ball.angle = ball.angle > 180 ? (540 - ball.angle) : (180 - ball.angle);
@@ -405,23 +412,18 @@
           ball.angle = (ball.angle > 180 ? 360 : 180) - ball.angle;
         } else if(cellY > mapSize - 1) {
           ball.angle = (ball.angle > 180 ? 180 : 360) - ball.angle;
-        } else {
-          collisionCellList.push(mapCells[cellY][cellX]);
-          if (cellX > 0 && x % cellSize <= ballSize) {
-            collisionCellList.push(mapCells[cellY][cellX - 1]);
-          }
-          if (cellY > 0 && y % cellSize <= ballSize) {
-            collisionCellList.push(mapCells[cellY - 1][cellX]);
-          }
-          if ((x + ballSize) / cellSize >= cellX) {
-            collisionCellList.push(mapCells[cellY][cellX + 1]);
-          }
-          if ((y + ballSize) / cellSize >= cellY) {
-            collisionCellList.push(mapCells[cellY + 1][cellX]);
-          }
+        } else if (mapCells[cellY][cellX].type !== ball.type) {
+          collisionCell = mapCells[cellY][cellX];
+        } else if (cellX > 0 && x % cellSize <= ballSize && mapCells[cellY][cellX - 1] !== ball.type) {
+          collisionCell = mapCells[cellY][cellX - 1];
+        } else if (cellY > 0 && y % cellSize <= ballSize && mapCells[cellY - 1][cellX] !== ball.type) {
+          collisionCell = mapCells[cellY - 1][cellX];
+        } else if ((x + ballSize) / cellSize >= cellX && mapCells[cellY][cellX + 1] !== ball.type) {
+          collisionCell = mapCells[cellY][cellX + 1];
+        } else if ((y + ballSize) / cellSize >= cellY && mapCells[cellY + 1][cellX] !== ball.type) {
+          collisionCell = mapCells[cellY + 1][cellX];
         }
         ball.angle %= 360;
-        collisionCell = collisionCellList.find(collisionCellEl => collisionCellEl && collisionCellEl.type !== ball.type);
         if (collisionCell && collisionCell.type !== ball.type) {
           if (collisionCell.type) {
             groupMap[collisionCell.type].cellNum--;
@@ -449,8 +451,8 @@
         ballCtx.fill();
         i++;
       }
-      mainCtx.drawImage(cellCanvas, 0, 0);
-      mainCtx.drawImage(ballCanvas, 0, 0);
+      mainCtx.drawImage(cellCanvas, 0, 0, screenWidth, screenHeight);
+      mainCtx.drawImage(ballCanvas, 0, 0, screenWidth, screenHeight);
       createDataHtml();
       if (Object.keys(groupMap).some(key => groupMap[key].cellNum === mapSize * mapSize)) {
         cancelAnimationFrame(raf);
