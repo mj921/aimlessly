@@ -20,16 +20,19 @@
       width: 500px;
       height: 500px;
     }
+
     #data {
       position: absolute;
       right: 10px;
       font-weight: bold;
       -webkit-text-stroke: 0.5px #000;
     }
+
     .btns {
       position: fixed;
       bottom: 0;
     }
+
     #createDialog {
       position: fixed;
       left: 50%;
@@ -46,9 +49,11 @@
       justify-content: center;
       align-items: center;
     }
-    #createDialog > * {
+
+    #createDialog>* {
       margin-bottom: 10px;
     }
+
     .hide {
       display: none !important;
     }
@@ -121,6 +126,7 @@
     let ballSize = 1;
     let mapCells = [];
     let ballList = [];
+    let totalCellNum = mapSize * mapSize;
     const GroupStatus = {
       CREATE_BALL: 1,
       BALL_MOVE: 2,
@@ -129,11 +135,41 @@
     const groupList = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'gray'];
     let groupMap = {}
     let launchPoint = []
-    let maxCellNum = { cellNum: 0, type: '' };
-    let minCellNum = { cellNum: 0, type: '' };
-    let maxBallNum = { ballNum: 0, type: '' };
+    let currMaxCellNum = {
+      cellNum: 0,
+      type: '',
+      startTime: 0,
+    }
+    let maxCellNum = {
+      cellNum: 0,
+      type: '',
+      startTime: 0
+    };
+    let currMaxCellHistory = [];
+    let maxCellHistory = [];
+    let maxBallNum = {
+      ballNum: 0,
+      type: ''
+    };
     let maxTotalNum = 0;
     let status = "pause";
+    const saveKey = [
+      'maxBallNum',
+      'maxTotalNum',
+      'groupMap',
+      'mapSize',
+      'cellSize',
+      'ballSize',
+      'ballSpeed',
+      'launchPoint',
+      'maxCellNum',
+      'mapCells',
+      'time',
+      'maxCellHistory',
+      'currMaxCellNum',
+      'currMaxCellHistory',
+    ]
+
     const ctxClear = ctx => {
       ctx.clearRect(0, 0, screenWidth, screenHeight);
     }
@@ -146,14 +182,19 @@
         return getRandomCell(isEmpty);
       }
     }
-    const init = (initType = '') => {
+    const init = (initType = '', initData = {}) => {
       setBtnDisabled();
       cancelAnimationFrame(raf);
       raf = null;
       ctxClear(mainCtx);
       ctxClear(cellCtx);
-      if (initType === 'load') {
-        const data = JSON.parse(localStorage.getItem('lingtu4Save') || '{}');
+      if (['load', 'import'].includes(initType)) {
+        let data = {};
+        if (initType === 'load') {
+          data = JSON.parse(localStorage.getItem('lingtu4Save') || '{}');
+        } else {
+          data = initData;
+        }
         if (data.maxBallNum) {
           maxBallNum = data.maxBallNum;
           maxTotalNum = data.maxTotalNum;
@@ -165,9 +206,11 @@
           time = data.time;
           ballList = [];
           launchPoint = data.launchPoint;
-          maxCellNum = data.maxCellNum;
-          minCellNum = data.minCellNum;
           mapCells = data.mapCells;
+          maxCellNum = data.maxCellNum;
+          maxCellHistory = data.maxCellHistory;
+          currMaxCellNum = data.currMaxCellNum;
+          currMaxCellHistory = data.currMaxCellHistory;
           setCanvasSize(mapSize * cellSize);
           for (let i = 0; i < mapSize; i++) {
             for (let j = 0; j < mapSize; j++) {
@@ -184,9 +227,13 @@
         }
       } else {
         ballList = [];
+        maxCellHistory = [];
+        currMaxCellHistory = [];
         const cellNum = 1;
-        maxCellNum = { cellNum, type: '' };
-        minCellNum = { cellNum, type: '' };
+        maxCellNum = {
+          cellNum,
+          type: ''
+        };
         mapCells = [];
         mapSize = 301;
         cellSize = 2;
@@ -196,7 +243,7 @@
         if (initType === 'create') {
           if (createGroupNumEl.value) {
             groupNum = parseInt(createGroupNumEl.value);
-          } 
+          }
           if (createLaunchPointNumEl.value) {
             launchPointNum = parseInt(createLaunchPointNumEl.value);
           }
@@ -230,9 +277,8 @@
         groupList.slice(0, groupNum).forEach(key => {
           groupMap[key] = {
             type: key,
-            cellNum: cellNum,
+            cellNum,
             maxCellNum: cellNum,
-            minCellNum: cellNum,
             launchPointNum: 1,
             time: 0,
             launchPointTime: 0,
@@ -267,22 +313,87 @@
               total: 1,
             },
           });
+          drawCell(cellItem);
         }
       }
+      totalCellNum = mapSize * mapSize;
       mainCtx.drawImage(cellCanvas, 0, 0, screenWidth, screenHeight);
       createDataHtml();
     }
     const createDataHtml = () => {
+      let min = totalCellNum;
+      let minType = '';
+      const arr = Object.keys(groupMap).map(key => {
+        if (groupMap[key].cellNum && groupMap[key].maxCellNum < min) {
+          min = groupMap[key].maxCellNum;
+          minType = key;
+        }
+        return groupMap[key];
+      });
+      arr.sort(
+        (a, b) => b.cellNum === a.cellNum ?
+        (b.time === a.time ?
+          b.maxCellNum - a.maxCellNum :
+          b.time - a.time) :
+        b.cellNum - a.cellNum
+      );
+
+      if ((currMaxCellHistory.length === 0 || currMaxCellNum.type !== arr[0].type)) {
+        if (currMaxCellHistory.length) {
+          const continuedTime = time - currMaxCellHistory[currMaxCellHistory.length - 1].startTime;
+          if (currMaxCellNum.cellNum >= totalCellNum / 10 || continuedTime >= 3600 || currMaxCellHistory.length > 1) {
+            currMaxCellHistory[currMaxCellHistory.length - 1].endTime = time;
+            currMaxCellHistory[currMaxCellHistory.length - 1].endNum = currMaxCellNum.cellNum;
+            currMaxCellHistory[currMaxCellHistory.length - 1].continuedTime = continuedTime;
+          } else {
+            currMaxCellHistory.pop();
+          }
+          currMaxCellHistory.push({
+            cellNum: arr[0].cellNum,
+            type: arr[0].type,
+            startTime: time,
+          })
+        } else {
+          currMaxCellHistory.push({
+            cellNum: arr[0].cellNum,
+            type: arr[0].type,
+            startTime: time,
+          })
+        }
+      }
+      currMaxCellNum = {
+        cellNum: arr[0].cellNum,
+        type: arr[0].type,
+      }
+
+      const maxCellHistoryItem = maxCellHistory.length ? maxCellHistory[maxCellHistory.length - 1] : null;
+      const currMaxCellHistoryItem = currMaxCellHistory.length ? currMaxCellHistory[currMaxCellHistory.length - 1] :
+        null;
       let html = `<div>
           <dl>time: ${time} lpTotal：${launchPoint.length}</dl>
-          <dl style="color: ${maxCellNum.type || '#000'}">max: ${maxCellNum.cellNum}</dl>
-          <dl style="color: ${minCellNum.type || '#000'}">min: ${minCellNum.cellNum}</dl>
+          <dl style="color: ${maxCellNum.type || '#000'}">
+            max: ${maxCellNum.cellNum} 
+            start: ${maxCellHistoryItem ? maxCellHistoryItem.startTime : maxCellNum.startTime} 
+            time: ${time - (maxCellHistoryItem ? maxCellHistoryItem.startTime : maxCellNum.startTime)}
+          </dl>
+          <dl style="color: ${currMaxCellNum.type || '#000'}">
+            max: ${currMaxCellNum.cellNum} 
+            start: ${currMaxCellHistoryItem ? currMaxCellHistoryItem.startTime : currMaxCellNum.startTime} 
+            time: ${time - (currMaxCellHistoryItem ? currMaxCellHistoryItem.startTime : currMaxCellNum.startTime)}
+          </dl>
+          <dl style="color: ${minType || '#000'}">min: ${min}</dl>
           <dl style="color: ${maxBallNum.type || '#000'}">maxBall: ${maxBallNum.ballNum}, bl：${maxBallNum.bl}</dl>
           <dl>max: ${maxTotalNum}</dl>
         </div><ul>`;
-      const arr = Object.keys(groupMap).map(key => groupMap[key]);
-      arr.sort((a, b) => b.cellNum === a.cellNum ? b.time - a.time : b.cellNum - a.cellNum);
-      arr.forEach(({ type, cellNum, maxCellNum: max, minCellNum: min, launchPointNum, time, launchPointTime }) => {
+
+      arr.forEach(({
+        type,
+        cellNum,
+        maxCellNum: max,
+        launchPointNum,
+        time,
+        launchPointTime
+      }) => {
         html += `<li style="color: ${type};">
           <dt>${type}：${cellNum}， ${launchPointNum}</dt>
           <dl>max: ${max} time: ${time} lpTime: ${launchPointTime}</dl>
@@ -293,19 +404,39 @@
     }
 
     let raf = null;
-    const setMinMax = (key, val) => {
+    const setMax = (key, val) => {
       groupMap[key].maxCellNum = Math.max(groupMap[key].maxCellNum, val);
-      groupMap[key].minCellNum = Math.min(groupMap[key].minCellNum, val);
+      if (groupMap[key].maxCellNum !== val) return;
+      if ((maxCellHistory.length === 0 || maxCellNum.cellNum < val)) {
+        if (maxCellHistory.length) {
+          if (maxCellNum.type !== key) {
+            const continuedTime = time - maxCellHistory[maxCellHistory.length - 1].startTime;
+            if (maxCellNum.cellNum >= totalCellNum / 10 || continuedTime >= 3600 || maxCellHistory.length > 1) {
+              maxCellHistory[maxCellHistory.length - 1].endTime = time;
+              maxCellHistory[maxCellHistory.length - 1].endNum = maxCellNum.cellNum;
+              maxCellHistory[maxCellHistory.length - 1].continuedTime = continuedTime;
+            } else {
+              maxCellHistory.pop();
+            }
+            maxCellHistory.push({
+              cellNum: val,
+              type: key,
+              startTime: time,
+            })
+          }
+        } else {
+          maxCellHistory.push({
+            cellNum: val,
+            type: key,
+            startTime: time,
+          })
+        }
+      }
       if (maxCellNum.cellNum < val) {
         maxCellNum = {
           cellNum: val,
           type: key,
-        };
-      }
-      if (minCellNum.cellNum > val) {
-        minCellNum = {
-          cellNum: val,
-          type: key,
+          startTime: time,
         };
       }
     }
@@ -331,7 +462,13 @@
         }
       });
       launchPoint.forEach(point => {
-        const { position, startAngle, x, y, range } = point;
+        const {
+          position,
+          startAngle,
+          x,
+          y,
+          range
+        } = point;
         const type = mapCells[y][x].type;
         if (!type) return;
         if (point.status === GroupStatus.BALL_MOVE && point.ballInfo.total <= 0) {
@@ -341,9 +478,14 @@
             total: 1,
           };
         }
-        const { ballInfo } = point;
+        const {
+          ballInfo
+        } = point;
         if (point.status === GroupStatus.CREATE_BALL) {
-          const { wait, total } = ballInfo;
+          const {
+            wait,
+            total
+          } = ballInfo;
           for (let i = 0; i < wait; i++) {
             if (Math.random() < wait / (total * total) * 0.618) {
               ballInfo.wait++;
@@ -400,17 +542,20 @@
         ball.time++;
         ball.x += Math.cos(ball.angle * Math.PI / 180) * ballSpeed;
         ball.y += Math.sin(ball.angle * Math.PI / 180) * ballSpeed;
-        const { x, y } = ball;
+        const {
+          x,
+          y
+        } = ball;
         const cellX = Math.floor(x / cellSize);
         const cellY = Math.floor(y / cellSize);
         let collisionCell = null;
         if (cellX < 0) {
           ball.angle = ball.angle > 180 ? (540 - ball.angle) : (180 - ball.angle);
-        } else if(cellX > mapSize - 1) {
+        } else if (cellX > mapSize - 1) {
           ball.angle = ball.angle > 180 ? (540 - ball.angle) : (180 - ball.angle);
-        } else if(cellY < 0) {
+        } else if (cellY < 0) {
           ball.angle = (ball.angle > 180 ? 360 : 180) - ball.angle;
-        } else if(cellY > mapSize - 1) {
+        } else if (cellY > mapSize - 1) {
           ball.angle = (ball.angle > 180 ? 180 : 360) - ball.angle;
         } else if (mapCells[cellY][cellX].type !== ball.type) {
           collisionCell = mapCells[cellY][cellX];
@@ -427,14 +572,14 @@
         if (collisionCell && collisionCell.type !== ball.type) {
           if (collisionCell.type) {
             groupMap[collisionCell.type].cellNum--;
-            setMinMax(collisionCell.type, groupMap[collisionCell.type].cellNum);
+            setMax(collisionCell.type, groupMap[collisionCell.type].cellNum);
           };
           if (collisionCell.isLaunch) {
             collisionCell.type && groupMap[collisionCell.type].launchPointNum--;
             groupMap[ball.type].launchPointNum++;
           }
           groupMap[ball.type].cellNum++;
-          setMinMax(ball.type, groupMap[ball.type].cellNum)
+          setMax(ball.type, groupMap[ball.type].cellNum)
           collisionCell.type = ball.type;
           drawCell(collisionCell);
           ballList.splice(i, 1);
@@ -454,7 +599,7 @@
       mainCtx.drawImage(cellCanvas, 0, 0, screenWidth, screenHeight);
       mainCtx.drawImage(ballCanvas, 0, 0, screenWidth, screenHeight);
       createDataHtml();
-      if (Object.keys(groupMap).some(key => groupMap[key].cellNum === mapSize * mapSize)) {
+      if (Object.keys(groupMap).some(key => groupMap[key].cellNum === totalCellNum)) {
         cancelAnimationFrame(raf);
         raf = null;
         createDataHtml();
@@ -469,7 +614,9 @@
           ballSpeed,
           launchPoint,
           maxCellNum,
-          minCellNum,
+          maxCellHistory,
+          currMaxCellNum,
+          currMaxCellHistory,
         });
         localStorage.setItem('lingtu4History', JSON.stringify(history));
       } else if (status === 'play') {
@@ -506,9 +653,11 @@
         ballSpeed,
         launchPoint,
         maxCellNum,
-        minCellNum,
         mapCells,
         time,
+        maxCellHistory,
+        currMaxCellNum,
+        currMaxCellHistory,
       };
       localStorage.setItem('lingtu4Save', JSON.stringify(data));
     });
@@ -528,11 +677,15 @@
         ballSpeed,
         launchPoint,
         maxCellNum,
-        minCellNum,
         mapCells,
         time,
+        maxCellHistory,
+        currMaxCellNum,
+        currMaxCellHistory,
       };
-      const blob = new Blob([JSON.stringify(data)], { type: 'text/plain;charset=utf-8' });
+      const blob = new Blob([JSON.stringify(data)], {
+        type: 'text/plain;charset=utf-8'
+      });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `lingtu4_${new Date().getTime()}.json`;
@@ -544,19 +697,7 @@
       const reader = new FileReader();
       reader.onload = (e) => {
         const data = JSON.parse(e.target.result);
-        maxBallNum = data.maxBallNum;
-        maxTotalNum = data.maxTotalNum;
-        groupMap = data.groupMap;
-        mapSize = data.mapSize;
-        cellSize = data.cellSize;
-        ballSize = data.ballSize;
-        ballSpeed = data.ballSpeed;
-        launchPoint = data.launchPoint;
-        maxCellNum = data.maxCellNum;
-        minCellNum = data.minCellNum;
-        mapCells = data.mapCells;
-        time = data.time;
-        init('load');
+        init('import', data);
       };
       reader.readAsText(file);
     });
