@@ -152,6 +152,7 @@
       type: ''
     };
     let maxTotalNum = 0;
+    let currTotalLaunchPointNum = 0;
     let status = "pause";
     const saveKey = [
       'maxBallNum',
@@ -168,6 +169,7 @@
       'maxCellHistory',
       'currMaxCellNum',
       'currMaxCellHistory',
+      'currTotalLaunchPointNum',
     ]
 
     const ctxClear = ctx => {
@@ -211,6 +213,7 @@
           maxCellHistory = data.maxCellHistory;
           currMaxCellNum = data.currMaxCellNum;
           currMaxCellHistory = data.currMaxCellHistory;
+          currTotalLaunchPointNum = data.currTotalLaunchPointNum;
           setCanvasSize(mapSize * cellSize);
           for (let i = 0; i < mapSize; i++) {
             for (let j = 0; j < mapSize; j++) {
@@ -299,6 +302,7 @@
           });
           drawCell(cellItem);
         })
+        currTotalLaunchPointNum = groupNum;
         for (let i = groupNum; i < launchPointNum; i++) {
           const cellItem = getRandomCell(randomCell => !randomCell.launchPoint);
           cellItem.isLaunch = true;
@@ -370,7 +374,7 @@
       const currMaxCellHistoryItem = currMaxCellHistory.length ? currMaxCellHistory[currMaxCellHistory.length - 1] :
         null;
       let html = `<div>
-          <dl>time: ${time} lpTotal：${launchPoint.length}</dl>
+          <dl>time: ${time} lpTotal：${launchPoint.length} currLpTotal: ${currTotalLaunchPointNum}</dl>
           <dl style="color: ${maxCellNum.type || '#000'}">
             max: ${maxCellNum.cellNum} 
             start: ${maxCellHistoryItem ? maxCellHistoryItem.startTime : maxCellNum.startTime} 
@@ -395,7 +399,7 @@
         launchPointTime
       }) => {
         html += `<li style="color: ${type};">
-          <dt>${type}：${cellNum}， ${launchPointNum}</dt>
+          <dt>${type}：${cellNum}， ${launchPointNum}， ${launchPointNum ? (cellNum / launchPointNum).toFixed(2) : ''}</dt>
           <dl>max: ${max} time: ${time} lpTime: ${launchPointTime}</dl>
         </li>`;
       })
@@ -511,9 +515,9 @@
                 type,
               };
             }
-
-            let max = Math.floor(5000 - ballList.length);
-            if (max < 0) max += 5000;
+            const createMaxBallNum = 1000 + Math.floor(currTotalLaunchPointNum / launchPoint.length * 4000);
+            let max = Math.floor(createMaxBallNum - ballList.length);
+            if (max < 0) max += createMaxBallNum;
             max = Math.max(max, Math.floor(10000 / launchPoint.length));
             ballInfo.total = Math.min(max, ballInfo.total);
             point.status = GroupStatus.BALL_MOVE;
@@ -572,7 +576,11 @@
             setMax(collisionCell.type, groupMap[collisionCell.type].cellNum);
           };
           if (collisionCell.isLaunch) {
-            collisionCell.type && groupMap[collisionCell.type].launchPointNum--;
+            if (collisionCell.type) {
+              groupMap[collisionCell.type].launchPointNum--;
+            } else {
+              currTotalLaunchPointNum++;
+            }
             groupMap[ball.type].launchPointNum++;
           }
           groupMap[ball.type].cellNum++;
@@ -614,6 +622,7 @@
           maxCellHistory,
           currMaxCellNum,
           currMaxCellHistory,
+          currTotalLaunchPointNum,
         });
         localStorage.setItem('lingtu4History', JSON.stringify(history));
       } else if (status === 'play') {
@@ -655,6 +664,7 @@
         maxCellHistory,
         currMaxCellNum,
         currMaxCellHistory,
+        currTotalLaunchPointNum,
       };
       localStorage.setItem('lingtu4Save', JSON.stringify(data));
     });
@@ -679,6 +689,7 @@
         maxCellHistory,
         currMaxCellNum,
         currMaxCellHistory,
+        currTotalLaunchPointNum,
       };
       const blob = new Blob([JSON.stringify(data)], {
         type: 'text/plain;charset=utf-8'
