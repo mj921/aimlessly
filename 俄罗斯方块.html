@@ -31,84 +31,83 @@
 	}
 
 	//七种图形
-	var Graph=function(type,x0,y0,state){ // 1  I  2 O  3  T  4 Z  5  反Z   6  L  7 反L 
+	var Graph = function (type, x, y, state) { // 1  I  2 O  3  T  4 Z  5  反Z   6  L  7 反L 
 		this.type=type;//类型
-		this.points=new Array();
-		this.points[0]=new Point(x0,y0);//中心坐标
+		this.points = new Array();
+		this.centerPoint = new Point(x, y); //中心点
 		this.color="#000";
+    this.offsetX = 10;
+    this.offsetY = 10;
 		this.state=state;//旋转状态
-		this.init=function(){
-
-		};
+		this.cellSize = 30;
 		switch(type){//生成各方块坐标
 			case 1:
-				this.points[1]=new Point(-1.5,-0.5);
-				this.points[2]=new Point(-0.5,-0.5);
-				this.points[3]=new Point(0.5,-0.5);
-				this.points[4]=new Point(1.5,-0.5);
+        this.points[0] = new Point(-1, 0);
+        this.points[1] = new Point(0, 0);
+        this.points[2] = new Point(1, 0);
+        this.points[3] = new Point(2, 0);
 				this.color="#000";
 				break;
-			case 2:
-				this.points[1]=new Point(-0.5,-0.5);
-				this.points[2]=new Point(0.5,-0.5);
-				this.points[3]=new Point(0.5,0.5);
-				this.points[4]=new Point(-0.5,0.5);
-				this.color="#700";
-				break;
-			case 3:
-				this.points[1]=new Point(0.5,-0.5);
-				this.points[2]=new Point(-0.5,0.5);
-				this.points[3]=new Point(0.5,0.5);
-				this.points[4]=new Point(1.5,0.5);
-				this.color="#d00";
-				break;
-			case 4:
-				this.points[1]=new Point(0.5,-0.5);
-				this.points[2]=new Point(-0.5,0.5);
-				this.points[3]=new Point(0.5,0.5);
-				this.points[4]=new Point(-0.5,1.5);
-				this.color="#070";
-				break;
-			case 5:
-				this.points[1]=new Point(-0.5,-0.5);
-				this.points[2]=new Point(-0.5,0.5);
-				this.points[3]=new Point(0.5,0.5);
-				this.points[4]=new Point(0.5,1.5);
-				this.color="#0d0";
-				break;
-			case 6:
-				this.points[1]=new Point(0.5,-0.5);
-				this.points[2]=new Point(-0.5,0.5);
-				this.points[3]=new Point(0.5,0.5);
-				this.points[4]=new Point(-1.5,0.5);
-				this.color="#007";
-				break;
-			case 7:
-				this.points[1]=new Point(-0.5,-0.5);
-				this.points[2]=new Point(-0.5,0.5);
-				this.points[3]=new Point(0.5,0.5);
-				this.points[4]=new Point(1.5,0.5);
-				this.color="#00d";
-				break;
+      case 2:
+        this.points[0] = new Point(0, -1);
+        this.points[1] = new Point(1, -1);
+        this.points[2] = new Point(0, 0);
+        this.points[3] = new Point(1, 0);
+        this.color = '#770000';
+        break;
+      case 3:
+        this.points[0] = new Point(0, -1);
+        this.points[1] = new Point(-1, 0);
+        this.points[2] = new Point(0, 0);
+        this.points[3] = new Point(1, 0);
+        this.color = '#dd0000';
+        break;
+      case 4:
+        this.points[0] = new Point(-1, -1);
+        this.points[1] = new Point(0, -1);
+        this.points[2] = new Point(0, 0);
+        this.points[3] = new Point(1, 0);
+        this.color = '#007700';
+        break;
+      case 5:
+        this.points[0] = new Point(-1, 0);
+        this.points[1] = new Point(0, -1);
+        this.points[2] = new Point(0, 0);
+        this.points[3] = new Point(1, -1);
+        this.color = '#00dd00';
+        break;
+      case 6:
+        this.points[0] = new Point(-1, 0);
+        this.points[1] = new Point(0, 0);
+        this.points[2] = new Point(1, 0);
+        this.points[3] = new Point(1, -1);
+        this.color = '#000077';
+        break;
+      case 7:
+        this.points[0] = new Point(-1, -1);
+        this.points[1] = new Point(-1, 0);
+        this.points[2] = new Point(0, 0);
+        this.points[3] = new Point(1, 0);
+        this.color = '#0000dd';
 		}
 		this.draw=function(){//绘制图形
-			for(var i=1;i<this.points.length;i++){
+			for (var i = 0; i < this.points.length; i++) {
 				ctx.beginPath();
-				ctx.strokeStyle="#fff";
-				ctx.strokeRect(10+(this.points[i].x-0.5+this.points[0].x)*ScellSize,10+(this.points[i].y-0.5+this.points[0].y)*ScellSize,30,30);
-				ctx.strokeStyle="#000";
-				ctx.fillStyle=this.color;
-				ctx.fillRect(10+(this.points[i].x-0.5+this.points[0].x)*ScellSize,10+(this.points[i].y-0.5+this.points[0].y)*ScellSize,30,30);
-				ctx.fillStyle="#000";
+				ctx.strokeStyle = "#fff";
+				ctx.strokeRect(this.offsetX + (this.points[i].x + this.centerPoint.x) * ScellSize, this.offsetY + (this.points[i].y + this.centerPoint.y) * ScellSize, this.cellSize, this.cellSize);
+				ctx.strokeStyle = "#000";
+				ctx.fillStyle = this.color;
+				ctx.fillRect(this.offsetX + (this.points[i].x + this.centerPoint.x) * ScellSize, this.offsetY + (this.points[i].y + this.centerPoint.y) * ScellSize, this.cellSize, this.cellSize);
+				ctx.fillStyle = "#000";
 			}
 		}
 		this.clears=function(){//清除
-			for(var i=1;i<this.points.length;i++){
-				ctx.clearRect(10+(this.points[i].x-0.5+this.points[0].x)*ScellSize,10+(this.points[i].y-0.5+this.points[0].y)*ScellSize,30,30);
+			for (var i = 0; i < this.points.length; i++) {
+				ctx.clearRect(this.offsetX + (this.points[i].x + this.centerPoint.x) * ScellSize, this.offsetY + (this.points[i].y + this.centerPoint.y) * ScellSize, this.cellSize, this.cellSize);
 			}
 		}
 		this.rotateL=function(){//逆时针旋转
-			for(var i=1;i<this.points.length;i++){
+			for(var i=0;i<this.points.length;i++){
 				x=this.points[i].x;
 				y=this.points[i].y;
 				this.points[i].x=-1*y;
@@ -116,7 +115,7 @@
 			}
 		}
 		this.rotateR=function(){//顺指针旋转
-			for(var i=1;i<this.points.length;i++){
+			for (var i = 0; i < this.points.length; i++) {
 				x=this.points[i].x;
 				y=this.points[i].y;
 				this.points[i].x=y;
@@ -170,17 +169,17 @@
 		}
 		this.drop=function(){//下落
 			this.clears();
-			this.points[0].y++;
+			this.centerPoint.y++;
 			this.draw();
 		}
 		this.moveleft=function(){//左移
 			this.clears();
-			this.points[0].x--;
+			this.centerPoint.x--;
 			this.draw();
 		}
 		this.moveright=function(){//右移
 			this.clears();
-			this.points[0].x++;
+			this.centerPoint.x++;
 			this.draw();
 		}
 		for(var i=1;i<this.state;i++){
@@ -219,14 +218,17 @@
 			for(var i=0;i<this.col;i++){
 				var cs = new Array();
 				for(var j=0;j<this.row;j++){
-					cs[j]=false;
+					cs[j] = {
+						has: false,
+						color: '',
+					};
 				}
 				ccs[i]=cs;
 			}
 			return ccs;
 		},
 		drawNext:function(){//绘制下一个图形
-			ctx.clearRect(10+(this.col+1)*this.cellSize,10+2*this.cellSize,120,120);
+			ctx.clearRect(10 + (this.col + 1) * this.cellSize, 10 + 2 * this.cellSize, 160, 120);
 			type=Math.floor(Math.random()*7)+1;
 			var g=new Graph(type,13,3,1);
 			g.draw();
@@ -239,63 +241,108 @@
 			return g;
 		},
 		isDrop:function(){//判断面板内图形是否能下移
-			x=this.nowG.points[0].x;
-			y=this.nowG.points[0].y+1;
-			for(var i=1;i<5;i++){
-				if(this.nowG.points[i].y+y>this.row){
-					return false;
-				}else if(this.cells[this.nowG.points[i].x+x-0.5][this.nowG.points[i].y+y+0.5]){
+			var x = this.nowG.centerPoint.x;
+			var y = this.nowG.centerPoint.y + 1;
+			for (var i = 0; i < this.nowG.points.length; i++) {
+				if (this.nowG.points[i].y + y >= this.row || this.cells[this.nowG.points[i].x + x][this.nowG.points[i].y + y].has) {
 					return false;
 				}
 			}
 			return true;
 		},
 		isMoveleft:function(){//判断面板内图形是否能左移
-			x=this.nowG.points[0].x-1;
-			y=this.nowG.points[0].y;
-			// document.getElementById("msg").innerHTML +=(this.nowG.points[1].x+x-0.5)+","+(this.nowG.points[1].y+y-0.5)+","+this.cells[this.nowG.points[1].x+x-0.5][this.nowG.points[1].y+y-0.5];
-			for(var i=1;i<5;i++){
-				if(this.nowG.points[i].x+x<0){
-					return false;
-				}else if(this.cells[this.nowG.points[i].x+x-0.5][this.nowG.points[i].y+y-0.5]){
+			var x = this.nowG.centerPoint.x - 1;
+			var y = this.nowG.centerPoint.y;
+			for (var i = 0; i < this.nowG.points.length; i++) {
+				if (this.nowG.points[i].x + x < 0 || this.cells[this.nowG.points[i].x + x][this.nowG.points[i].y + y].has) {
 					return false;
 				}
 			}
 			return true;
 		},
 		isMoveright:function(){//判断面板内图形是否能右移
-			x=this.nowG.points[0].x+1;
-			y=this.nowG.points[0].y;
-			// document.getElementById("msg").innerHTML += (this.nowG.points[1].x+x-1.5)+","+(this.nowG.points[1].y+y-0.5)+"-----";
-			for(var i=1;i<5;i++){
-				if(this.nowG.points[i].x+x>this.col){
-					return false;
-				}else if(this.cells[this.nowG.points[i].x+x-0.5][this.nowG.points[i].y+y-0.5]){
+			var x = this.nowG.centerPoint.x + 1;
+			var y = this.nowG.centerPoint.y;
+			for (var i = 0; i < this.nowG.points.length; i++) {
+				if (this.nowG.points[i].x + x >= this.col || this.cells[this.nowG.points[i].x + x][this.nowG.points[i].y + y].has) {
 					return false;
 				}
 			}
 			return true;
 		},
 		isrotate:function(){//判断面板内图形是否能旋转
-			var ggg=this.nowG;
-			ggg.rotate1();
-			x=ggg.points[0].x;
-			y=ggg.points[0].y;
-			for(var i=1;i<5;i++){
-				if(this.cells[ggg.points[i].x+x-0.5][ggg.points[i].y+y-0.5]){
-					ggg.rotate2();
+			this.nowG.rotate1();
+			var x = this.nowG.centerPoint.x;
+			var y = this.nowG.centerPoint.y;
+			for (var i = 0; i < this.nowG.points.length; i++) {
+				if (this.nowG.points[i].x + x < 0 || this.nowG.points[i].x + x >= this.col || this.nowG.points[i].y + y < 0 || this.nowG.points[i].y + y >= this.row || this.cells[this.nowG.points[i].x + x][this.nowG.points[i].y + y].has){
+					this.nowG.rotate2();
 					return false;
 				}
 			}
-			ggg.rotate2();
+			this.nowG.rotate2();
 			return true;
 		},
-		land:function(){//面板内图形着陆
-			for(var i=1;i<5;i++){
-				this.cells[this.nowG.points[i].x+x-0.5-1][this.nowG.points[i].y+y-0.5-1]=true;
-				// alert(1);
-				// alert((this.nowG.points[i].x+x-0.5-1)+","+(this.nowG.points[i].y+y-0.5-1));
+		drawCells() {
+			ctx.clearRect(8, 8, this.col * this.cellSize, this.row * this.cellSize);
+			for (var i = 0; i < this.col; i++) {
+				for (var j = 0; j < this.row; j++) {
+					if (this.cells[i][j].has) {
+						ctx.fillStyle = this.cells[i][j].color;
+						ctx.fillRect(10 + i * this.cellSize, 10 + j * this.cellSize, this.cellSize, this.cellSize);
+					}
+				}
 			}
+		},
+		checkRow() {
+			var rowMoveNumArr = [];
+			var moveNum = 0;
+			for (var i = this.row - 1; i >= 0; i--) {
+				var n = 0;
+				for (var j = this.col - 1; j >= 0; j--) {
+					if (!this.cells[j][i].has) {
+						break;
+					} else {
+						n++;
+					}
+				}
+				var obj = {
+					removeFlag: false,
+					moveNum: 0,
+				}
+				if (n === this.col) {
+					obj.removeFlag = true;
+				}
+				obj.moveNum = moveNum;
+				rowMoveNumArr[i] = obj;
+				if (n === this.col) {
+					moveNum++;
+				}
+			}
+			this.score += moveNum;
+			this.drawScore();
+			for (var i = this.row - 1; i >= 0; i--) {
+				if (rowMoveNumArr[i].moveNum > 0) {
+					for (var j = 0; j < this.col; j++) {
+						if (!rowMoveNumArr[i].removeFlag) {
+							this.cells[j][i + rowMoveNumArr[i].moveNum].has = this.cells[j][i].has;
+							this.cells[j][i + rowMoveNumArr[i].moveNum].color = this.cells[j][i].color;
+						}
+						this.cells[j][i].has = false;
+					}
+				}
+			}
+		},
+		land:function(){//面板内图形着陆
+			const x = this.nowG.centerPoint.x;
+			const y = this.nowG.centerPoint.y;
+			for (var i = 0; i < this.nowG.points.length; i++) {
+				const cell = this.cells[this.nowG.points[i].x + x][this.nowG.points[i].y + y];
+				cell.has = true;
+				cell.color = this.nowG.color;
+			}
+    	this.checkRow();
+			this.drawCells();
 		},
 		rotate:function(){//面板内图形旋转
 			if(this.isrotate()){
@@ -318,8 +365,8 @@
 				}else{
 					this.land();
 					this.nowG=this.nextG;
-					this.nowG.points[0].x=5;
-					this.nowG.points[0].y=2;
+					this.nowG.centerPoint.x = 5;
+					this.nowG.centerPoint.y = 2;
 					this.nowG.draw();
 					this.nextG=this.drawNext();
 				}
