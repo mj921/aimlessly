@@ -31,12 +31,12 @@
 	}
 
 	//七种图形
-	var Graph = function (type, x, y, state) { // 1  I  2 O  3  T  4 Z  5  反Z   6  L  7 反L 
+	var Graph = function (type, x, y, state, offsetX = 10) { // 1  I  2 O  3  T  4 Z  5  反Z   6  L  7 反L 
 		this.type=type;//类型
 		this.points = new Array();
 		this.centerPoint = new Point(x, y); //中心点
 		this.color="#000";
-    this.offsetX = 10;
+    this.offsetX = offsetX;
     this.offsetY = 10;
 		this.state=state;//旋转状态
 		this.cellSize = 30;
@@ -228,9 +228,9 @@
 			return ccs;
 		},
 		drawNext:function(){//绘制下一个图形
-			ctx.clearRect(10 + (this.col + 1) * this.cellSize, 10 + 2 * this.cellSize, 160, 120);
+			ctx.clearRect(10 + (this.col + 0.5) * this.cellSize, 2 * this.cellSize, 160, 120);
 			type=Math.floor(Math.random()*7)+1;
-			var g=new Graph(type,13,3,1);
+			var g=new Graph(type,13,3,1, 0);
 			g.draw();
 			return g;
 		},
@@ -364,7 +364,8 @@
 					this.nowG.drop();
 				}else{
 					this.land();
-					this.nowG=this.nextG;
+					this.nowG = this.nextG;
+					this.nowG.offsetX = 10;
 					this.nowG.centerPoint.x = 5;
 					this.nowG.centerPoint.y = 2;
 					this.nowG.draw();
