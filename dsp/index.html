@@ -32,6 +32,9 @@
           animation: false,
           roam: true,
           draggable: true,
+          emphasis: {
+            focus: 'adjacency',
+          },
           data: data.map(el => ({
             ...el,
             category: legend.indexOf(el.type),
@@ -46,10 +49,10 @@
           edgeSymbol: ['circle', 'arrow'],
           links: links.map(el => ({
             ...el,
-            label: {
-              show: true,
-              formatter: el.type,
-            }
+            // label: {
+            //   show: true,
+            //   formatter: el.type,
+            // }
           })),
           lineStyle: {
             curveness: 0
