@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      margin: 0;
+    }
+    .box {
+      display: flex;
+      align-items: center;
+    }
+    canvas {
+      width: 180vh;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <canvas id="canvas" width="18000" height="10000"></canvas>
+  </div>
+  <script>
+    const stars = [{
+      r: 12756,
+      name: '地球'
+    }, {
+      r: 3476.28,
+      name: '月球'
+    }, {
+      r: 2376.6,
+      name: '冥王星'
+    }, {
+      r: 950,
+      name: '谷神星'
+    }, {
+      r: 1782.45,
+      name: '谷神星'
+    }, {
+      r: 1560,
+      name: '妊神星'
+    }, {
+      r: 320,
+      name: '妊卫一'
+    }, {
+      r: 170,
+      name: '妊卫二'
+    }, {
+      r: 6779,
+      name: '火星'
+    }, {
+      r: 4880,
+      name: '水星'
+    }, {
+      r: 12103.6,
+      name: '金星'
+    }, {
+      r: 116464,
+      name: '土星'
+    }, {
+      r: 139822,
+      name: '木星'
+    }, {
+      r: 1392000,
+      name: '太阳'
+    }, {
+      r: 200000,
+      name: '比邻星'
+    }, {
+      r: 243560,
+      name: '巴纳德星'
+    }, {
+      r: 2381712,
+      name: '天狼星'
+    }, {
+      r: 35356800,
+      name: '大角星'
+    }, {
+      r: 1282032000,
+      name: '参宿四'
+    }, {
+      r: 61428960,
+      name: '毕宿五'
+    }, {
+      r: 165861,
+      name: 'OGLE-TR-122b'
+    }, {
+      r: 986500,
+      name: 'HD 100546b'
+    }]
+    const base = 10000;
+    let rateNum = 0;
+    let scaleSpeed = 2;
+    let rate = 10000;
+    stars.sort((a, b) => a.r - b.r)
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    let startX = 0;
+    const drawStar = (star, x, y) => {
+      let rr = Math.pow(2, rateNum / scaleSpeed);
+      ctx.beginPath();
+      ctx.fillStyle = '#795548';
+      ctx.arc(x / rr, rate / 2 / rr, star.r / 2 / rr, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `${star.r / 5 / rr}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(star.name, x / rr, (y - star.r / 7) / rr);
+      ctx.fillText(star.r, x / rr, (y + star.r / 7) / rr);
+    }
+    const draw = () => {
+      ctx.clearRect(0, 0, 18000, 10000);
+      let x = startX + stars[0].r / 2 + rate / 50;
+      drawStar(stars[0], x, rate / 2)
+      stars.slice(1).reduce((x, el, i) => {
+        x += (el.r + stars[i].r) / 2 +  + rate / 50;
+        drawStar(el, x, rate / 2)
+        return x;
+      }, x);
+    }
+    window.addEventListener('mousewheel', e => {
+      rateNum += e.wheelDelta > 0 ? -1 : 1;
+      rate = base * Math.pow(2, rateNum / scaleSpeed);
+      console.log(rate);
+      draw();
+    });
+    let mouseX = 0;
+    let offsetX = 0;
+    let currStartX = 0;
+    window.addEventListener('mousedown', e => {
+      mouseX = e.clientX;
+      currStartX = startX;
+    });
+    window.addEventListener('mousemove', e => {
+      if (mouseX !== 0) {
+        offsetX = (e.clientX - mouseX) / canvas.offsetWidth * rate;
+        startX = currStartX + offsetX;
+        draw();
+      }
+    });
+    window.addEventListener('mouseup', e => {
+      offsetX = 0;
+      mouseX = 0;
+    });
+    draw();
+  </script>
+</body>
+</html>
