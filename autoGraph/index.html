@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.3.2/echarts.min.js"></script>
+    <style>
+      body, canvas {
+        padding: 0;
+        margin: 0;
+      }
+      #btn {
+        position: absolute;
+        left: 5px;
+        top: 5px;
+      }
+    </style>
+</head>
+<body>
+    <div id="main"></div>
+    <button id="btn">点击</button>
+    <script type="text/javascript">
+      const data = [];
+      const main = document.getElementById('main');
+      const btn = document.getElementById('btn')
+      main.style.width = window.innerWidth + 'px'
+      main.style.height = window.innerHeight + 'px'
+      var myChart = echarts.init(main);
+      const setOption = () => {
+        option = {
+          series: [{
+            type: 'graph',
+            layout: 'force',
+            animation: false,
+            roam: true,
+            draggable: true,
+            autoCurveness: true,
+            data: data.map(el => ({
+              ...el,
+              name: el.name + '_' + (el.symbolSize - 10),
+            })),
+            force: {
+              repulsion: 200,
+              edgeLength: 5
+            },
+            edgeSymbol: ['', 'arrow'],
+            links: [],
+            lineStyle: {
+              curveness: 0
+            }
+          }]
+        }
+        myChart.setOption(option);
+      }
+      setOption();
+      let id = 1;
+      let totalSize = 0;
+      const colors = ['#d3d3d3', '#808080', '#6a5acd', '#3cb371', '#1e90ff', '#ee82ee', '#ffa500', '#ff6347', '#000000']
+      const colorSizes = [9, 12, 18, 27, 39, 54, 72, 93, 117];
+      const fn = () => {
+        if (Math.random() < 1 / (data.length + 1)) {
+          data.push({
+            name: `id_${id++}`,
+            symbolSize: 10,
+            itemStyle: {
+              color: colors[0]
+            },
+          });
+          totalSize += 10;
+        } else {
+          let r = Math.random() * totalSize;
+          let i = 0;
+          let j = 0;
+          while (r > data[i].symbolSize && i < data.length - 1) {
+            r -= data[i].symbolSize;
+            i++;
+          }
+          data[i].symbolSize++;
+          totalSize++;
+          j = colorSizes.length - 1;
+          while (j > 0 && data[i].symbolSize <= colorSizes[j]) {
+            j--;
+          }
+          data[i].itemStyle.color = colors[j];
+
+          r = Math.random() * totalSize;
+          i = 0;
+          while (r > data[i].symbolSize && i < data.length - 1) {
+            r -= data[i].symbolSize;
+            i++;
+          }
+          data[i].symbolSize++;
+          totalSize++;
+          j = colorSizes.length - 1;
+          while (j > 0 && data[i].symbolSize <= colorSizes[j]) {
+            j--;
+          }
+          data[i].itemStyle.color = colors[j];
+        }
+        setOption();
+        setTimeout(fn, 1000);
+      }
+      fn();
+      btn.addEventListener('click', () => {
+        fn();
+      })
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    var TextEditor = function () {
+      this.node = null;
+      this.zeroFlag = true;
+    };
+
+    /** 
+     * @param {string} text
+     * @return {void}
+     */
+    TextEditor.prototype.addText = function (text) {
+      let i = 0;
+      if (!this.node) {
+        this.node = {
+          val: text[0],
+          prev: null,
+          next: null,
+        }
+        this.zeroFlag = false;
+        i++;
+      }
+      let node = this.zeroFlag ? null : this.node;
+      const beforeNext = this.node.next;
+      while (i < text.length) {
+        const next = {
+          prev: node,
+          val: text[i],
+          next: null
+        }
+        if (node) node.next = next;
+        node = next
+        i++;
+      }
+      if (this.zeroFlag) {
+        node.next = this.node;
+        this.node.prev = node;
+        this.node = node;
+        this.zeroFlag = false;
+      } else {
+        node.next = beforeNext;
+        if (beforeNext) beforeNext.prev = node;
+        this.node = node;
+      }
+    };
+
+    /** 
+     * @param {number} k
+     * @return {number}
+     */
+    TextEditor.prototype.deleteText = function (k) {
+      if (!this.node || this.zeroFlag) return 0;
+      let num = 0;
+      const next = this.node.next;
+      while (this.node && k > 0) {
+        num++;
+        this.node = this.node.prev;
+        k--;
+      }
+      if (this.node) {
+        this.node.next = next;
+        if (next) {
+          next.prev = this.node;
+        }
+      } else {
+        this.node = next;
+        if (this.node) {
+          this.node.prev = null;
+        }
+        this.zeroFlag = true;
+      }
+      return num;
+    };
+
+    /** 
+     * @param {number} k
+     * @return {string}
+     */
+    TextEditor.prototype.cursorLeft = function (k) {
+      if (!this.node || this.zeroFlag) return '';
+      while (this.node.prev && k > 0) {
+        this.node = this.node.prev;
+        k--;
+      }
+      if (k > 0) {
+        this.zeroFlag = true;
+      }
+      return this.getCursorLeft(10);
+    };
+
+    TextEditor.prototype.getCursorLeft = function (len) {
+      if (this.zeroFlag) return '';
+      let node = this.node;
+      let str = '';
+      while (node && len > 0) {
+        str = node.val + str;
+        node = node.prev;
+        len--;
+      }
+      return str;
+    };
+
+    /** 
+     * @param {number} k
+     * @return {string}
+     */
+    TextEditor.prototype.cursorRight = function (k) {
+      if (!this.node) return '';
+      if (this.zeroFlag) {
+        k--;
+        this.zeroFlag = false;
+      }
+      while (this.node.next && k > 0) {
+        this.node = this.node.next;
+        k--;
+      }
+      return this.getCursorLeft(10);
+    };
+
+    // var obj = new TextEditor()
+    // obj.addText('leetcode') // leetcode|
+    // console.log('delete', obj.deleteText(4)) // leet|  4
+    // obj.addText('practice') // leetpractice|
+    // console.log('right', obj.cursorRight(3)) // leetpractice|  etpractice
+    // console.log('left', obj.cursorLeft(8)) // leet|practice  leet
+    // console.log('delete', obj.deleteText(10)) // |practice  4
+    // console.log('left', obj.cursorLeft(2)) // |practice  ''
+    // console.log('right', obj.cursorRight(6)) // practi|ce practi
+    // console.log(obj);
+
+    
+    // var obj = new TextEditor()
+    // obj.addText('jxarid') // jxarid|
+    // console.log('left', obj.cursorLeft(5)) // j|xarid  j
+    // console.log('left', obj.cursorLeft(10)) // |jxarid  ''
+    // obj.addText('du') // du|jxarid
+    // console.log('delete', obj.deleteText(20)) // |jxarid  2
+    // console.log(obj);
+
+    var obj = new TextEditor()
+    console.log('delete', obj.deleteText(9)) // |  0
+    console.log('left', obj.cursorLeft(14)) // |  ''
+    obj.addText('mjzxkemqyvfrg') // mjzxkemqyvfrg|
+    console.log('left', obj.cursorLeft(5)) // mjzxkemq|yvfrg  mjzxkemq
+    obj.addText('svvyobqebssp') // mjzxkemqsvvyobqebssp|yvfrg
+    obj.addText('xkoznsq') // mjzxkemqsvvyobqebsspxkoznsq|yvfrg
+    console.log('right', obj.cursorRight(3)) // mjzxkemqsvvyobqebsspxkoznsqyvf|rg  xkoznsqyvf
+    // console.log('left', obj.cursorLeft(10)) // |jxarid  ''
+    // obj.addText('du') // du|jxarid
+    console.log(obj);
+
+    ["TextEditor","deleteText","cursorLeft","addText","cursorLeft","addText","addText","cursorRight","cursorLeft","addText","cursorLeft","addText","cursorLeft","deleteText","addText","addText","cursorRight","cursorLeft","cursorLeft","deleteText","deleteText","deleteText","deleteText","deleteText","cursorLeft","addText","cursorRight","cursorLeft","addText","addText","addText","addText","cursorRight","cursorRight","cursorLeft","cursorLeft","addText","cursorRight","addText","addText","addText","addText","addText","addText","addText","deleteText"]
+[[],[9],[14],["mjzxkemqyvfrg"],[5],["svvyobqebssp"],["xkoznsq"],[3],[15],["irgkilfitjuysfgu"],[18],["aanfokhwqqjf"],[18],[7],["kjekmkypfqvbsyigry"],["opkmggjoxng"],[17],[1],[9],[16],[17],[2],[10],[5],[15],["bskjfptrqpg"],[1],[16],["dpuzcwbqotoihn"],["an"],["pntm"],["eamnglbbdnencdunao"],[12],[6],[5],[14],["utcyzkianwahi"],[4],["wcojk"],["yrfmlfvzev"],["ncpjvbv"],["ie"],["megbbxribprrsojsiofd"],["witgxkjntmvfvqjxitf"],["ifvhcabjla"],[10]]
+  </script>
+</body>
+
+</html>
