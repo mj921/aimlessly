@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #bg, #main {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg" width="800" height="500"></canvas>
+  <canvas id="main" width="800" height="500"></canvas>
+  <script>
+    const bgCanvas = document.getElementById('bg');
+    const mainCanvas = document.getElementById('main');
+    const bgCtx = bgCanvas.getContext('2d');
+    const mainctx = mainCanvas.getContext('2d');
+    const width = 800;
+    const height = 500;
+    const bgSize = 50;
+    const cellSize = 40;
+    const bg = [
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0]
+    ];
+    const offsetLeft = (width - bg[0].length * bgSize) / 2;
+    const offsetTop = (height - bg.length * bgSize) / 2;
+    let currSelect = null;
+    let cell = [];
+    const init = () => {
+      bgCtx.clearRect(0, 0, width, height);
+      bgCtx.fillStyle = '#dddddd';
+      bgCtx.fillRect(offsetLeft - (bgSize - cellSize) / 2, offsetTop - (bgSize - cellSize) / 2, bgSize * bg[0].length + bgSize - cellSize, bgSize * bg.length + bgSize - cellSize);
+      cell = bg.map((row, y) => {
+        return row.map((item, x) => {
+          if (item === 0) {
+            bgCtx.fillStyle = '#dddddd';
+            bgCtx.fillRect(offsetLeft + bgSize * x, offsetTop + bgSize * y, bgSize, bgSize);
+            return {
+              x,
+              y,
+              type: Math.floor(Math.random() * 7) + 1,
+              offsetTop: 0,
+              offsetLeft: 0,
+              special: 0
+            }
+          } else {
+            bgCtx.fillStyle = '#ffffff';
+            bgCtx.fillRect(offsetLeft + bgSize * x, offsetTop + bgSize * y, bgSize, bgSize);
+            return {
+              x,
+              y,
+              type: 0
+            }
+          }
+        })
+      })
+      match(false);
+      mainCanvas.addEventListener('click', mainClick);
+    }
+    const match = (hasAnimate = true) => {
+      const matchMap = {};
+      let matchId = 1;
+      const cellMap = {};
+      cell.forEach((row, y) => {
+        row.forEach((item, x) => {
+          if (x < cell[0].length - 1 && cell[y][x + 1].type === item.type) {
+            const key = `${x}-${y}`
+            const key1 = `${x + 1}-${y}`
+            if (cellMap[key]) {
+              if (cellMap[key].row) {
+                matchMap[cellMap[key].row]++;
+              } else {
+                cellMap[key].row = matchId++;
+                matchMap[cellMap[key].row] = 2;
+              }
+            } else {
+              cellMap[key] = {};
+              cellMap[key].row = matchId++;
+              matchMap[cellMap[key].row] = 2;
+            }
+            if (cellMap[key1]) {
+              cellMap[key1].row = cellMap[key].row;
+            } else {
+              cellMap[key1] = {};
+              cellMap[key1].row = cellMap[key].row;
+            }
+          }
+          if (y < cell.length - 1 && cell[y + 1][x].type === item.type) {
+            const key = `${x}-${y}`
+            const key1 = `${x}-${y + 1}`
+            if (cellMap[key]) {
+              if (cellMap[key].col) {
+                matchMap[cellMap[key].col]++;
+              } else {
+                cellMap[key].col = matchId++;
+                matchMap[cellMap[key].col] = 2;
+              }
+            } else {
+              cellMap[key] = {};
+              cellMap[key].col = matchId++;
+              matchMap[cellMap[key].col] = 2;
+            }
+            if (cellMap[key1]) {
+              cellMap[key1].col = cellMap[key].col;
+            } else {
+              cellMap[key1] = {};
+              cellMap[key1].col = cellMap[key].col;
+            }
+          }
+        })
+      })
+      let hasMatch = false;
+      cell.forEach((row, y) => {
+        row.forEach((item, x) => {
+          const key = `${x}-${y}`
+          if (cellMap[key] && ((cellMap[key].col && matchMap[cellMap[key].col] >= 3) || (cellMap[key].row && matchMap[cellMap[key].row] >= 3))) {
+            hasMatch = true;
+            item.type = -1;
+          }
+        })
+      })
+      if (hasMatch) {
+        for (let i = 0; i < bg[0].length; i++) {
+          let offsetTop = 0;
+          for (let j = bg.length - 1, k = bg.length - 2; j >= 0;) {
+            if (cell[j][i].type === -1) {
+              if (k >= 0) {
+                if (cell[k][i].type === -1) {
+                  k--;
+                } else {
+                  offsetTop = (k - j) * bgSize;
+                  cell[j][i].type = cell[k][i].type;
+                  if (hasAnimate) {
+                    cell[j][i].offsetTop = offsetTop;
+                  }
+                  cell[k][i].type = -1;
+                  j--;
+                  k--;
+                }
+              } else {
+                cell[j][i].type = Math.floor(Math.random() * 7) + 1;
+                if (hasAnimate) {
+                  if (offsetTop === 0) {
+                    offsetTop = (k - j) * bgSize;
+                  }
+                  cell[j][i].offsetTop = offsetTop;
+                }
+                j--;
+              }
+            } else {
+              j--;
+              if (j === k) {
+                k--;
+              }
+            }
+          }
+        }
+        if (hasAnimate) {
+          animate();
+        }
+        match(hasAnimate);
+      } else {
+        console.log(checkMoveMatch());
+      }
+      return hasMatch;
+    }
+    const checkMoveMatch = () => {const matchMap = {};
+      let matchId = 1;
+      const cellMap = {};
+      for (let y = 0; y < cell.length; y++) {
+        const row = cell[y];
+        for (let x = 0; x < row.length; x++) {
+          const item = row[x];
+          if (x < row.length - 1) {
+            if (x < row.length - 2 && item.type === cell[y][x + 2].type) {
+              /**
+               *   ■
+               * ■   ■
+               */
+              if (y > 0 && cell[y - 1][x + 1].type === item.type) {
+                return { x: x + 1, y: y - 1, x1: x + 1, y1: y }
+              }
+              /**
+               * ■   ■
+               *   ■
+               */
+              if (y < cell.length - 1 && cell[y + 1][x + 1].type === item.type) {
+                return { x: x + 1, y: y + 1, x1: x + 1, y1: y };
+              }
+            }
+            if (item.type === cell[y][x + 1].type) {
+              if (y > 0) {
+                /**
+                 *     ■
+                 * ■ ■
+                 */
+                if (x < row.length - 2 && cell[y - 1][x + 2].type === item.type) {
+                  return { x: x + 2, y: y - 1, x1: x + 2, y1: y }
+                }
+                /**
+                 * ■
+                 *   ■ ■
+                 */
+                if (x > 0 && cell[y - 1][x - 1].type === item.type) {
+                  return { x: x - 1, y: y - 1, x1: x - 1, y1: y }
+                }
+              }
+              if (y < cell.length - 1) {
+                /**
+                 * ■ ■
+                 *     ■
+                 */
+                if (x < row.length - 2 && cell[y + 1][x + 2].type === item.type) {
+                  return { x: x + 2, y: y + 1, x1: x + 2, y1: y }
+                }
+                /**
+                 *   ■ ■
+                 * ■
+                 */
+                if (x > 0 && cell[y + 1][x - 1].type === item.type) {
+                  return { x: x - 1, y: y + 1, x1: x - 1, y1: y }
+                }
+              }
+              /**
+               * ■ ■   ■
+               */
+              if (x < row.length - 3 && cell[y][x + 3].type === item.type) {
+                return { x: x + 3, y: y, x1: x + 2, y1: y }
+              }
+              /**
+               * ■   ■ ■
+               */
+              if (x > 1 && cell[y][x - 2].type === item.type) {
+                return { x: x - 2, y: y, x1: x - 1, y1: y }
+              }
+            }
+          }
+          if (y < cell.length - 1) {
+            if (y < cell.length - 2 && item.type === cell[y + 2][x].type) {
+              /**
+               *   ■
+               * ■
+               *   ■
+               */
+              if (x > 0 && cell[y + 1][x - 1].type === item.type) {
+                return { x: x - 1, y: y + 1, x1: x, y1: y + 1 }
+              }
+              /**
+               * ■
+               *   ■
+               * ■
+               */
+              if (x < row.length - 1 && cell[y + 1][x + 1].type === item.type) {
+                return { x: x + 1, y: y + 1, x1: x, y1: y + 1 }
+              }
+            }
+            if (item.type === cell[y + 1][x].type) {
+              if (x > 0) {
+                /**
+                 *   ■
+                 *   ■
+                 * ■
+                 */
+                if (y < cell.length - 2 && cell[y + 2][x - 1].type === item.type) {
+                  return { x: x - 1, y: y + 2, x1: x, y1: y + 2 }
+                }
+                /**
+                 * ■
+                 *   ■
+                 *   ■
+                 */
+                if (y > 0 && cell[y - 1][x - 1].type === item.type) {
+                  return { x: x - 1, y: y - 1, x1: x - 1, y1: y }
+                }
+              }
+              if (x < row.length - 1) {
+                /**
+                 *   ■
+                 *   ■
+                 *     ■
+                 */
+                if (y < cell.length - 2 && cell[y + 2][x + 1].type === item.type) {
+                  return { x: x + 1, y: y + 2, x1: x, y1: y + 2 }
+                }
+                /**
+                 *     ■
+                 *   ■
+                 *   ■
+                 */
+                if (y > 0 && cell[y - 1][x + 1].type === item.type) {
+                  return { x: x + 1, y: y - 1, x1: x, y1: y - 1 }
+                }
+              }
+              /**
+               * ■
+               * ■
+               * 
+               * ■
+               */
+              if (y < cell.length - 3 && cell[y + 3][x].type === item.type) {
+                return { x: x, y: y + 3, x1: x, y1: y + 2 }
+              }
+              /**
+               * ■
+               * 
+               * ■
+               * ■
+               */
+              if (y > 1 && cell[y - 2][x].type === item.type) {
+                return { x: x, y: y - 2, x1: x, y1: y - 1 }
+              }
+            }
+          }
+        }
+      }
+      return false;
+    }
+    const typeColorMap = {
+      1: '#0000ff',
+      2: '#ff0000',
+      3: '#00ff00',
+      4: '#ffff00',
+      5: '#ff00ff',
+      6: '#00ffff',
+      7: '#ffffff',
+    }
+    const draw = () => {
+      mainctx.clearRect(0, 0, width, height);
+      cell.forEach((row, y) => {
+        row.forEach((item, x) => {
+          if (item.type !== -1) {
+            mainctx.fillStyle = typeColorMap[item.type];
+            mainctx.fillRect(offsetLeft + item.offsetLeft + bgSize * x + (bgSize - cellSize) / 2, offsetTop + item.offsetTop + bgSize * y + (bgSize - cellSize) / 2, cellSize, cellSize);
+          }
+        })
+      });
+      mainctx.strokeStyle = '#000000';
+      if (currSelect) {
+        mainctx.strokeRect(offsetLeft + bgSize * currSelect.x + (bgSize - cellSize) / 2, offsetTop + bgSize *  currSelect.y + (bgSize - cellSize) / 2, cellSize, cellSize);
+      }
+    }
+    const animate = (matchFlag = true) => {
+      return new Promise(resolve => {
+        let hasOffset = false
+        cell.forEach((row, y) => {
+          row.forEach((item, x) => {
+            if (item.offsetTop !== 0) {
+              item.offsetTop += 5 * (Math.abs(item.offsetTop) / -item.offsetTop);
+              if (item.offsetTop !== 0) {
+                hasOffset = true;
+              }
+            }
+            if (item.offsetLeft !== 0) {
+              item.offsetLeft += 5 * (Math.abs(item.offsetLeft) / -item.offsetLeft);
+              if (item.offsetLeft !== 0) {
+                hasOffset = true;
+              }
+            }
+          })
+        })
+        if (hasOffset) {
+          setTimeout(() => {
+            animate(matchFlag).then(resolve)
+          }, 1000 / 60);
+        } else {
+          if (matchFlag) {
+            match();
+          }
+          resolve();
+        }
+      })
+    }
+    const exchange = (cell1, cell2) => {
+      cell1.type = cell[cell1.y][cell1.x].type;
+      cell2.type = cell[cell2.y][cell2.x].type;
+      cell[cell1.y][cell1.x].type = cell2.type;
+      cell[cell2.y][cell2.x].type = cell1.type;
+      if (cell1.x === cell2.x) {
+        cell[cell1.y][cell1.x].offsetTop = bgSize * (cell2.y - cell1.y);
+        cell[cell2.y][cell2.x].offsetTop = bgSize * (cell1.y - cell2.y);
+      }
+      if (cell1.y === cell2.y) {
+        cell[cell1.y][cell1.x].offsetLeft = bgSize * (cell2.x - cell1.x);
+        cell[cell2.y][cell2.x].offsetLeft = bgSize * (cell1.x - cell2.x);
+      }
+      animate(false).then(() => {
+        if (!match()) {
+          cell[cell1.y][cell1.x].type = cell1.type;
+          cell[cell2.y][cell2.x].type = cell2.type;
+          if (cell1.x === cell2.x) {
+            cell[cell1.y][cell1.x].offsetTop = bgSize * (cell2.y - cell1.y);
+            cell[cell2.y][cell2.x].offsetTop = bgSize * (cell1.y - cell2.y);
+          }
+          if (cell1.y === cell2.y) {
+            cell[cell1.y][cell1.x].offsetLeft = bgSize * (cell2.x - cell1.x);
+            cell[cell2.y][cell2.x].offsetLeft = bgSize * (cell1.x - cell2.x);
+          }
+          animate(false);
+        }
+      })
+    }
+    const loop = () => {
+      draw();
+      setTimeout(loop, 1000 / 60);
+    }
+    const mainClick = e => {
+      const clickX = e.offsetX - offsetLeft;
+      const clickY = e.offsetY - offsetTop;
+      const x = Math.floor(clickX / bgSize);
+      const y = Math.floor(clickY / bgSize);
+      if (x >= 0 && x < bg[0].length && y >= 0 && y < bg.length) {
+        if (currSelect) {
+          if (Math.abs(x - currSelect.x) + Math.abs(y - currSelect.y) === 1) {
+            exchange({...currSelect}, { x, y });
+          }
+          currSelect = null;
+        } else {
+          currSelect = { x, y };
+        }
+      }
+    }
+    init();
+    loop();
+  </script>
+</body>
+</html>
