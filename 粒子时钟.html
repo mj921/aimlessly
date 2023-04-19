@@ -154,7 +154,7 @@
             new RingParticle({
               a: Math.random() * 360,
               r: size / 2 - 60 + 30 * Math.random(),
-              color: `#${Math.floor(16777216 * Math.random()).toString(16)}`,
+              color: `#${('00000' + Math.floor(16777216 * Math.random()).toString(16)).slice(-6)}`,
               v: 0.5 + Math.random(),
               i,
             })

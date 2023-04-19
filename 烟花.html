@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>烟花</title>
+    <link rel="stylesheet" href="" />
+    <style>
+      body {
+        margin: 0;
+      }
+      #canvas1,
+      #canvas2 {
+        position: absolute;
+        left: -1000%;
+        top: -1000%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="800" height="800"></canvas>
+    <canvas id="canvas1" width="800" height="800"></canvas>
+    <script>
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+      let size = Math.min(width, height);
+      let canvas = document.getElementById('canvas');
+      let canvas1 = document.getElementById('canvas1');
+      const setSize = () => {
+        size = Math.min(width, height);
+        canvas.width = width;
+        canvas.height = height;
+        canvas1.width = width;
+        canvas1.height = height;
+      };
+      setSize();
+      let ctx = canvas.getContext('2d');
+      let ctx1 = canvas1.getContext('2d');
+      let preList = [];
+      window.addEventListener('resize', () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        size = Math.min(width, height);
+        setSize();
+      });
+      let particleList = [];
+      const hslToHex = (h, s, l) => {
+        let r, g, b;
+        if (s == 0) {
+          r = g = b = l; // achromatic
+        } else {
+          const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+          };
+
+          let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+          let p = 2 * l - q;
+          r = hue2rgb(p, q, h + 1 / 3);
+          g = hue2rgb(p, q, h);
+          b = hue2rgb(p, q, h - 1 / 3);
+        }
+        return `#${('0' + Math.round(r * 255).toString(16)).slice(-2)}${(
+          '0' + Math.round(g * 255).toString(16)
+        ).slice(-2)}${('0' + Math.round(b * 255).toString(16)).slice(-2)}`;
+      };
+      function Particle({ x, y, v, to, from, isParent = false }) {
+        this.x = x;
+        this.y = y;
+        this.color = hslToHex(Math.random(), 1, 0.5);
+        this.from = from;
+        this.to = to;
+        this.v = v;
+        this.status = 'to';
+        this.isParent = isParent;
+        this.death = false;
+      }
+      Particle.prototype.move = function () {
+        const { x: toX, y: toY } = this.to;
+        const { x: fromX, y: fromY } = this.from;
+        const x = this.status === 'to' ? toX - fromX : fromX - toX;
+        const y = this.status === 'to' ? toY - fromY : fromY - toY;
+        const moveX = x / this.v;
+        const moveY = y / this.v;
+        if (
+          this.status === 'to' &&
+          ((x !== 0 && Math.abs(moveX) > Math.abs(toX - this.x)) ||
+            (y !== 0 && Math.abs(moveY) > Math.abs(toY - this.y)))
+        ) {
+          this.status = 'from';
+          this.x = toX;
+          this.y = toY;
+          this.death = true;
+          if (this.isParent) {
+            for (let i = 0, len = Math.random() * 25 + 25; i < len; i++) {
+              const a = (360 / len) * i + (Math.random() * 360) / len;
+              const r = size / 8 + (Math.random() * size) / 20;
+              preList.push(
+                new Particle({
+                  x: this.x,
+                  y: this.y,
+                  v: 15 + 10 * Math.random(),
+                  to: {
+                    x: this.x + Math.cos((a / 180) * Math.PI) * r,
+                    y: this.y + Math.sin((a / 180) * Math.PI) * r,
+                  },
+                  from: {
+                    x: this.x,
+                    y: this.y,
+                  },
+                })
+              );
+            }
+            console.log(preList);
+          }
+        } else {
+          this.x += moveX;
+          this.y += moveY;
+        }
+      };
+      Particle.prototype.draw = function () {
+        const { color, x, y } = this;
+        ctx1.fillStyle = color;
+        ctx1.beginPath();
+        ctx1.arc(x, y, 2, 0, Math.PI * 2);
+        ctx1.closePath();
+        ctx1.fill();
+      };
+      const particleNum = 700;
+      const init = () => {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, width, height);
+        particleList = [];
+      };
+      const drawBg = () => {
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.fillRect(0, 0, width, height);
+      };
+      const drawBg1 = () => {
+        ctx1.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx1.beginPath();
+        ctx1.fillRect(0, 0, width, height);
+      };
+      const draw = () => {
+        drawBg();
+        drawBg1();
+        particleList.forEach((el) => {
+          el.move();
+          el.draw();
+        });
+        particleList = particleList.filter((el) => !el.death);
+        particleList = particleList.concat(preList);
+        preList = [];
+        ctx.drawImage(canvas1, 0, 0, width, height);
+      };
+      init();
+      let sto = null;
+      const animate = () => {
+        const now = new Date().getTime();
+        if (sto) {
+          clearTimeout(sto);
+        }
+        draw();
+        sto = setTimeout(animate, Math.max(20 - new Date().getTime() + now, 0));
+      };
+      animate();
+      window.addEventListener('click', (e) => {
+        particleList.push(
+          new Particle({
+            x: e.offsetX,
+            y: height,
+            v: 100 + 10 * Math.random(),
+            to: {
+              x: e.offsetX,
+              y: e.offsetY,
+            },
+            from: {
+              x: e.offsetX,
+              y: height,
+            },
+            isParent: true,
+          })
+        );
+      });
+    </script>
+  </body>
+</html>
