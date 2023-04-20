@@ -68,8 +68,6 @@
         const { x: fromX, y: fromY } = this.from;
         const x = this.status === 'to' ? toX - fromX : fromX - toX;
         const y = this.status === 'to' ? toY - fromY : fromY - toY;
-        // const moveX = (x / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))) * this.v;
-        // const moveY = (y / Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))) * this.v;
         const moveX = x / this.v;
         const moveY = y / this.v;
         if (
@@ -133,7 +131,6 @@
           x,
           y,
           color,
-          // v: (Math.PI * 2 * r * v) / 360,
           v: 15 + 10 * Math.random(),
           to,
           from: {
@@ -143,7 +140,6 @@
           fromParticle: this,
         });
       };
-      // Particle.prototype.
       const particleNum = 700;
       const init = () => {
         ctx.fillStyle = '#000';

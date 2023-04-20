@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title></title>
+    <link rel="stylesheet" href="" />
+    <style>
+      body {
+        margin: 0;
+      }
+      #canvas1,
+      #canvas2 {
+        position: absolute;
+        left: -1000%;
+        top: -1000%;
+      }
+    </style>
+  </head>
+  <body>
+    <input type="text" id="ipt" />
+    <input type="file" id="file" />
+    <button id="btn">显示</button>
+    <br />
+    <br />
+    <canvas id="canvas" width="800" height="800"></canvas>
+    <canvas id="canvas1" width="800" height="800"></canvas>
+    <canvas id="canvas2" width="800" height="800"></canvas>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const canvas1 = document.getElementById('canvas1');
+      const canvas2 = document.getElementById('canvas2');
+      const ctx = canvas.getContext('2d');
+      const ctx1 = canvas1.getContext('2d');
+      const ctx2 = canvas2.getContext('2d');
+      const ipt = document.getElementById('ipt');
+      const file = document.getElementById('file');
+      const btn = document.getElementById('btn');
+      const fontSize = 60;
+      ctx.fillStyle = '#000';
+      canvas2.height = fontSize * 1.25;
+      const BASE_SIZE = 2;
+      const BASE_WIDTH = 800;
+      let text = '404';
+      let list = [];
+      let animateSto;
+      const time = 120;
+      const animate = (n) => {
+        n++;
+        ctx.clearRect(0, 0, BASE_WIDTH, BASE_WIDTH);
+        for (let i = 0, len = list.length; i < len; i++) {
+          if (n < time) {
+            list[i].x += (list[i].x1 - list[i].x) * 1.2;
+            list[i].y += (list[i].y1 - list[i].y) * 1.2;
+          } else {
+            list[i].x = list[i].x1;
+            list[i].y = list[i].y1;
+          }
+          ctx.fillStyle = list[i].color;
+          ctx.beginPath();
+          ctx.arc(list[i].x, list[i].y, BASE_SIZE / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // ctx.drawImage(canvas2, 0, 0);
+        if (n < time) {
+          animateSto = setTimeout(() => {
+            animate(n);
+          }, 1000 / 60);
+        }
+      };
+      const show = (file) => {
+        const oldList = list;
+        list = [];
+        ctx1.clearRect(0, 0, BASE_WIDTH, BASE_WIDTH);
+        ctx2.clearRect(0, 0, BASE_WIDTH, BASE_WIDTH);
+        let ctxData = [];
+        let textWidth = 0;
+        if (file) {
+          const size = Math.max(file.width, file.height);
+          const w = size > 100 ? (size / file.width) * 100 : file.width;
+          const h = size > 100 ? (size / file.height) * 100 : file.height;
+          canvas2.height = w;
+          canvas2.width = h;
+          textWidth = w;
+          ctx2.drawImage(file, 0, 0, file.width, file.height, 0, 0, w, h);
+          ctxData = ctx2.getImageData(0, 0, w, h).data;
+        } else {
+          ctx2.font = `${fontSize}px 微软雅黑`;
+          textWidth = Math.floor(ctx2.measureText(text).width + 4);
+          canvas2.height = fontSize * 1.25;
+          canvas2.width = textWidth;
+          ctx2.font = `${fontSize}px 微软雅黑`;
+          ctx2.textAlign = 'center';
+          ctx2.textBaseline = 'middle';
+          ctx2.fillText(text, textWidth / 2, (fontSize * 1.25) / 2);
+          ctxData = ctx2.getImageData(0, 0, textWidth, fontSize * 1.25).data;
+        }
+        const interval = 2;
+        const zIndex = 3;
+        for (
+          let i = 0, len = ctxData.length, i1 = 0, i2 = 0;
+          i < len;
+          i += 4, i2 += interval
+        ) {
+          if (ctxData[i + 3] > 0) {
+            for (let n = 0; n < interval; n++) {
+              const item = oldList[list.length];
+              const x = item
+                ? item.x
+                : Math.floor(Math.random() * BASE_WIDTH * 3) - BASE_WIDTH;
+              const y = item
+                ? item.y
+                : Math.floor(Math.random() * BASE_WIDTH * 3) - BASE_WIDTH;
+              const x1 =
+                i2 * BASE_SIZE -
+                BASE_SIZE / 2 +
+                Math.random() * BASE_SIZE * n * 2;
+              const y1 =
+                i1 * BASE_SIZE -
+                BASE_SIZE / 2 -
+                Math.random() * BASE_SIZE * n * 2;
+              const x0 = (x1 - x) / 60;
+              const y0 = (y1 - y) / 60;
+              list.push({
+                x1,
+                y1,
+                x,
+                y,
+                x0,
+                y0,
+                color: `rgba(${ctxData[i]},${ctxData[i + 1]},${
+                  ctxData[i + 2]
+                },${ctxData[i + 3]})`,
+              });
+            }
+          }
+          if ((i + 4) % (textWidth * 4) === 0) {
+            i1 += interval;
+            i2 = 0;
+          }
+        }
+        console.log(list.length);
+        animate(0);
+      };
+      show();
+      btn.addEventListener('click', () => {
+        text = ipt.value || '404';
+        show();
+      });
+      file.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file.type.includes('image')) {
+          const reader = new FileReader();
+          console.log(new Uint8ClampedArray(reader.result), reader.result);
+          const url = URL.createObjectURL(file);
+          const img = new Image();
+          img.onload = () => {
+            show(img);
+          };
+          img.src = url;
+        }
+      });
+    </script>
+  </body>
+</html>
