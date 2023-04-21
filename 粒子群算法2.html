@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>粒子群算法</title>
+  </head>
+  <body>
+    <div>
+      <button id="stepBtn">下一步</button>
+      <button id="autoBtn">自动</button>
+      <span id="min"></span>
+    </div>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const stepBtn = document.getElementById('stepBtn');
+      const autoBtn = document.getElementById('autoBtn');
+      const min = document.getElementById('min');
+      const ctx = canvas.getContext('2d');
+      const list = [];
+      const num = 10;
+      const UNIT = 1;
+      let minPoint = null;
+      let minDistance = Infinity;
+      const Point = function (x, y, color = 'black') {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+      };
+      Point.prototype.distance = function ({ x, y }) {
+        return Math.sqrt(Math.pow(this.x - x, 2) + Math.pow(this.y - y, 2));
+      };
+      Point.prototype.clone = function () {
+        return new Point(this.x, this.y);
+      };
+      Point.prototype.move = function (direction, origin, unit) {
+        const dx = direction.x - origin.x;
+        const dy = direction.y - origin.y;
+        const r = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+        if (r > 0) {
+          this.x += (dx / r) * unit;
+          this.y += (dy / r) * unit;
+        }
+      };
+      Point.prototype.draw = function () {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      };
+      Point.getPoint = () => {
+        return new Point(Math.random() * 600, Math.random() * 600);
+      };
+      const Bird = function ({ point, food }) {
+        this.point = point;
+        this.targetPoint = point;
+        this.beforePoint = null;
+        this.food = food;
+        this.minDistance = -food(point / 100) * 10;
+      };
+      Bird.prototype.move = function () {
+        const { point, targetPoint, beforePoint } = this;
+        const old = point;
+        this.point +=
+          targetPoint > old ? UNIT * 2 : targetPoint < old ? -UNIT * 2 : 0;
+        this.point +=
+          minPoint > old ? UNIT * 2 : minPoint < old ? -UNIT * 2 : 0;
+        if (typeof beforePoint === 'number') {
+          this.point +=
+            old > beforePoint
+              ? UNIT * 0.9
+              : old < beforePoint
+              ? -UNIT * 0.9
+              : 0;
+        }
+        this.beforePoint = old;
+        const d = -this.food(this.point / 100) * 10;
+        if (d < this.minDistance) {
+          this.minDistance = d;
+          this.targetPoint = point;
+        }
+      };
+      Bird.prototype.draw = function () {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(
+          300 + this.point,
+          300 - this.food(this.point / 100) * 10,
+          2,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      };
+      const food = new Point(500, 500, 'red');
+      const fn = (x) => 11 * Math.sin(x) + 7 * Math.cos(5 * x);
+      const getMinPoint = () => {
+        list.forEach(({ point }) => {
+          const d = -fn(point / 100) * 10;
+          if (minDistance > d) {
+            minDistance = d;
+            minPoint = point;
+          }
+        });
+        min.innerText = minDistance + ' ### ' + minPoint;
+      };
+      const init = () => {
+        ctx.beginPath();
+        ctx.moveTo(0, 300 - fn(-3) * 10);
+        for (let i = -300; i <= 300; i++) {
+          ctx.lineTo(300 + i, 300 - fn(i / 100) * 10);
+        }
+        ctx.stroke();
+        for (let i = 0; i < num; i++) {
+          const item = new Bird({
+            point: -300 + Math.random() * 600,
+            food: fn,
+          });
+          list.push(item);
+          const d = food.distance(item.point);
+          if (minDistance > d) {
+            minDistance = d;
+            minPoint = item.point;
+          }
+          food.draw();
+          item.draw();
+        }
+      };
+      const step = () => {
+        ctx.clearRect(0, 0, 600, 600);
+        ctx.beginPath();
+        ctx.moveTo(0, 300 - fn(-3) * 10);
+        for (let i = -300; i <= 300; i++) {
+          ctx.lineTo(300 + i, 300 - fn(i / 100) * 10);
+        }
+        ctx.stroke();
+        food.draw('red');
+        getMinPoint();
+        list.forEach((el) => {
+          el.move();
+          el.draw();
+        });
+      };
+      init();
+      let sto;
+      let n = 0;
+      autoBtn.addEventListener('click', () => {
+        if (n === 0) {
+          n++;
+          sto = setInterval(() => {
+            step();
+            n++;
+            if (n > 60) {
+              clearInterval(sto);
+              n = 0;
+            }
+          }, 1000 / 60);
+        }
+      });
+      stepBtn.addEventListener('click', step);
+    </script>
+  </body>
+</html>
