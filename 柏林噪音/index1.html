@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>柏林噪音1</title>
+  </head>
+  <body>
+    <div>
+      <input
+        type="number"
+        min="10000000"
+        max="99999999"
+        id="ipt"
+        maxlength="8"
+        style="width: 100px"
+      />
+      <button id="btn">生成</button>
+    </div>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const ipt = document.getElementById('ipt');
+      const btn = document.getElementById('btn');
+      const ctx = canvas.getContext('2d');
+      let seed = '12345678';
+      const createPerm = (x) => {
+        const n1 = parseFloat(
+          `${[3, 1, 4].map((i) => seed[i]).join('')}.${[0]
+            .map((i) => seed[i])
+            .join('')}`
+        );
+        const n2 = parseFloat(
+          `${[0, 2, 6, 7, 4, 1].map((i) => seed[i]).join('')}.${[
+            1, 5, 3, 4, 6, 3,
+          ]
+            .map((i) => seed[i])
+            .join('')}`
+        );
+        const a = Math.sin(x * n1) * n2;
+        const b = (a - Math.floor(a)) * 2 - 1;
+        return ((a - Math.floor(a)) * 2 - 1) * 255;
+      };
+      function perlin(x) {
+        const x1 = Math.floor(x);
+        const x2 = x1 + 1;
+        const grad1 = createPerm(x1);
+        const grad2 = createPerm(x2);
+        const vec1 = x - x1;
+        const vec2 = x - x2;
+        const t = 3 * Math.pow(vec1, 2) - 2 * Math.pow(vec1, 3);
+        const product1 = grad1 * vec1;
+        const product2 = grad2 * vec2;
+        return product1 + t * (product2 - product1);
+      }
+      console.log(createPerm(100));
+      const init = () => {
+        ctx.clearRect(0, 0, 600, 600);
+        ctx.beginPath();
+        ctx.moveTo(0, perlin(1 / 30) / 5 + 300);
+        for (let i = 1; i < 800; i++) {
+          ctx.lineTo(i, perlin((i + 1) / 30) / 5 + 300);
+        }
+        ctx.stroke();
+      };
+      init();
+      btn.addEventListener('click', () => {
+        seed = ipt.value;
+        if (seed < 10000000) {
+          seed = 10000000;
+        } else if (seed > 99999999) {
+          seed = 99999999;
+        }
+        ipt.value = seed;
+        init();
+      });
+    </script>
+  </body>
+</html>

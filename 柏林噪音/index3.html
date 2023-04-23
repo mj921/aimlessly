@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>柏林噪音2</title>
+    <style>
+      body {
+        margin: 0;
+        /* color: forestgreen; */
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <input
+        type="number"
+        min="10000000"
+        max="99999999"
+        id="ipt"
+        maxlength="8"
+        style="width: 100px"
+      />
+      <button id="btn">生成</button>
+      <button id="upBtn">上升</button>
+      <span id="hpmEl">0.5</span>
+    </div>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const ipt = document.getElementById('ipt');
+      const btn = document.getElementById('btn');
+      const upBtn = document.getElementById('upBtn');
+      const hpmEl = document.getElementById('hpmEl');
+      const ctx = canvas.getContext('2d');
+      const prem = [];
+      let list = [];
+      let seed = 12345678;
+      const seededRandom = () => {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+      };
+      const createPermList = () => {
+        list.sort(() => seededRandom() - 0.5);
+      };
+      const createPerm = (x, y) => {
+        const vec = [];
+        vec[0] = Math.sin(x * list[0] + y * list[1]) * list[2];
+        vec[1] = Math.sin(x * list[3] + y * list[4]) * list[5];
+        vec[0] = (vec[0] - Math.floor(vec[0])) * 2 - 1;
+        vec[1] = (vec[1] - Math.floor(vec[1])) * 2 - 1;
+        return vec;
+      };
+      function perlin(x, y) {
+        const p0x = Math.floor(x); // P0坐标
+        const p0y = Math.floor(y);
+        const p1x = p0x; // P1坐标
+        const p1y = p0y + 1;
+        const p2x = p0x + 1; // P2坐标
+        const p2y = p0y + 1;
+        const p3x = p0x + 1; // P3坐标
+        const p3y = p0y;
+
+        const [g0x, g0y] = createPerm(p0x, p0y); // P0点的梯度
+        const [g1x, g1y] = createPerm(p1x, p1y); // P1点的梯度
+        const [g2x, g2y] = createPerm(p2x, p2y); // P2点的梯度
+        const [g3x, g3y] = createPerm(p3x, p3y); // P3点的梯度
+
+        const v0x = x - p0x; // P0点的方向向量
+        const v0y = y - p0y;
+        const v1x = x - p1x; // P1点的方向向量
+        const v1y = y - p1y;
+        const v2x = x - p2x; // P2点的方向向量
+        const v2y = y - p2y;
+        const v3x = x - p3x; // P3点的方向向量
+        const v3y = y - p3y;
+
+        const product0 = g0x * v0x + g0y * v0y; // P0点梯度向量和方向向量的点乘
+        const product1 = g1x * v1x + g1y * v1y; // P1点梯度向量和方向向量的点乘
+        const product2 = g2x * v2x + g2y * v2y; // P2点梯度向量和方向向量的点乘
+        const product3 = g3x * v3x + g3y * v3y; // P3点梯度向量和方向向量的点乘
+
+        // P1和P2的插值
+        const d0 = x - p0x;
+        const t0 =
+          6.0 * Math.pow(d0, 5.0) -
+          15.0 * Math.pow(d0, 4.0) +
+          10.0 * Math.pow(d0, 3.0);
+        const n0 = product1 * (1.0 - t0) + product2 * t0;
+
+        // P0和P3的插值
+        const n1 = product0 * (1.0 - t0) + product3 * t0;
+
+        // P点的插值
+        const d1 = y - p0y;
+        const t1 =
+          6.0 * Math.pow(d1, 5.0) -
+          15.0 * Math.pow(d1, 4.0) +
+          10.0 * Math.pow(d1, 3.0);
+        return n1 * (1.0 - t1) + n0 * t1;
+      }
+      let hpm = 0.5;
+      const create = () => {
+        const width = 600;
+        const height = 600;
+        const size = 16;
+        const cellSize = 1;
+        ctx.clearRect(0, 0, 600, 600);
+        for (let i = 0; i < width; i++) {
+          const tx = ((i + 1) / width) * size;
+          for (let j = 0; j < height; j++) {
+            const ty = ((j + 1) / height) * size;
+            const lv = perlin(tx, ty);
+            if (lv < hpm) {
+              ctx.fillStyle = `dodgerblue`;
+            } else {
+              ctx.fillStyle = `forestgreen`;
+            }
+            // ctx.fillStyle = `rgba(0,0,0,${(lv + 1) / 2})`;
+            ctx.fillRect(i, j, cellSize, cellSize);
+          }
+        }
+      };
+      const init = () => {
+        list = [];
+        for (let i = 1; i < 256; i++) {
+          list.push(i);
+        }
+        createPermList();
+        create();
+      };
+      init();
+      btn.addEventListener('click', () => {
+        seed = +ipt.value || 12345678;
+        if (seed < 10000000) {
+          seed = 10000000;
+        } else if (seed > 99999999) {
+          seed = 99999999;
+        }
+        ipt.value = seed;
+        init();
+      });
+      upBtn.addEventListener('click', () => {
+        hpm -= 0.01;
+        hpmEl.innerHTML = Math.floor(hpm * 100) / 100;
+        create();
+      });
+    </script>
+  </body>
+</html>
