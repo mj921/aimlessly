@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>转盘</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      .turntable-btn {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        left: 175px;
+        top: 175px;
+        border-radius: 50%;
+        z-index: 1;
+        cursor: pointer;
+      }
+      .allow {
+        position: absolute;
+        width: 50px;
+        height: 110px;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background-image: url('指针.png');
+        background-size: 105px;
+        background-position: center bottom;
+        background-repeat: no-repeat;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <div class="turntable-btn" id="btn"><div class="allow"></div></div>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const btn = document.getElementById('btn');
+      const ctx = canvas.getContext('2d');
+      ctx.translate(200, 200);
+      const offsetScreenCanvasList = [];
+      const config = [
+        {
+          value: 100,
+          img: '../多功能相册/images/img1.jpg',
+        },
+        {
+          value: 200,
+          img: '../多功能相册/images/img2.jpg',
+        },
+        {
+          value: 300,
+          img: '../多功能相册/images/img3.jpg',
+        },
+        {
+          value: 400,
+          img: '../多功能相册/images/img4.jpg',
+        },
+      ];
+      const sum = config.reduce((s, el) => {
+        el.start = s;
+        return s + el.value;
+      }, 0);
+      const init = () => {
+        const startA = -Math.PI / 2 - (config[0].value / 2 / sum) * Math.PI * 2;
+        config.forEach((el) => {
+          const img = new Image();
+          img.src = el.img;
+          const offsetScreenCanvas = document.createElement('canvas');
+          offsetScreenCanvas.width = 400;
+          offsetScreenCanvas.height = 400;
+          const offsetScreenCtx = offsetScreenCanvas.getContext('2d');
+          img.onload = () => {
+            const size = Math.min(img.width, img.height);
+            offsetScreenCtx.beginPath();
+            offsetScreenCtx.translate(200, 200);
+            // offsetScreenCtx.rotate(-(el.start / sum) * Math.PI * 2);
+            offsetScreenCtx.moveTo(0, 0);
+            offsetScreenCtx.arc(
+              0,
+              0,
+              150,
+              startA + (el.start / sum) * (Math.PI * 2),
+              startA + ((el.start + el.value) / sum) * (Math.PI * 2)
+            );
+            offsetScreenCtx.lineTo(0, 0);
+            offsetScreenCtx.clip();
+            offsetScreenCtx.rotate((el.start / sum) * Math.PI * 2);
+            offsetScreenCtx.drawImage(
+              img,
+              (img.width - size) / 2,
+              (img.height - size) / 2,
+              size,
+              size,
+              -150,
+              -150,
+              300,
+              300
+            );
+            offsetScreenCanvasList.push(offsetScreenCanvas);
+            ctx.drawImage(offsetScreenCanvas, -200, -200, 400, 400);
+            // document.body.appendChild(offsetScreenCanvas);
+          };
+        });
+      };
+      let a = 0;
+      const draw = () => {
+        ctx.clearRect(-200, -200, 400, 400);
+        offsetScreenCanvasList.forEach((c) => {
+          ctx.drawImage(c, -200, -200, 400, 400);
+        });
+      };
+      let sto = null;
+      let n = 0;
+      const span = document.getElementById('a');
+      const speed = 3;
+      let baseA = 0;
+      let currentA = 0;
+      const loop = () => {
+        n++;
+        ctx.save();
+        if (n / 360 < 0.5) {
+          a =
+            baseA +
+            (Math.pow(n / 360, speed) / Math.pow(0.5, speed) / 2) * currentA;
+        } else {
+          a =
+            baseA +
+            (1 - Math.pow(1 - n / 360, speed) / Math.pow(0.5, speed) / 2) *
+              currentA;
+        }
+        ctx.rotate((a * Math.PI) / 180);
+        draw();
+        ctx.restore();
+        if (n < 360) {
+          sto = setTimeout(loop, 1000 / 60);
+        } else {
+          n = 0;
+        }
+      };
+      init();
+      btn.addEventListener('click', () => {
+        if (n === 0) {
+          const n = Math.floor(Math.random() * 4);
+          baseA = a % 360;
+          currentA =
+            6840 +
+            -(
+              (config[n].start - config[0].value / 2 + config[n].value / 2) /
+              sum
+            ) *
+              360 -
+            baseA;
+          console.log(n);
+          loop();
+        }
+      });
+    </script>
+  </body>
+</html>

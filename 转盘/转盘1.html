@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>转盘</title>
+  <style>
+    body {
+      margin: 0;
+    }
+
+    .turntable {
+      position: relative;
+      width: 300px;
+      height: 300px;
+    }
+
+    .turntable-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transition: transform 5s ease-in-out;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 1px solid #333;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .turntable-btn {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 1px solid #333;
+      text-align: center;
+      line-height: 50px;
+      z-index: 1;
+      background-color: #fff;
+    }
+
+    .turntable-item1 {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 150px;
+    }
+
+    .turntable-item2 {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform-origin: bottom;
+      transform: translateX(-50%) rotateZ(90deg);
+      width: 300px;
+      height: 150px;
+    }
+
+    .turntable-item3 {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform-origin: bottom;
+      transform: translateX(-50%) rotateZ(180deg);
+      width: 300px;
+      height: 150px;
+    }
+
+    .turntable-item4 {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform-origin: bottom;
+      transform: translateX(-50%) rotateZ(-90deg);
+      width: 300px;
+      height: 150px;
+    }
+
+    .sk1 {
+      position: absolute;
+      left: 0%;
+      top: 0;
+      width: 300px;
+      height: 150px;
+      transform-origin: top;
+      transform: skew(45deg, 0deg);
+      overflow: hidden;
+    }
+
+    .sk2 {
+      width: 300px;
+      height: 150px;
+      transform-origin: top;
+      transform: skew(-63deg, 0deg);
+      overflow: hidden;
+    }
+
+    img {
+      object-fit: cover;
+    }
+
+    .sk2 img {
+      width: 300px;
+      height: 150px;
+      transform-origin: top;
+      transform: skew(45deg, 0deg);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <div class="turntable">
+      <div class="turntable-content" id="turntable">
+        <div class="turntable-item1">
+          <div class="sk1">
+            <div class="sk2"><img src="../多功能相册/images/img1.jpg" /></div>
+          </div>
+        </div>
+
+        <div class="turntable-item2">
+          <div class="sk1">
+            <div class="sk2"><img src="../多功能相册/images/img2.jpg" /></div>
+          </div>
+        </div>
+
+        <div class="turntable-item3">
+          <div class="sk1">
+            <div class="sk2"><img src="../多功能相册/images/img3.jpg" /></div>
+          </div>
+        </div>
+
+        <div class="turntable-item4">
+          <div class="sk1">
+            <div class="sk2"><img src="../多功能相册/images/img4.jpg" /></div>
+          </div>
+        </div>
+      </div>
+      <div class="turntable-btn" id="btn">按钮</div>
+    </div>
+    <script>
+      const turntable = document.getElementById('turntable');
+      const btn = document.getElementById('btn');
+      let a = 0;
+      btn.addEventListener('click', () => {
+        a += 3600 + Math.floor(Math.random() * 4) * 90 + 360 - (a % 360)
+        turntable.style.transform = `rotate(${a}deg)`;
+      });
+    </script>
+</body>
+
+</html>
