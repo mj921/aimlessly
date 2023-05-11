@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <canvas id="canvas" width="1000" height="800"></canvas>
+
+    <script>
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      // 太阳系中每个行星的半径和距离太阳的距离
+      const sunRadius = 50;
+      const mercuryRadius = 5;
+      const mercuryDistance = 100;
+      const venusRadius = 10;
+      const venusDistance = 150;
+      const earthRadius = 15;
+      const earthDistance = 200;
+      const marsRadius = 8;
+      const marsDistance = 250;
+      const jupiterRadius = 40;
+      const jupiterDistance = 300;
+      const saturnRadius = 35;
+      const saturnDistance = 350;
+      const uranusRadius = 20;
+      const uranusDistance = 400;
+      const neptuneRadius = 18;
+      const neptuneDistance = 450;
+
+      // 太阳系中每个行星的颜色
+      const sunColor = 'yellow';
+      const mercuryColor = 'gray';
+      const venusColor = 'orange';
+      const earthColor = 'blue';
+      const marsColor = 'red';
+      const jupiterColor = 'brown';
+      const saturnColor = 'tan';
+      const uranusColor = 'lightblue';
+      const neptuneColor = 'lightgreen';
+
+      // 每个行星的速度
+      const mercurySpeed = 0.03;
+      const venusSpeed = 0.02;
+      const earthSpeed = 0.01;
+      const marsSpeed = 0.009;
+      const jupiterSpeed = 0.005;
+      const saturnSpeed = 0.004;
+      const uranusSpeed = 0.003;
+      const neptuneSpeed = 0.002;
+
+      // 每个行星的角度
+      let mercuryAngle = 0;
+      let venusAngle = 0;
+      let earthAngle = 0;
+      let marsAngle = 0;
+      let jupiterAngle = 0;
+      let saturnAngle = 0;
+      let uranusAngle = 0;
+      let neptuneAngle = 0;
+
+      // 绘制太阳系中的行星
+      function drawPlanets() {
+        // 绘制太阳
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, sunRadius, 0, Math.PI * 2);
+        ctx.fillStyle = sunColor;
+        ctx.fill();
+
+        // 绘制水星
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2 +
+            mercuryDistance * Math.cos((mercuryAngle * Math.PI) / 180),
+          canvas.height / 2 +
+            mercuryDistance * Math.sin((mercuryAngle * Math.PI) / 180),
+          mercuryRadius,
+          0,
+          Math.PI * 2
+        );
+        ctx.fillStyle = mercuryColor;
+        ctx.fill();
+
+        // 绘制金星
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2 +
+            venusDistance * Math.cos((venusAngle * Math.PI) / 180),
+          canvas.height / 2 +
+            venusDistance * Math.sin((venusAngle * Math.PI) / 180),
+          venusRadius,
+          0,
+          Math.PI * 2
+        );
+        ctx.fillStyle = venusColor;
+        ctx.fill();
+
+        // 绘制地球
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2 +
+            earthDistance * Math.cos((earthAngle * Math.PI) / 180),
+          canvas.height / 2 +
+            earthDistance * Math.sin((earthAngle * Math.PI) / 180),
+          earthRadius,
+          0,
+          Math.PI * 2
+        );
+        ctx.fillStyle = earthColor;
+        ctx.fill();
+
+        // 绘制火星
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2 +
+            marsDistance * Math.cos((marsAngle * Math.PI) / 180),
+          canvas.height / 2 +
+            marsDistance * Math.sin((marsAngle * Math.PI) / 180),
+          marsRadius,
+          0,
+          Math.PI * 2
+        );
+        ctx.fillStyle = marsColor;
+        ctx.fill();
+
+        // 绘制木星
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2 +
+            jupiterDistance * Math.cos((jupiterAngle * Math.PI) / 180),
+          canvas.height / 2 +
+            jupiterDistance * Math.sin((jupiterAngle * Math.PI) / 180),
+          jupiterRadius,
+          0,
+          Math.PI * 2
+        );
+        ctx.fillStyle = jupiterColor;
+        ctx.fill();
+
+        // 绘制土星
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2 +
+            saturnDistance * Math.cos((saturnAngle * Math.PI) / 180),
+          canvas.height / 2 +
+            saturnDistance * Math.sin((saturnAngle * Math.PI) / 180),
+          saturnRadius,
+          0,
+          Math.PI * 2
+        );
+        ctx.fillStyle = saturnColor;
+        ctx.fill();
+
+        // 绘制天王星
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2 +
+            uranusDistance * Math.cos((uranusAngle * Math.PI) / 180),
+          canvas.height / 2 +
+            uranusDistance * Math.sin((uranusAngle * Math.PI) / 180),
+          uranusRadius,
+          0,
+          Math.PI * 2
+        );
+        ctx.fillStyle = uranusColor;
+        ctx.fill();
+
+        // 绘制海王星
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2 +
+            neptuneDistance * Math.cos((neptuneAngle * Math.PI) / 180),
+          canvas.height / 2 +
+            neptuneDistance * Math.sin((neptuneAngle * Math.PI) / 180),
+          neptuneRadius,
+          0,
+          Math.PI * 2
+        );
+        ctx.fillStyle = neptuneColor;
+        ctx.fill();
+      }
+      const loop = () => {
+        ctx.clearRect(0, 0, 1000, 800);
+        drawPlanets();
+        mercuryAngle += mercurySpeed * 36;
+        venusAngle += venusSpeed * 36;
+        earthAngle += earthSpeed * 36;
+        marsAngle += marsSpeed * 36;
+        jupiterAngle += jupiterSpeed * 36;
+        saturnAngle += saturnSpeed * 36;
+        uranusAngle += uranusSpeed * 36;
+        neptuneAngle += neptuneSpeed * 36;
+        setTimeout(loop, 1000 / 60);
+      };
+      loop();
+    </script>
+  </body>
+</html>

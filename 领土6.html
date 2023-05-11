@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <style>
+      html,
+      body {
+        padding: 0;
+        margin: 0;
+      }
+
+      dl {
+        margin: 4px 0;
+      }
+
+      #main {
+        position: absolute;
+        left: 0;
+        height: 0;
+        width: 500px;
+        height: 500px;
+      }
+
+      #data {
+        position: absolute;
+        right: 10px;
+        font-weight: bold;
+        -webkit-text-stroke: 0.5px #000;
+        min-width: 420px;
+      }
+
+      .btns {
+        position: fixed;
+        bottom: 0;
+      }
+
+      #createDialog {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        /* height: 160px; */
+        background-color: #fff;
+        box-shadow: 0 0 1px 3px rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #createDialog > * {
+        margin-bottom: 10px;
+      }
+
+      .hide {
+        display: none !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="main"></canvas>
+    <div class="btns">
+      <button id="save">save</button>
+      <button id="load">load</button>
+      <button id="start">start</button>
+      <button id="create">create</button>
+      <button id="export">export</button>
+      <input id="import" type="file" />
+    </div>
+    <div id="createDialog" class="hide">
+      <input
+        type="number"
+        id="createMapSizeNum"
+        value="300"
+        placeholder="mapSizeNum"
+      />
+      <input
+        type="number"
+        id="createCellSizeNum"
+        value="2"
+        placeholder="cellSizeNum"
+      />
+      <input
+        type="number"
+        id="createBallSpeedNum"
+        value="4"
+        placeholder="ballSpeedNum"
+      />
+      <input type="number" id="createGroupNum" placeholder="groupNum" max="9" />
+      <input
+        type="number"
+        id="createLaunchPointNum"
+        placeholder="launchPointNum"
+      />
+      <div>
+        <button id="createConfirm">confirm</button>
+        <button id="createCancel">cancel</button>
+      </div>
+    </div>
+    <div id="data"></div>
+    <script>
+      const main = document.getElementById('main');
+      const mainCtx = main.getContext('2d');
+      const ballCanvas = document.createElement('canvas');
+      const ballCtx = ballCanvas.getContext('2d');
+      const cellCanvas = document.createElement('canvas');
+      const cellCtx = cellCanvas.getContext('2d');
+      const dataEl = document.getElementById('data');
+      const saveBtn = document.getElementById('save');
+      const loadBtn = document.getElementById('load');
+      const startBtn = document.getElementById('start');
+      const createBtn = document.getElementById('create');
+      const exportBtn = document.getElementById('export');
+      const importBtn = document.getElementById('import');
+      const createGroupNumEl = document.getElementById('createGroupNum');
+      const createLaunchPointNumEl = document.getElementById(
+        'createLaunchPointNum'
+      );
+      const createMapSizeNumEl = document.getElementById('createMapSizeNum');
+      const createCellSizeNumEl = document.getElementById('createCellSizeNum');
+      const createBallSpeedNumEl =
+        document.getElementById('createBallSpeedNum');
+      const createDialog = document.getElementById('createDialog');
+      const createConfirmBtn = document.getElementById('createConfirm');
+      const createCancelBtn = document.getElementById('createCancel');
+      let screenWidth = 700;
+      let screenHeight = 700;
+      const resizeHandle = () => {
+        main.width = screenWidth;
+        main.height = screenHeight;
+        ballCanvas.width = screenWidth;
+        ballCanvas.height = screenHeight;
+        cellCanvas.width = screenWidth;
+        cellCanvas.height = screenHeight;
+      };
+      const setCanvasSize = (size) => {
+        screenWidth = size;
+        screenHeight = size;
+        resizeHandle();
+      };
+      let time = 0;
+      let mapSize = 301;
+      let cellSize = 2;
+      let ballSpeed = 4;
+      let ballSize = 1;
+      let mapCells = [];
+      let ballList = [];
+      let totalCellNum = mapSize * mapSize;
+      const GroupStatus = {
+        CREATE_BALL: 1,
+        BALL_MOVE: 2,
+        END: 3,
+      };
+      const groupList = [
+        'red',
+        'blue',
+        'green',
+        'yellow',
+        'purple',
+        'orange',
+        'pink',
+        'brown',
+        'gray',
+      ];
+      let groupMap = {};
+      let launchPoint = [];
+      let occupyCell = 0;
+      let currMaxCellNum = {
+        cellNum: 0,
+        type: '',
+        startTime: 0,
+      };
+      let maxCellNum = {
+        cellNum: 0,
+        type: '',
+        startTime: 0,
+      };
+      let maxAvgCellNum = {
+        cellNum: 0,
+        type: '',
+        startTime: 0,
+      };
+      let currMaxCellHistory = [];
+      let maxCellHistory = [];
+      let maxBallNum = {
+        ballNum: 0,
+        type: '',
+      };
+      let maxTotalNum = 0;
+      let currTotalLaunchPointNum = 0;
+      let status = 'pause';
+      const saveKey = [
+        'maxBallNum',
+        'maxTotalNum',
+        'groupMap',
+        'mapSize',
+        'cellSize',
+        'ballSize',
+        'ballSpeed',
+        'launchPoint',
+        'maxCellNum',
+        'maxAvgCellNum',
+        'mapCells',
+        'time',
+        'maxCellHistory',
+        'currMaxCellNum',
+        'currMaxCellHistory',
+        'currTotalLaunchPointNum',
+      ];
+
+      const ctxClear = (ctx) => {
+        ctx.clearRect(0, 0, screenWidth, screenHeight);
+      };
+      const getRandomCell = (isEmpty) => {
+        let x = Math.floor(Math.random() * mapSize);
+        let y = Math.floor(Math.random() * mapSize);
+        if (isEmpty(mapCells[x][y])) {
+          return mapCells[x][y];
+        } else {
+          return getRandomCell(isEmpty);
+        }
+      };
+      const init = (initType = '', initData = {}) => {
+        setBtnDisabled();
+        cancelAnimationFrame(raf);
+        raf = null;
+        ctxClear(mainCtx);
+        ctxClear(cellCtx);
+        if (['load', 'import'].includes(initType)) {
+          let data = {};
+          if (initType === 'load') {
+            data = JSON.parse(localStorage.getItem('lingtu4Save') || '{}');
+          } else {
+            data = initData;
+          }
+          if (data.maxBallNum) {
+            maxBallNum = data.maxBallNum;
+            maxTotalNum = data.maxTotalNum;
+            groupMap = data.groupMap;
+            mapSize = data.mapSize;
+            cellSize = data.cellSize;
+            ballSize = data.ballSize;
+            ballSpeed = data.ballSpeed;
+            time = data.time;
+            ballList = [];
+            launchPoint = data.launchPoint;
+            mapCells = data.mapCells;
+            maxCellNum = data.maxCellNum;
+            maxAvgCellNum = data.maxAvgCellNum || {
+              cellNum: 0,
+              type: '',
+            };
+            maxCellHistory = data.maxCellHistory || [];
+            currMaxCellNum = data.currMaxCellNum;
+            currMaxCellHistory = data.currMaxCellHistory || [];
+            currTotalLaunchPointNum = data.currTotalLaunchPointNum;
+            setCanvasSize(mapSize * cellSize);
+            for (let i = 0; i < mapSize; i++) {
+              for (let j = 0; j < mapSize; j++) {
+                drawCell(mapCells[i][j]);
+              }
+            }
+            launchPoint.forEach((el) => {
+              el.ballInfo = {
+                wait: 1,
+                total: 1,
+              };
+              el.status = GroupStatus.CREATE_BALL;
+            });
+          }
+        } else {
+          ballList = [];
+          maxCellHistory = [];
+          currMaxCellHistory = [];
+          const cellNum = 1;
+          maxCellNum = {
+            cellNum,
+            type: '',
+          };
+          maxAvgCellNum = {
+            cellNum: 0,
+            type: '',
+          };
+          mapCells = [];
+          mapSize = 301;
+          cellSize = 2;
+          ballSpeed = 4;
+          let groupNum = Math.max(
+            Math.floor(Math.random() * groupList.length),
+            7
+          );
+          let launchPointNum = Math.floor(Math.random() * 30) + groupNum;
+          if (initType === 'create') {
+            if (createGroupNumEl.value) {
+              groupNum = parseInt(createGroupNumEl.value);
+            }
+            if (createLaunchPointNumEl.value) {
+              launchPointNum = parseInt(createLaunchPointNumEl.value);
+            }
+            if (createMapSizeNumEl.value) {
+              mapSize = parseInt(createMapSizeNumEl.value);
+            }
+            if (createCellSizeNumEl.value) {
+              cellSize = parseInt(createCellSizeNumEl.value);
+            }
+            if (createBallSpeedNumEl.value) {
+              ballSpeed = parseInt(createBallSpeedNumEl.value);
+            }
+          }
+          setCanvasSize(mapSize * cellSize);
+          ballSize = cellSize / 4;
+          for (let i = 0; i < mapSize; i++) {
+            const cells = [];
+            for (let j = 0; j < mapSize; j++) {
+              const cell = {
+                x: j,
+                y: i,
+                type: '',
+              };
+              cells.push(cell);
+              drawCell(cell);
+            }
+            mapCells.push(cells);
+          }
+          launchPoint = [];
+          groupMap = {};
+          groupList.slice(0, groupNum).forEach((key) => {
+            groupMap[key] = {
+              type: key,
+              cellNum,
+              maxCellNum: cellNum,
+              maxAvgCellNum: 0,
+              launchPointNum: 1,
+              time: 0,
+              launchPointTime: 0,
+            };
+            const cellItem = getRandomCell(
+              (randomCell) => randomCell.type === ''
+            );
+            cellItem.type = key;
+            cellItem.isLaunch = true;
+            launchPoint.push({
+              x: cellItem.x,
+              y: cellItem.y,
+              startAngle: 0,
+              range: 360,
+              status: GroupStatus.CREATE_BALL,
+              oldType: key,
+              ballInfo: {
+                wait: 1,
+                total: 1,
+              },
+            });
+            drawCell(cellItem);
+          });
+          currTotalLaunchPointNum = groupNum;
+          for (let i = groupNum; i < launchPointNum; i++) {
+            const cellItem = getRandomCell(
+              (randomCell) => !randomCell.launchPoint
+            );
+            cellItem.isLaunch = true;
+            launchPoint.push({
+              x: cellItem.x,
+              y: cellItem.y,
+              startAngle: 0,
+              range: 360,
+              status: GroupStatus.CREATE_BALL,
+              ballInfo: {
+                wait: 1,
+                total: 1,
+              },
+            });
+            drawCell(cellItem);
+          }
+        }
+        totalCellNum = mapSize * mapSize;
+        mainCtx.drawImage(cellCanvas, 0, 0, screenWidth, screenHeight);
+        createDataHtml();
+      };
+      const createDataHtml = () => {
+        let min = totalCellNum;
+        let minType = '';
+        const arr = Object.keys(groupMap).map((key) => {
+          if (groupMap[key].cellNum && groupMap[key].maxCellNum < min) {
+            min = groupMap[key].maxCellNum;
+            minType = key;
+          }
+          return groupMap[key];
+        });
+        arr.sort((a, b) =>
+          b.cellNum === a.cellNum
+            ? b.time === a.time
+              ? b.maxCellNum - a.maxCellNum
+              : b.time - a.time
+            : b.cellNum - a.cellNum
+        );
+
+        if (
+          currMaxCellHistory?.length === 0 ||
+          currMaxCellNum.type !== arr[0].type
+        ) {
+          if (currMaxCellHistory.length) {
+            const continuedTime =
+              time -
+              currMaxCellHistory[currMaxCellHistory.length - 1].startTime;
+            if (
+              currMaxCellNum.cellNum >= totalCellNum / 10 ||
+              continuedTime >= 3600 ||
+              currMaxCellHistory.length > 1
+            ) {
+              currMaxCellHistory[currMaxCellHistory.length - 1].endTime = time;
+              currMaxCellHistory[currMaxCellHistory.length - 1].endNum =
+                currMaxCellNum.cellNum;
+              currMaxCellHistory[currMaxCellHistory.length - 1].continuedTime =
+                continuedTime;
+            } else {
+              currMaxCellHistory.pop();
+            }
+            currMaxCellHistory.push({
+              cellNum: arr[0].cellNum,
+              type: arr[0].type,
+              startTime: time,
+            });
+          } else {
+            currMaxCellHistory.push({
+              cellNum: arr[0].cellNum,
+              type: arr[0].type,
+              startTime: time,
+            });
+          }
+        }
+        currMaxCellNum = {
+          cellNum: arr[0].cellNum,
+          type: arr[0].type,
+        };
+
+        const maxCellHistoryItem = maxCellHistory.length
+          ? maxCellHistory[maxCellHistory.length - 1]
+          : null;
+        const currMaxCellHistoryItem = currMaxCellHistory.length
+          ? currMaxCellHistory[currMaxCellHistory.length - 1]
+          : null;
+        occupyCell = arr.reduce((s, el) => s + el.cellNum, 0);
+        let html = `<div>
+          <dl>time: ${time} lpTotal：${
+          launchPoint.length
+        } currLpTotal: ${currTotalLaunchPointNum}</dl>
+          <dl>occupyCell：${occupyCell}，${
+          Math.floor((occupyCell / mapSize / mapSize) * 10000) / 100
+        }%</dl>
+          <dl style="color: ${maxCellNum.type || '#000'}">
+            hitsoryMax: ${maxCellNum.cellNum} 
+            start: ${
+              maxCellHistoryItem
+                ? maxCellHistoryItem.startTime
+                : maxCellNum.startTime
+            } 
+            time: ${
+              time -
+              (maxCellHistoryItem
+                ? maxCellHistoryItem.startTime
+                : maxCellNum.startTime)
+            }
+          </dl>
+          <dl style="color: ${maxAvgCellNum.type || '#000'}">
+            maxAvg: ${maxAvgCellNum.cellNum.toFixed(2)} 
+            start: ${maxAvgCellNum.startTime} 
+            time: ${time - maxAvgCellNum.startTime}
+          </dl>
+          <dl style="color: ${currMaxCellNum.type || '#000'}">
+            currentMax: ${currMaxCellNum.cellNum} 
+            start: ${
+              currMaxCellHistoryItem
+                ? currMaxCellHistoryItem.startTime
+                : currMaxCellNum.startTime
+            } 
+            time: ${
+              time -
+              (currMaxCellHistoryItem
+                ? currMaxCellHistoryItem.startTime
+                : currMaxCellNum.startTime)
+            }
+          </dl>
+          <dl style="color: ${minType || '#000'}">min: ${min}</dl>
+          <dl style="color: ${maxBallNum.type || '#000'}">maxBall: ${
+          maxBallNum.ballNum
+        }, bl：${maxBallNum.bl}</dl>
+          <dl>max: ${maxTotalNum}</dl>
+        </div><ul>`;
+
+        arr.forEach(
+          ({
+            type,
+            cellNum,
+            maxCellNum: max,
+            maxAvgCellNum: maxAvg,
+            launchPointNum,
+            time,
+            launchPointTime,
+          }) => {
+            html += `<li style="color: ${type};">
+          <dt>${type}：${cellNum}， ${launchPointNum}， ${
+              launchPointNum ? (cellNum / launchPointNum).toFixed(2) : ''
+            }，${Math.floor((cellNum / mapSize / mapSize) * 10000) / 100}%</dt>
+          <dl>max: ${max} time: ${time} ${
+              Math.floor((max / mapSize / mapSize) * 10000) / 100
+            }%</dl>
+          <dl>maxAvg：${
+            maxAvg ? maxAvg.toFixed(2) : 0
+          }，lpTime: ${launchPointTime}</dl>
+        </li>`;
+          }
+        );
+        html += '</ul>';
+        dataEl.innerHTML = html;
+      };
+
+      let raf = null;
+      const setMax = (currCell) => {
+        const { cellNum: val, launchPointNum, type: key } = currCell;
+        const avgVal = launchPointNum ? val / launchPointNum : 0;
+        currCell.maxCellNum = Math.max(currCell.maxCellNum, val);
+        currCell.maxAvgCellNum = Math.max(currCell.maxAvgCellNum, avgVal);
+        if (maxAvgCellNum.cellNum < avgVal) {
+          if (maxAvgCellNum.type !== key) {
+            maxAvgCellNum = {
+              cellNum: avgVal,
+              type: currCell.type,
+              startTime: time,
+            };
+          } else {
+            maxAvgCellNum.cellNum = avgVal;
+          }
+        }
+        if (currCell.maxCellNum !== val) return;
+        if (maxCellHistory.length === 0 || maxCellNum.cellNum < val) {
+          if (maxCellHistory.length) {
+            if (maxCellNum.type !== key) {
+              const continuedTime =
+                time - maxCellHistory[maxCellHistory.length - 1].startTime;
+              if (
+                maxCellNum.cellNum >= totalCellNum / 10 ||
+                continuedTime >= 3600 ||
+                maxCellHistory.length > 1
+              ) {
+                maxCellHistory[maxCellHistory.length - 1].endTime = time;
+                maxCellHistory[maxCellHistory.length - 1].endNum =
+                  maxCellNum.cellNum;
+                maxCellHistory[maxCellHistory.length - 1].continuedTime =
+                  continuedTime;
+              } else {
+                maxCellHistory.pop();
+              }
+              maxCellHistory.push({
+                cellNum: val,
+                type: key,
+                startTime: time,
+              });
+            }
+          } else {
+            maxCellHistory.push({
+              cellNum: val,
+              type: key,
+              startTime: time,
+            });
+          }
+        }
+        if (maxCellNum.cellNum < val) {
+          maxCellNum = {
+            cellNum: val,
+            type: key,
+            startTime: time,
+          };
+        }
+      };
+      const drawCell = (cell) => {
+        cellCtx.fillStyle = cell.type || 'white';
+        cellCtx.fillRect(
+          cell.x * cellSize,
+          cell.y * cellSize,
+          cellSize,
+          cellSize
+        );
+        if (cell.isLaunch) {
+          cellCtx.strokeStyle = 'black';
+          cellCtx.strokeRect(
+            cell.x * cellSize,
+            cell.y * cellSize,
+            cellSize,
+            cellSize
+          );
+        }
+      };
+      const ballMove = () => {
+        for (let i = 0; i < ballList.length; ) {
+          const ball = ballList[i];
+          ball.time++;
+          let collisionCell = null;
+          for (let i = 0, len = ballSpeed / cellSize; i < len; i++) {
+            const speed = i + 1 >= len ? ballSpeed - cellSize * i : cellSize;
+            ball.x += Math.cos((ball.angle * Math.PI) / 180) * speed;
+            ball.y += Math.sin((ball.angle * Math.PI) / 180) * speed;
+            const { x, y } = ball;
+            const cellX = Math.floor(x / cellSize);
+            const cellY = Math.floor(y / cellSize);
+            if (cellX < 0) {
+              ball.angle =
+                ball.angle > 180 ? 540 - ball.angle : 180 - ball.angle;
+            } else if (cellX > mapSize - 1) {
+              ball.angle =
+                ball.angle > 180 ? 540 - ball.angle : 180 - ball.angle;
+            } else if (cellY < 0) {
+              ball.angle = (ball.angle > 180 ? 360 : 180) - ball.angle;
+            } else if (cellY > mapSize - 1) {
+              ball.angle = (ball.angle > 180 ? 180 : 360) - ball.angle;
+            } else {
+              let flag = false;
+              if (cellX > 0 && x % cellSize <= ballSize) {
+                if (
+                  cellY > 0 &&
+                  y % cellSize <= ballSize &&
+                  mapCells[cellY - 1][cellX - 1] !== ball.type
+                ) {
+                  collisionCell = mapCells[cellY - 1][cellX - 1];
+                } else if (
+                  cellY < mapSize - 1 &&
+                  (y + ballSize) / cellSize >= cellY &&
+                  mapCells[cellY + 1][cellX - 1] !== ball.type
+                ) {
+                  collisionCell = mapCells[cellY + 1][cellX - 1];
+                } else if (mapCells[cellY][cellX - 1] !== ball.type) {
+                  collisionCell = mapCells[cellY][cellX - 1];
+                }
+              } else if (
+                cellX < mapSize - 1 &&
+                (x + ballSize) / cellSize >= cellX
+              ) {
+                if (
+                  cellY > 0 &&
+                  y % cellSize <= ballSize &&
+                  mapCells[cellY - 1][cellX + 1] !== ball.type
+                ) {
+                  collisionCell = mapCells[cellY - 1][cellX + 1];
+                } else if (
+                  cellY < mapSize - 1 &&
+                  (y + ballSize) / cellSize >= cellY &&
+                  mapCells[cellY + 1][cellX + 1] !== ball.type
+                ) {
+                  collisionCell = mapCells[cellY + 1][cellX + 1];
+                } else if (mapCells[cellY][cellX + 1] !== ball.type) {
+                  collisionCell = mapCells[cellY][cellX + 1];
+                }
+              } else {
+                if (
+                  cellY > 0 &&
+                  y % cellSize <= ballSize &&
+                  mapCells[cellY - 1][cellX] !== ball.type
+                ) {
+                  collisionCell = mapCells[cellY - 1][cellX];
+                } else if (
+                  cellY < mapSize - 1 &&
+                  (y + ballSize) / cellSize >= cellY &&
+                  mapCells[cellY + 1][cellX] !== ball.type
+                ) {
+                  collisionCell = mapCells[cellY + 1][cellX];
+                } else if (mapCells[cellY][cellX] !== ball.type) {
+                  collisionCell = mapCells[cellY][cellX];
+                }
+              }
+            }
+            if (collisionCell) {
+              break;
+            }
+          }
+          ball.angle %= 360;
+          if (collisionCell && collisionCell.type !== ball.type) {
+            if (collisionCell.type) {
+              groupMap[collisionCell.type].cellNum--;
+              setMax(groupMap[collisionCell.type]);
+            }
+            if (collisionCell.isLaunch) {
+              if (collisionCell.type) {
+                groupMap[collisionCell.type].launchPointNum--;
+              } else {
+                currTotalLaunchPointNum++;
+              }
+              groupMap[ball.type].launchPointNum++;
+            }
+            groupMap[ball.type].cellNum++;
+            setMax(groupMap[ball.type]);
+            collisionCell.type = ball.type;
+            drawCell(collisionCell);
+            ballList.splice(i, 1);
+            ball.launchPoint.ballInfo.total--;
+            continue;
+          }
+          if (ball.time > 1000) {
+            ballList.splice(i, 1);
+            ball.launchPoint.ballInfo.total--;
+            continue;
+          }
+          ballCtx.beginPath();
+          ballCtx.arc(ball.x, ball.y, ballSize, 0, 180);
+          ballCtx.fill();
+          i++;
+        }
+      };
+      const loop = () => {
+        if (occupyCell >= mapSize * mapSize) {
+          toggle();
+          return;
+        }
+        time++;
+        ctxClear(mainCtx);
+        ctxClear(ballCtx);
+        ballCtx.fillStyle = '#000';
+        Object.keys(groupMap).forEach((key) => {
+          if (groupMap[key].cellNum > 0) {
+            groupMap[key].time++;
+          }
+          if (groupMap[key].launchPointNum > 0) {
+            groupMap[key].launchPointTime++;
+          }
+        });
+        launchPoint.forEach((point) => {
+          const { position, startAngle, x, y, range } = point;
+          let type = mapCells[y][x].type;
+          if (!type) return;
+          if (
+            point.status === GroupStatus.BALL_MOVE &&
+            point.ballInfo.total <= 0
+          ) {
+            point.status = GroupStatus.CREATE_BALL;
+            const groupObj = groupMap[type];
+            const oldGroupObj = groupMap[point.oldType];
+            if (
+              point.oldType &&
+              point.oldType !== type &&
+              groupObj.launchPointNum > 1 &&
+              Math.random() < Math.min(0.1, Math.max(1, oldGroupObj) / groupObj.cellNum)
+            ) {
+              groupMap[point.oldType].launchPointNum++;
+              groupMap[type].launchPointNum--;
+              mapCells[y][x].type = point.oldType;
+              type = point.oldType;
+            }
+            point.ballInfo = {
+              wait: 1,
+              total: 1,
+            };
+          }
+          const { ballInfo } = point;
+          if (point.status === GroupStatus.CREATE_BALL) {
+            const { wait, total } = ballInfo;
+            for (let i = 0; i < wait; i++) {
+              if (Math.random() < (wait / (total * total)) * 0.618) {
+                ballInfo.wait++;
+                ballInfo.total++;
+              } else {
+                ballInfo.wait--;
+              }
+            }
+            if (ballInfo.wait === 0) {
+              let r = Math.random();
+              let val = 0.5;
+              let bl = 1;
+              while (r < val && bl <= 1024) {
+                bl *= 2;
+                val /= 2;
+                r = Math.random() - Math.min(bl / 1000, 0.1);
+              }
+              ballInfo.total *= Math.pow(2, bl - 1);
+              if (maxBallNum.ballNum < ballInfo.total) {
+                maxBallNum = {
+                  ballNum: ballInfo.total,
+                  bl,
+                  type,
+                };
+              }
+              const createMaxBallNum =
+                1000 +
+                Math.floor(
+                  (currTotalLaunchPointNum / launchPoint.length) * 4000
+                );
+              let max = Math.floor(createMaxBallNum - ballList.length);
+              if (max < 0) max += createMaxBallNum;
+              max = Math.max(max, Math.floor(10000 / launchPoint.length));
+              ballInfo.total = Math.min(max, ballInfo.total);
+              point.status = GroupStatus.BALL_MOVE;
+              const ballNum = ballInfo.total;
+              for (let i = 0; i < ballNum; i++) {
+                ballList.push({
+                  x: (x + 0.5) * cellSize,
+                  y: (y + 0.5) * cellSize,
+                  angle: startAngle + Math.random() * range,
+                  type,
+                  launchPoint: point,
+                  time: 0,
+                });
+              }
+            }
+          }
+        });
+
+        maxTotalNum = Math.max(maxTotalNum, ballList.length);
+        ballMove();
+        mainCtx.drawImage(cellCanvas, 0, 0, screenWidth, screenHeight);
+        mainCtx.drawImage(ballCanvas, 0, 0, screenWidth, screenHeight);
+        createDataHtml();
+        if (
+          Object.keys(groupMap).some(
+            (key) => groupMap[key].cellNum === totalCellNum
+          )
+        ) {
+          cancelAnimationFrame(raf);
+          raf = null;
+          createDataHtml();
+          const history = JSON.parse(
+            localStorage.getItem('lingtu4History') || '[]'
+          );
+          history.push({
+            maxBallNum,
+            maxTotalNum,
+            groupMap,
+            mapSize,
+            cellSize,
+            ballSize,
+            ballSpeed,
+            launchPoint,
+            maxCellNum,
+            maxCellHistory,
+            currMaxCellNum,
+            currMaxCellHistory,
+            currTotalLaunchPointNum,
+          });
+          localStorage.setItem('lingtu4History', JSON.stringify(history));
+        } else if (status === 'play') {
+          raf = requestAnimationFrame(loop);
+        }
+      };
+      const setBtnDisabled = () => {
+        saveBtn.disabled = status !== 'pause';
+        loadBtn.disabled = status !== 'pause';
+        exportBtn.disabled = status !== 'pause';
+        importBtn.disabled = status !== 'pause';
+        createBtn.disabled = status !== 'pause';
+      };
+      const toggle = () => {
+        if (status === 'play') {
+          status = 'pause';
+        } else {
+          status = 'play';
+          loop();
+        }
+        setBtnDisabled();
+      };
+      resizeHandle();
+      init();
+      saveBtn.addEventListener('click', () => {
+        if (status !== 'pause') return;
+        const data = {
+          maxBallNum,
+          maxTotalNum,
+          groupMap,
+          mapSize,
+          cellSize,
+          ballSize,
+          ballSpeed,
+          launchPoint,
+          maxCellNum,
+          maxAvgCellNum,
+          mapCells,
+          time,
+          maxCellHistory,
+          currMaxCellNum,
+          currMaxCellHistory,
+          currTotalLaunchPointNum,
+        };
+        localStorage.setItem('lingtu4Save', JSON.stringify(data));
+      });
+      loadBtn.addEventListener('click', (e) => {
+        if (status !== 'pause') return;
+        init('load');
+      });
+      exportBtn.addEventListener('click', () => {
+        if (status !== 'pause') return;
+        const data = {
+          maxBallNum,
+          maxTotalNum,
+          groupMap,
+          mapSize,
+          cellSize,
+          ballSize,
+          ballSpeed,
+          launchPoint,
+          maxCellNum,
+          maxAvgCellNum,
+          mapCells,
+          time,
+          maxCellHistory,
+          currMaxCellNum,
+          currMaxCellHistory,
+          currTotalLaunchPointNum,
+        };
+        const blob = new Blob([JSON.stringify(data)], {
+          type: 'text/plain;charset=utf-8',
+        });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `lingtu4_${new Date().getTime()}.json`;
+        a.click();
+      });
+      importBtn.addEventListener('change', (e) => {
+        if (status !== 'pause') return;
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const data = JSON.parse(e.target.result);
+          init('import', data);
+        };
+        reader.readAsText(file);
+      });
+      startBtn.addEventListener('click', () => {
+        toggle();
+        startBtn.innerText = status === 'play' ? '暂停' : '开始';
+      });
+      createBtn.addEventListener('click', () => {
+        createDialog.className = '';
+      });
+      createCancelBtn.addEventListener('click', () => {
+        createDialog.className = 'hide';
+      });
+      createConfirmBtn.addEventListener('click', () => {
+        init('create');
+        createDialog.className = 'hide';
+      });
+      /**
+       * time: 76953 pink 35279， 13， 2713.77，39.19%
+       */
+    </script>
+  </body>
+</html>
+

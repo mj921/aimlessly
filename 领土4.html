@@ -12,9 +12,11 @@
       padding: 0;
       margin: 0;
     }
+
     dl {
-      margin: 12px 0;
+      margin: 4px 0;
     }
+
     #main {
       position: absolute;
       left: 0;
@@ -28,7 +30,7 @@
       right: 10px;
       font-weight: bold;
       -webkit-text-stroke: 0.5px #000;
-      min-width: 450px;
+      min-width: 420px;
     }
 
     .btns {
@@ -42,7 +44,7 @@
       top: 50%;
       transform: translate(-50%, -50%);
       width: 300px;
-      height: 160px;
+      /* height: 160px; */
       background-color: #fff;
       box-shadow: 0 0 1px 3px rgba(0, 0, 0, 0.3);
       padding: 10px;
@@ -148,6 +150,11 @@
       type: '',
       startTime: 0
     };
+    let maxAvgCellNum = {
+      cellNum: 0,
+      type: '',
+      startTime: 0
+    };
     let currMaxCellHistory = [];
     let maxCellHistory = [];
     let maxBallNum = {
@@ -167,6 +174,7 @@
       'ballSpeed',
       'launchPoint',
       'maxCellNum',
+      'maxAvgCellNum',
       'mapCells',
       'time',
       'maxCellHistory',
@@ -213,9 +221,13 @@
           launchPoint = data.launchPoint;
           mapCells = data.mapCells;
           maxCellNum = data.maxCellNum;
-          maxCellHistory = data.maxCellHistory;
+          maxAvgCellNum = data.maxAvgCellNum || {
+            cellNum: 0,
+            type: ''
+          };
+          maxCellHistory = data.maxCellHistory || [];
           currMaxCellNum = data.currMaxCellNum;
-          currMaxCellHistory = data.currMaxCellHistory;
+          currMaxCellHistory = data.currMaxCellHistory || [];
           currTotalLaunchPointNum = data.currTotalLaunchPointNum;
           setCanvasSize(mapSize * cellSize);
           for (let i = 0; i < mapSize; i++) {
@@ -240,6 +252,10 @@
           cellNum,
           type: ''
         };
+        maxAvgCellNum = {
+          cellNum: 0,
+          type: ''
+        }
         mapCells = [];
         mapSize = 301;
         cellSize = 2;
@@ -285,6 +301,7 @@
             type: key,
             cellNum,
             maxCellNum: cellNum,
+            maxAvgCellNum: 0,
             launchPointNum: 1,
             time: 0,
             launchPointTime: 0,
@@ -339,13 +356,13 @@
       });
       arr.sort(
         (a, b) => b.cellNum === a.cellNum ?
-        (b.time === a.time ?
-          b.maxCellNum - a.maxCellNum :
-          b.time - a.time) :
-        b.cellNum - a.cellNum
+          (b.time === a.time ?
+            b.maxCellNum - a.maxCellNum :
+            b.time - a.time) :
+          b.cellNum - a.cellNum
       );
 
-      if ((currMaxCellHistory.length === 0 || currMaxCellNum.type !== arr[0].type)) {
+      if ((currMaxCellHistory?.length === 0 || currMaxCellNum.type !== arr[0].type)) {
         if (currMaxCellHistory.length) {
           const continuedTime = time - currMaxCellHistory[currMaxCellHistory.length - 1].startTime;
           if (currMaxCellNum.cellNum >= totalCellNum / 10 || continuedTime >= 3600 || currMaxCellHistory.length > 1) {
@@ -381,12 +398,17 @@
           <dl>time: ${time} lpTotal：${launchPoint.length} currLpTotal: ${currTotalLaunchPointNum}</dl>
           <dl>occupyCell：${occupyCell}，${Math.floor(occupyCell / mapSize / mapSize * 10000) / 100}%</dl>
           <dl style="color: ${maxCellNum.type || '#000'}">
-            max: ${maxCellNum.cellNum} 
+            hitsoryMax: ${maxCellNum.cellNum} 
             start: ${maxCellHistoryItem ? maxCellHistoryItem.startTime : maxCellNum.startTime} 
             time: ${time - (maxCellHistoryItem ? maxCellHistoryItem.startTime : maxCellNum.startTime)}
           </dl>
+          <dl style="color: ${maxAvgCellNum.type || '#000'}">
+            maxAvg: ${maxAvgCellNum.cellNum.toFixed(2)} 
+            start: ${maxAvgCellNum.startTime} 
+            time: ${time - maxAvgCellNum.startTime}
+          </dl>
           <dl style="color: ${currMaxCellNum.type || '#000'}">
-            max: ${currMaxCellNum.cellNum} 
+            currentMax: ${currMaxCellNum.cellNum} 
             start: ${currMaxCellHistoryItem ? currMaxCellHistoryItem.startTime : currMaxCellNum.startTime} 
             time: ${time - (currMaxCellHistoryItem ? currMaxCellHistoryItem.startTime : currMaxCellNum.startTime)}
           </dl>
@@ -399,13 +421,15 @@
         type,
         cellNum,
         maxCellNum: max,
+        maxAvgCellNum: maxAvg,
         launchPointNum,
         time,
         launchPointTime
       }) => {
         html += `<li style="color: ${type};">
           <dt>${type}：${cellNum}， ${launchPointNum}， ${launchPointNum ? (cellNum / launchPointNum).toFixed(2) : ''}，${Math.floor(cellNum / mapSize / mapSize * 10000) / 100}%</dt>
-          <dl>max: ${max} time: ${time} lpTime: ${launchPointTime}，${Math.floor(max / mapSize / mapSize * 10000) / 100}%</dl>
+          <dl>max: ${max} time: ${time} ${Math.floor(max / mapSize / mapSize * 10000) / 100}%</dl>
+          <dl>maxAvg：${maxAvg ? (maxAvg).toFixed(2) : 0}，lpTime: ${launchPointTime}</dl>
         </li>`;
       })
       html += '</ul>';
@@ -413,9 +437,23 @@
     }
 
     let raf = null;
-    const setMax = (key, val) => {
-      groupMap[key].maxCellNum = Math.max(groupMap[key].maxCellNum, val);
-      if (groupMap[key].maxCellNum !== val) return;
+    const setMax = (currCell) => {
+      const { cellNum: val, launchPointNum, type: key } = currCell;
+      const avgVal = launchPointNum ? (val / launchPointNum) : 0
+      currCell.maxCellNum = Math.max(currCell.maxCellNum, val);
+      currCell.maxAvgCellNum = Math.max(currCell.maxAvgCellNum, avgVal);
+      if (maxAvgCellNum.cellNum < avgVal) {
+        if (maxAvgCellNum.type !== key) {
+          maxAvgCellNum = {
+            cellNum: avgVal,
+            type: currCell.type,
+            startTime: time
+          }
+        } else {
+          maxAvgCellNum.cellNum = avgVal;
+        }
+      }
+      if (currCell.maxCellNum !== val) return;
       if ((maxCellHistory.length === 0 || maxCellNum.cellNum < val)) {
         if (maxCellHistory.length) {
           if (maxCellNum.type !== key) {
@@ -457,120 +495,120 @@
         cellCtx.strokeRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
       }
     }
-      const ballMove = () => {
-        for (let i = 0; i < ballList.length; ) {
-          const ball = ballList[i];
-          ball.time++;
-          let collisionCell = null;
-          for (let i = 0, len = ballSpeed / cellSize; i < len; i++) {
-            const speed = i + 1 >= len ? ballSpeed - cellSize * i : cellSize;
-            ball.x += Math.cos((ball.angle * Math.PI) / 180) * speed;
-            ball.y += Math.sin((ball.angle * Math.PI) / 180) * speed;
-            const { x, y } = ball;
-            const cellX = Math.floor(x / cellSize);
-            const cellY = Math.floor(y / cellSize);
-            if (cellX < 0) {
-              ball.angle =
-                ball.angle > 180 ? 540 - ball.angle : 180 - ball.angle;
-            } else if (cellX > mapSize - 1) {
-              ball.angle =
-                ball.angle > 180 ? 540 - ball.angle : 180 - ball.angle;
-            } else if (cellY < 0) {
-              ball.angle = (ball.angle > 180 ? 360 : 180) - ball.angle;
-            } else if (cellY > mapSize - 1) {
-              ball.angle = (ball.angle > 180 ? 180 : 360) - ball.angle;
-            } else {
-              let flag = false;
-              if (cellX > 0 && x % cellSize <= ballSize) {
-                if (
-                  cellY > 0 &&
-                  y % cellSize <= ballSize &&
-                  mapCells[cellY - 1][cellX - 1] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY - 1][cellX - 1];
-                } else if (
-                  cellY < mapSize - 1 &&
-                  (y + ballSize) / cellSize >= cellY &&
-                  mapCells[cellY + 1][cellX - 1] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY + 1][cellX - 1];
-                } else if (mapCells[cellY][cellX - 1] !== ball.type) {
-                  collisionCell = mapCells[cellY][cellX - 1];
-                }
-              } else if (
-                cellX < mapSize - 1 &&
-                (x + ballSize) / cellSize >= cellX
+    const ballMove = () => {
+      for (let i = 0; i < ballList.length;) {
+        const ball = ballList[i];
+        ball.time++;
+        let collisionCell = null;
+        for (let i = 0, len = ballSpeed / cellSize; i < len; i++) {
+          const speed = i + 1 >= len ? ballSpeed - cellSize * i : cellSize;
+          ball.x += Math.cos((ball.angle * Math.PI) / 180) * speed;
+          ball.y += Math.sin((ball.angle * Math.PI) / 180) * speed;
+          const { x, y } = ball;
+          const cellX = Math.floor(x / cellSize);
+          const cellY = Math.floor(y / cellSize);
+          if (cellX < 0) {
+            ball.angle =
+              ball.angle > 180 ? 540 - ball.angle : 180 - ball.angle;
+          } else if (cellX > mapSize - 1) {
+            ball.angle =
+              ball.angle > 180 ? 540 - ball.angle : 180 - ball.angle;
+          } else if (cellY < 0) {
+            ball.angle = (ball.angle > 180 ? 360 : 180) - ball.angle;
+          } else if (cellY > mapSize - 1) {
+            ball.angle = (ball.angle > 180 ? 180 : 360) - ball.angle;
+          } else {
+            let flag = false;
+            if (cellX > 0 && x % cellSize <= ballSize) {
+              if (
+                cellY > 0 &&
+                y % cellSize <= ballSize &&
+                mapCells[cellY - 1][cellX - 1] !== ball.type
               ) {
-                if (
-                  cellY > 0 &&
-                  y % cellSize <= ballSize &&
-                  mapCells[cellY - 1][cellX + 1] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY - 1][cellX + 1];
-                } else if (
-                  cellY < mapSize - 1 &&
-                  (y + ballSize) / cellSize >= cellY &&
-                  mapCells[cellY + 1][cellX + 1] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY + 1][cellX + 1];
-                } else if (mapCells[cellY][cellX + 1] !== ball.type) {
-                  collisionCell = mapCells[cellY][cellX + 1];
-                }
-              } else {
-                if (
-                  cellY > 0 &&
-                  y % cellSize <= ballSize &&
-                  mapCells[cellY - 1][cellX] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY - 1][cellX];
-                } else if (
-                  cellY < mapSize - 1 &&
-                  (y + ballSize) / cellSize >= cellY &&
-                  mapCells[cellY + 1][cellX] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY + 1][cellX];
-                } else if (mapCells[cellY][cellX] !== ball.type) {
-                  collisionCell = mapCells[cellY][cellX];
-                }
+                collisionCell = mapCells[cellY - 1][cellX - 1];
+              } else if (
+                cellY < mapSize - 1 &&
+                (y + ballSize) / cellSize >= cellY &&
+                mapCells[cellY + 1][cellX - 1] !== ball.type
+              ) {
+                collisionCell = mapCells[cellY + 1][cellX - 1];
+              } else if (mapCells[cellY][cellX - 1] !== ball.type) {
+                collisionCell = mapCells[cellY][cellX - 1];
+              }
+            } else if (
+              cellX < mapSize - 1 &&
+              (x + ballSize) / cellSize >= cellX
+            ) {
+              if (
+                cellY > 0 &&
+                y % cellSize <= ballSize &&
+                mapCells[cellY - 1][cellX + 1] !== ball.type
+              ) {
+                collisionCell = mapCells[cellY - 1][cellX + 1];
+              } else if (
+                cellY < mapSize - 1 &&
+                (y + ballSize) / cellSize >= cellY &&
+                mapCells[cellY + 1][cellX + 1] !== ball.type
+              ) {
+                collisionCell = mapCells[cellY + 1][cellX + 1];
+              } else if (mapCells[cellY][cellX + 1] !== ball.type) {
+                collisionCell = mapCells[cellY][cellX + 1];
+              }
+            } else {
+              if (
+                cellY > 0 &&
+                y % cellSize <= ballSize &&
+                mapCells[cellY - 1][cellX] !== ball.type
+              ) {
+                collisionCell = mapCells[cellY - 1][cellX];
+              } else if (
+                cellY < mapSize - 1 &&
+                (y + ballSize) / cellSize >= cellY &&
+                mapCells[cellY + 1][cellX] !== ball.type
+              ) {
+                collisionCell = mapCells[cellY + 1][cellX];
+              } else if (mapCells[cellY][cellX] !== ball.type) {
+                collisionCell = mapCells[cellY][cellX];
               }
             }
-            if (collisionCell) {
-              break;
-            }
           }
-          ball.angle %= 360;
-          if (collisionCell && collisionCell.type !== ball.type) {
-            if (collisionCell.type) {
-              groupMap[collisionCell.type].cellNum--;
-              setMax(collisionCell.type, groupMap[collisionCell.type].cellNum);
-            }
-            if (collisionCell.isLaunch) {
-              if (collisionCell.type) {
-                groupMap[collisionCell.type].launchPointNum--;
-              } else {
-                currTotalLaunchPointNum++;
-              }
-              groupMap[ball.type].launchPointNum++;
-            }
-            groupMap[ball.type].cellNum++;
-            setMax(ball.type, groupMap[ball.type].cellNum);
-            collisionCell.type = ball.type;
-            drawCell(collisionCell);
-            ballList.splice(i, 1);
-            ball.launchPoint.ballInfo.total--;
-            continue;
+          if (collisionCell) {
+            break;
           }
-          if (ball.time > 1000) {
-            ballList.splice(i, 1);
-            ball.launchPoint.ballInfo.total--;
-            continue;
-          }
-          ballCtx.beginPath();
-          ballCtx.arc(ball.x, ball.y, ballSize, 0, 180);
-          ballCtx.fill();
-          i++;
         }
-      };
+        ball.angle %= 360;
+        if (collisionCell && collisionCell.type !== ball.type) {
+          if (collisionCell.type) {
+            groupMap[collisionCell.type].cellNum--;
+            setMax(groupMap[collisionCell.type]);
+          }
+          if (collisionCell.isLaunch) {
+            if (collisionCell.type) {
+              groupMap[collisionCell.type].launchPointNum--;
+            } else {
+              currTotalLaunchPointNum++;
+            }
+            groupMap[ball.type].launchPointNum++;
+          }
+          groupMap[ball.type].cellNum++;
+          setMax(groupMap[ball.type]);
+          collisionCell.type = ball.type;
+          drawCell(collisionCell);
+          ballList.splice(i, 1);
+          ball.launchPoint.ballInfo.total--;
+          continue;
+        }
+        if (ball.time > 1000) {
+          ballList.splice(i, 1);
+          ball.launchPoint.ballInfo.total--;
+          continue;
+        }
+        ballCtx.beginPath();
+        ballCtx.arc(ball.x, ball.y, ballSize, 0, 180);
+        ballCtx.fill();
+        i++;
+      }
+    };
     const loop = () => {
       time++;
       ctxClear(mainCtx);
@@ -715,6 +753,7 @@
         ballSpeed,
         launchPoint,
         maxCellNum,
+        maxAvgCellNum,
         mapCells,
         time,
         maxCellHistory,
@@ -740,6 +779,7 @@
         ballSpeed,
         launchPoint,
         maxCellNum,
+        maxAvgCellNum,
         mapCells,
         time,
         maxCellHistory,

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>打字机</title>
+</head>
+
+<body>
+  <div id="style"></div>
+  <script>
+    var styleHTML = `#style {
+                        border: 1px solid #000;
+                        color: #d4d4d4;
+                        background-color: #1e1e1e;
+                        padding: 1em 0;
+                        padding-left: 2em;
+                      }
+                      .property-line {
+                        margin-left: 2em;
+                      }
+                      .selector {
+                        color: #d7ba7d;
+                      }
+                      .punctuation {
+                        color: #f8f8f2;
+                      }
+                      .property {
+                        color: #9cdcfe;
+                      }
+                      .value {
+                        color: #ce9178;
+                      }
+                      .num {
+                        color: #b5cea8
+                      }
+                      .unit {
+                        color: #b5cea8
+                      }`;
+    var currStyleHTML = "";
+    var styleNum = 0;
+    var style = document.createElement("style");
+    var styleDiv = document.getElementById("style");
+    document.head.appendChild(style);
+    var styleFlag = false;
+    var update = function () {
+      if (styleNum < styleHTML.length) {
+        var str = styleHTML[styleNum++]
+        currStyleHTML += str;
+        var compliteHTML = "";
+        styleFlag = false;
+        currStyleHTML.split("\n").forEach(line => {
+          if (styleFlag) {
+            if (line.indexOf("}") > -1) {
+              styleFlag = false;
+              compliteHTML += `<span class="punctuation">}</span>`
+            } else {
+              var arr = line.split(":");
+              compliteHTML += `<span class="property-line">`;
+              compliteHTML += `<span class="property">${arr[0]}</span>`;
+              if (line.indexOf(":") > -1) {
+                compliteHTML += `<span class="punctuation">: </span>`;
+                var value = arr[1]
+                  .replace(";", "")
+                  .replace(/(#[0-9a-f]{6}|#[0-9a-f]{3}|\d+(px|em|rem)?|\d+\.\d*(px|em|rem)?)/g, "<span class='num'>$1</span>")
+                compliteHTML += `<span class="property">${value}</span>`;
+                compliteHTML += `<span class="punctuation">;</span>`;
+              }
+              compliteHTML += `</span>`;
+            }
+          } else {
+            compliteHTML += `<span class="selector">${line.replace("{", "")}</span>`
+            if (line.indexOf("{") > -1) {
+              styleFlag = true;
+              compliteHTML += ` <span class="punctuation">{</span>`
+            }
+          }
+          compliteHTML += "<br/>"
+        });
+        style.innerHTML = currStyleHTML;
+        styleDiv.innerHTML = compliteHTML;
+        if (str === "" || str === "\n" || str === " ") {
+          update();
+        } else {
+          setTimeout(update, 100);
+        }
+      }
+    }
+    update();
+  </script>
+</body>
+
+</html>

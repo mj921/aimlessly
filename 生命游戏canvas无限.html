@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+      const canvas = document.getElementById('canvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const cellSize = 5; // 每个细胞的大小
+      const rows = Math.floor(canvas.height / cellSize); // 行数
+      const cols = Math.floor(canvas.width / cellSize); // 列数
+      let cellList = {};
+      let deadCell = {};
+      let translateX = 0;
+      let translateY = 0;
+
+      const createDeadCell = () => {
+        deadCell = {};
+        Object.keys(cellList).forEach((key) => {
+          const { i, j } = cellList[key];
+          if (!cellList[`${i - 1},${j - 1}`]) {
+            deadCell[`${i - 1},${j - 1}`] =
+              (deadCell[`${i - 1},${j - 1}`] || 0) + 1;
+          }
+          if (!cellList[`${i - 1},${j}`]) {
+            deadCell[`${i - 1},${j}`] = (deadCell[`${i - 1},${j}`] || 0) + 1;
+          }
+          if (!cellList[`${i - 1},${j + 1}`]) {
+            deadCell[`${i - 1},${j + 1}`] =
+              (deadCell[`${i - 1},${j + 1}`] || 0) + 1;
+          }
+          if (!cellList[`${i},${j - 1}`]) {
+            deadCell[`${i},${j - 1}`] = (deadCell[`${i},${j - 1}`] || 0) + 1;
+          }
+          if (!cellList[`${i},${j + 1}`]) {
+            deadCell[`${i},${j + 1}`] = (deadCell[`${i},${j + 1}`] || 0) + 1;
+          }
+          if (!cellList[`${i + 1},${j - 1}`]) {
+            deadCell[`${i + 1},${j - 1}`] =
+              (deadCell[`${i + 1},${j - 1}`] || 0) + 1;
+          }
+          if (!cellList[`${i + 1},${j}`]) {
+            deadCell[`${i + 1},${j}`] = (deadCell[`${i + 1},${j}`] || 0) + 1;
+          }
+          if (!cellList[`${i + 1},${j + 1}`]) {
+            deadCell[`${i + 1},${j + 1}`] =
+              (deadCell[`${i + 1},${j + 1}`] || 0) + 1;
+          }
+        });
+      };
+
+      // 创建一个二维数组来表示生命游戏的棋盘
+      let board = new Array(rows);
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          if (Math.random() > 0.5) {
+            const key = `${i},${j}`;
+            cellList[key] = { i, j };
+          }
+        }
+      }
+      createDeadCell();
+
+      // 绘制棋盘
+      function drawBoard() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清除画布
+        ctx.save();
+        ctx.translate(translateX, translateY);
+        Object.keys(cellList).forEach((key) => {
+          const { i, j } = cellList[key];
+          ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+        });
+        ctx.restore();
+      }
+
+      // 计算细胞下一代的状态
+      function calculateNextGeneration() {
+        let newCellList = {};
+        Object.keys(cellList).forEach((key) => {
+          const { i, j } = cellList[key];
+          let neighbors = countNeighbors(i, j); // 计算邻居数量
+
+          if (neighbors === 2 || neighbors === 3) {
+            newCellList[`${i},${j}`] = { i, j }; // 存活的细胞周围邻居少于2个或多于3个，死亡
+          }
+        });
+        Object.keys(deadCell).forEach((key) => {
+          if (deadCell[key] === 0 || deadCell[key] === 3) {
+            const [i, j] = key.split(',').map((el) => +el);
+            newCellList[`${i},${j}`] = { i, j }; // 存活的细胞周围邻居少于2个或多于3个，死亡
+          }
+        });
+        cellList = newCellList;
+        createDeadCell();
+      }
+
+      // 计算指定位置的细胞周围存活细胞的数量
+      function countNeighbors(i, j) {
+        let count = 0;
+        if (cellList[`${i - 1},${j - 1}`]) {
+          count++;
+        }
+        if (cellList[`${i - 1},${j}`]) {
+          count++;
+        }
+        if (cellList[`${i - 1},${j + 1}`]) {
+          count++;
+        }
+        if (cellList[`${i},${j - 1}`]) {
+          count++;
+        }
+        if (cellList[`${i},${j + 1}`]) {
+          count++;
+        }
+        if (cellList[`${i + 1},${j - 1}`]) {
+          count++;
+        }
+        if (cellList[`${i + 1},${j}`]) {
+          count++;
+        }
+        if (cellList[`${i + 1},${j + 1}`]) {
+          count++;
+        }
+
+        return count;
+      }
+
+      // 每秒钟更新一次棋盘
+      setInterval(() => {
+        calculateNextGeneration();
+        drawBoard();
+      }, 1000 / 60);
+      let startX, startY, oldX, oldY;
+      let moveFlag = false;
+      canvas.addEventListener('mousedown', (e) => {
+        oldX = translateX;
+        oldY = translateY;
+        startX = e.clientX;
+        startY = e.clientY;
+        moveFlag = true;
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (moveFlag) {
+          translateX = oldX + e.clientX - startX;
+          translateY = oldY + e.clientY - startY;
+        }
+      });
+      canvas.addEventListener('mouseup', (e) => {
+        moveFlag = false;
+        translateX = oldX + e.clientX - startX;
+        translateY = oldY + e.clientY - startY;
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+      const canvas = document.getElementById('canvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const cellSize = 5; // 每个细胞的大小
+      const rows = Math.floor(canvas.height / cellSize); // 行数
+      const cols = Math.floor(canvas.width / cellSize); // 列数
+
+      // 创建一个二维数组来表示生命游戏的棋盘
+      let board = new Array(rows);
+      for (let i = 0; i < rows; i++) {
+        board[i] = new Array(cols);
+        for (let j = 0; j < cols; j++) {
+          board[i][j] = Math.floor(Math.random() * 2); // 随机生成每个细胞的状态
+        }
+      }
+
+      // 绘制棋盘
+      function drawBoard() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清除画布
+
+        for (let i = 0; i < rows; i++) {
+          for (let j = 0; j < cols; j++) {
+            if (board[i][j] === 1) {
+              ctx.fillStyle = 'black'; // 绘制存活的细胞
+            } else {
+              ctx.fillStyle = 'white'; // 绘制死亡的细胞
+            }
+            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+
+      // 计算细胞下一代的状态
+      function calculateNextGeneration() {
+        let newBoard = new Array(rows);
+        for (let i = 0; i < rows; i++) {
+          newBoard[i] = new Array(cols);
+          for (let j = 0; j < cols; j++) {
+            let neighbors = countNeighbors(i, j); // 计算邻居数量
+
+            if (board[i][j] === 1 && (neighbors < 2 || neighbors > 3)) {
+              newBoard[i][j] = 0; // 存活的细胞周围邻居少于2个或多于3个，死亡
+            } else if (board[i][j] === 0 && neighbors === 3) {
+              newBoard[i][j] = 1; // 死亡的细胞周围恰好有3个邻居，复活
+            } else {
+              newBoard[i][j] = board[i][j]; // 其他情况，细胞保持原状态
+            }
+          }
+        }
+        board = newBoard;
+      }
+
+      // 计算指定位置的细胞周围存活细胞的数量
+      function countNeighbors(row, col) {
+        let count = 0;
+
+        // 判断上方三个细胞是否存活
+        if (row > 0) {
+          if (board[row - 1][col] === 1) count++;
+          if (col > 0 && board[row - 1][col - 1] === 1) count++;
+          if (col < cols - 1 && board[row - 1][col + 1] === 1) count++;
+        }
+
+        // 判断左右两个细胞是否存活
+        if (col > 0 && board[row][col - 1] === 1) count++;
+        if (col < cols - 1 && board[row][col + 1] === 1) count++;
+
+        // 判断下方三个细胞是否存活
+        if (row < rows - 1) {
+          if (board[row + 1][col] === 1) count++;
+          if (col > 0 && board[row + 1][col - 1] === 1) count++;
+          if (col < cols - 1 && board[row + 1][col + 1] === 1) count++;
+        }
+
+        return count;
+      }
+
+      // 每秒钟更新一次棋盘
+      setInterval(() => {
+        calculateNextGeneration();
+        drawBoard();
+      }, 1000 / 60);
+    </script>
+  </body>
+</html>
