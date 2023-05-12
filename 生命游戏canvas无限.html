@@ -123,27 +123,35 @@
       function drawBoard() {
         ctx.clearRect(0, 0, canvas.width, canvas.height); // 清除画布
         ctx.save();
-        const offSetX = translateX * Math.pow(2, scale - 1);
-        const offSetY = translateY * Math.pow(2, scale - 1);
-        ctx.translate(offSetX, offSetY);
+        const currScale = Math.pow(2, scale - 1);
+        ctx.scale(currScale, currScale);
+        ctx.translate(translateX, translateY);
         const rowNum = Math.floor(canvas.height / cellSize); // 行数
         const cols = Math.floor(canvas.width / cellSize); // 列数
         if (scale > -3) {
-          for (let i = -cellSize; i < canvas.height + cellSize; i += cellSize) {
+          for (
+            let i = -cellSize;
+            i < (canvas.height + cellSize) / currScale;
+            i += cellSize
+          ) {
             ctx.beginPath();
-            ctx.moveTo(-offSetX, -offSetY + i + (offSetY % cellSize));
+            ctx.moveTo(-translateX, -translateY + i + (translateY % cellSize));
             ctx.lineTo(
-              -offSetX + canvas.width,
-              -offSetY + i + (offSetY % cellSize)
+              -translateX + canvas.width / currScale,
+              -translateY + i + (translateY % cellSize)
             );
             ctx.stroke();
           }
-          for (let i = -cellSize; i < canvas.width + cellSize; i += cellSize) {
+          for (
+            let i = -cellSize;
+            i < (canvas.width + cellSize) / currScale;
+            i += cellSize
+          ) {
             ctx.beginPath();
-            ctx.moveTo(-offSetX + i + (offSetX % cellSize), -offSetY);
+            ctx.moveTo(-translateX + i + (translateX % cellSize), -translateY);
             ctx.lineTo(
-              -offSetX + i + (offSetX % cellSize),
-              -offSetY + canvas.height
+              -translateX + i + (translateX % cellSize),
+              -translateY + canvas.height / currScale
             );
             ctx.stroke();
           }
@@ -229,8 +237,12 @@
       });
       canvas.addEventListener('click', (e) => {
         if (addFlag) {
-          const j = Math.floor((e.clientX - translateX) / cellSize);
-          const i = Math.floor((e.clientY - translateY) / cellSize);
+          const j = Math.floor(
+            (e.clientX - translateX) / (cellSize * Math.pow(2, scale - 1))
+          );
+          const i = Math.floor(
+            (e.clientY - translateY) / (cellSize * Math.pow(2, scale - 1))
+          );
           const key = `${i},${j}`;
           if (cellList[key]) {
             delete cellList[key];
@@ -278,11 +290,11 @@
             scaleFlag = true;
           }, 300);
           if (e.deltaY > 0) {
-            scale = Math.min(scale + 1, 10);
+            scale = Math.min(scale + 1, 4);
           } else {
             scale = Math.max(scale - 1, -10);
           }
-          cellSize = baseSize * Math.pow(2, scale - 1);
+          // cellSize = baseSize * Math.pow(2, scale - 1);
         }
       });
     </script>
