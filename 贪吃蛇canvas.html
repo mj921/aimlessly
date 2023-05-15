@@ -15,35 +15,27 @@
       #main {
         margin: 0 auto;
         width: 750px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
       button {
         display: block;
-        margin: 10px auto;
+        margin: 10px 0;
         width: 80px;
       }
       #panel {
-        margin: 0 auto;
         width: 500px;
-        zoom: 1;
-      }
-      #panel:after {
-        content: '';
-        display: block;
-        clear: both;
-      }
-      #panel dl {
-        float: left;
-        width: 50px;
-        height: 50px;
-        box-sizing: border-box;
-        border: 0.5px solid #000;
+        height: 500px;
+        border: 1px solid #000;
+        box-sizing: content-box;
       }
     </style>
   </head>
   <body>
     <div id="main">
       <button onclick="panel.init()">重新开始</button>
-      <div id="panel"></div>
+      <canvas id="panel" width="500" height="500"></canvas>
     </div>
     <script>
       const Cell = function (x, y, ele) {
@@ -56,7 +48,11 @@
       const panel = {
         snake: null,
         cells: [],
+        width: 500,
+        height: 500,
+        cellSize: 50,
         obj: document.getElementById('panel'),
+        ctx: document.getElementById('panel').getContext('2d'),
         food: {},
         rows: 10, //行数
         cols: 10,
@@ -69,21 +65,14 @@
           for (let i = 0; i < this.rows; i++) {
             const cs = [];
             for (let j = 0; j < this.cols; j++) {
-              const dl = document.createElement('dl');
-              this.obj.appendChild(dl);
-              cs[cs.length] = { x: j, y: i, ele: dl, status: 0 };
+              cs[cs.length] = { x: j, y: i, status: 0 };
             }
             this.cells[this.cells.length] = cs;
           }
         },
         //重置面板状态
         resetStatus: function () {
-          for (let i = 0; i < this.rows; i++) {
-            for (let j = 0; j < this.cols; j++) {
-              this.cells[i][j].status = 0;
-              this.cells[i][j].ele.style.backgroundColor = '#fff';
-            }
-          }
+          this.createCells();
         },
         //创建食物
         createFood: function () {
@@ -95,7 +84,6 @@
             y = ~~(rd / this.cols);
           this.food = { x, y };
           this.cells[y][x].status = -1;
-          this.cells[y][x].ele.style.backgroundColor = '#fe1234';
         },
         // 判断是否越界
         isCrossTheBorder: function () {
@@ -110,31 +98,37 @@
         },
         //自动移动
         autoMove: function () {
+          this.ctx.clearRect(0, 0, this.width, this.height);
           this.dirStatus = true;
-          for (let i = 0; i < this.snake.length; i++) {
-            this.cells[this.snake.body[i].y][this.snake.body[i].x].status = 0;
-            this.cells[this.snake.body[i].y][
-              this.snake.body[i].x
-            ].ele.style.backgroundColor = '#fff';
-          }
+          this.snake.forEach(({ x, y }) => {
+            this.cells[y][x].status = 0;
+          });
           const eatFlag = this.snake.move(this.food);
           if (this.isCrossTheBorder()) {
             alert('游戏结束');
             clearTimeout(this.sto);
             return;
           }
-          for (let i = 0; i < this.snake.length; i++) {
-            this.cells[this.snake.body[i].y][this.snake.body[i].x].status++;
-            this.cells[this.snake.body[i].y][
-              this.snake.body[i].x
-            ].ele.style.backgroundColor = '#123456';
-          }
+          this.ctx.fillStyle = '#123456';
+          this.snake.forEach(({ x, y }) => {
+            this.cells[y][x].status++;
+            this.ctx.fillRect(
+              x * this.cellSize,
+              y * this.cellSize,
+              this.cellSize,
+              this.cellSize
+            );
+          });
           if (eatFlag) {
-            this.cells[this.food.y][this.food.x].status = 0;
-            this.cells[this.food.y][this.food.x].ele.style.backgroundColor =
-              '#fff';
             this.createFood();
           }
+          this.ctx.fillStyle = '#fe1234';
+          this.ctx.fillRect(
+            this.food.x * this.cellSize,
+            this.food.y * this.cellSize,
+            this.cellSize,
+            this.cellSize
+          );
           if (this.isDeath()) {
             alert('游戏结束');
             clearTimeout(sto);
@@ -155,7 +149,10 @@
         //初始化
         init: function () {
           this.obj.innerHTML = '';
-          this.snake = new Snake({ x: ~~this.cols / 2, y: ~~this.rows / 2 });
+          this.snake = new Snake({
+            x: Math.floor(this.cols / 2),
+            y: Math.floor(this.rows / 2),
+          });
           this.createCells();
           this.createFood();
           this.autoMove();
@@ -165,12 +162,10 @@
       //蛇
       const Snake = function (head) {
         this.body = [head];
-        this.node = [];
         this.dx = -1;
         this.dy = 0;
         this.length = 1;
       };
-      Snake.dirList = [{}];
       //判断是否吃到食物
       Snake.prototype.isEat = function (food) {
         return (
