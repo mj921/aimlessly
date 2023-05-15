@@ -85,7 +85,7 @@
             //创建食物
             createFood:function(){
                 var rd = ~~(Math.random() * this.cols * this.rows);
-                while(this.cells[~~(rd / this.cols)][rd % this.rows] === 0){
+                while(this.cells[~~(rd / this.cols)][rd % this.rows].status !== 0){
                     rd = ~~(Math.random() * this.cols * this.rows);
                 }
                 var x = rd % this.rows,y = ~~(rd / this.cols);
