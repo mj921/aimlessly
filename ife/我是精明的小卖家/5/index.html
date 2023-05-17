@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我是精明的小卖家1</title>
+    <script src="../data.js"></script>
+    <script src="./checkbox.js"></script>
+    <script src="./table.js"></script>
+    <script src="./bar.js"></script>
+    <script src="./line.js"></script>
+    <style>
+      .filter {
+        margin-bottom: 16px;
+      }
+      #filter {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      #filter dl {
+        margin-right: 16px;
+      }
+      .checkbox-group {
+        display: flex;
+      }
+      .checkbox-group dd {
+        margin: 0 8px 0 0;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border: 1px solid #000;
+        padding: 4px 8px;
+        text-align: center;
+      }
+      td span {
+        cursor: pointer;
+      }
+      td input,button {
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="filter">
+      <form id="filter">
+        <dl id="regionCheckbox"></dl>
+        <dl id="productCheckbox"></dl>
+      </form>
+    </div>
+    <div id="table">
+      <table>
+        <thead id="thead"></thead>
+        <tbody id="table"></tbody>
+      </table>
+    </div>
+    <div id="line"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
