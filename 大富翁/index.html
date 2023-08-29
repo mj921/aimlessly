@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      .chessboard {
+        position: relative;
+        height: 400px;
+        width: 400px;
+      }
+      .cells-top {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 40px;
+        display: flex;
+      }
+      .cells-left {
+        position: absolute;
+        left: 0;
+        top: 40px;
+        width: 40px;
+        height: calc(100% - 80px);
+        display: flex;
+        flex-direction: column;
+      }
+      .cells-right {
+        position: absolute;
+        right: 0;
+        top: 40px;
+        width: 40px;
+        height: calc(100% - 80px);
+        display: flex;
+        flex-direction: column;
+      }
+      .cells-bottom {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 40px;
+        display: flex;
+      }
+      .cell {
+        border: 1px solid #000;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+      .cell-red {
+        background-color: red;
+      }
+      .cell-blue {
+        background-color: blue;
+      }
+      .cell .level {
+        position: absolute;
+        left: 4px;
+        top: 4px;
+        font-size: 12px;
+        color: #fff;
+      }
+      .cells-top .cell {
+        flex-direction: row-reverse;
+      }
+      .cells-left .cell {
+        flex-direction: column-reverse;
+      }
+      .cells-right .cell {
+        flex-direction: column;
+      }
+      .player {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 1px solid #000;
+      }
+      .cell-red .player,
+      .cell-blue .player {
+        border-color: #fff;
+      }
+      #player1 {
+        background-color: red;
+      }
+      #player2 {
+        background-color: blue;
+      }
+      .dice-box {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+      #dice {
+        width: 30px;
+        height: 30px;
+        border-radius: 4px;
+        border: 1px solid #000;
+        text-align: center;
+        line-height: 28px;
+        cursor: pointer;
+        background-color: red;
+        color: #fff;
+      }
+      .event {
+        background-color: darkorchid;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="money">
+      <dl>
+        <label>player1：</label><span id="money1">1000</span>
+        <span id="info1"
+          >；总等级：0；总格数：0；平均等级：0；总资产：1000；</span
+        >
+      </dl>
+      <dl>
+        <label>player2：</label><span id="money2">1000</span>
+        <span id="info2"
+          >；总等级：0；总格数：0；平均等级：0；总资产：1000；</span
+        >
+      </dl>
+    </div>
+    <div class="chessboard">
+      <dl class="cells-top">
+        <dd class="cell event">
+          <div id="player1" class="player"></div>
+          <div id="player2" class="player"></div>
+        </dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell event"></dd>
+      </dl>
+      <dl class="cells-left">
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+      </dl>
+      <dl class="cells-right">
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+      </dl>
+      <dl class="cells-bottom">
+        <dd class="cell event"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell"></dd>
+        <dd class="cell event"></dd>
+      </dl>
+      <div class="dice-box">
+        <div id="dice">1</div>
+      </div>
+    </div>
+    <script>
+      const LEVEL_MONEY_PAY = 62;
+      const LEVEL_MONEY_BUY = 100;
+      const CAN_BUY = 310;
+      const ROUND_MONEY = 620;
+      const START_MONEY = 1000;
+      let diceStatus = 0; // 骰子状态 0 停止 1 滚动 🎲
+      const diceAnimate = false;
+      let diceSto = null;
+      let currentPlay = 0;
+      const player1 = document.getElementById('player1');
+      const player2 = document.getElementById('player2');
+      const money1 = document.getElementById('money1');
+      const money2 = document.getElementById('money2');
+      const info1 = document.getElementById('info1');
+      const info2 = document.getElementById('info2');
+      const topCells = document.querySelectorAll('.cells-top .cell');
+      const bottomCells = document.querySelectorAll('.cells-bottom .cell');
+      const leftCells = document.querySelectorAll('.cells-left .cell');
+      const rightCells = document.querySelectorAll('.cells-right .cell');
+      const players = [
+        {
+          el: player1,
+          n: 0,
+          moneyEl: money1,
+          money: START_MONEY,
+          color: 'red',
+          cells: [],
+          infoEl: info1,
+        },
+        {
+          el: player2,
+          n: 0,
+          moneyEl: money2,
+          money: START_MONEY,
+          color: 'blue',
+          cells: [],
+          infoEl: info2,
+        },
+      ];
+      const dice = document.getElementById('dice');
+      const getRandomListItem = (arr) => {
+        const i = Math.floor(Math.random() * arr.length);
+        return {
+          i,
+          item: arr[i],
+        };
+      };
+      const setCellLevel = (cell, level) => {
+        cell.setAttribute('data-level', level);
+        cell.querySelector('.level').innerText = level;
+      };
+      const resetCell = (cell) => {
+        cell.removeAttribute('data-level');
+        cell.removeAttribute('data-player');
+        cell.className = 'cell';
+        cell.querySelector('.level').remove();
+      };
+      const getNowTime = () => {
+        const now = new Date();
+        return `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(
+          -2
+        )}-${('0' + now.getDate()).slice(-2)} ${('0' + now.getHours()).slice(
+          -2
+        )}:${('0' + now.getMinutes()).slice(-2)}:${(
+          '0' + now.getSeconds()
+        ).slice(-2)}`;
+      };
+      const diceLoop = () => {
+        dice.innerText = Math.floor(Math.random() * 6) + 1;
+        diceSto = setTimeout(diceLoop, 30);
+      };
+      const changePlay = () => {
+        const player = players[currentPlay];
+        const { n, el } = player;
+        let cell;
+        if (n < 10) {
+          cell = topCells.item(n);
+        } else if (n < 18) {
+          cell = rightCells.item(n - 10);
+        } else if (n < 28) {
+          cell = bottomCells.item(27 - n);
+        } else {
+          cell = leftCells.item(35 - n);
+        }
+        if (cell) {
+          cell.appendChild(el);
+          if (cell.className.includes('event')) {
+            const { fn: eventFn, text } = getRandomEvent();
+            console.log(
+              `%c [${getNowTime()}]：${text}`,
+              `color:${players[currentPlay].color}`
+            );
+            eventFn();
+            changePlayerInfo(players[currentPlay]);
+            changePlayerInfo(players[1 - currentPlay]);
+          } else {
+            const cellLevel = +(cell.getAttribute('data-level') || '0');
+            if (cell.className === 'cell') {
+              if (player.money >= CAN_BUY) {
+                player.money -= LEVEL_MONEY_BUY;
+                cell.setAttribute('data-player', currentPlay);
+                cell.setAttribute('data-level', 1);
+                cell.className += ' cell-' + player.color;
+                const levelEl = document.createElement('div');
+                levelEl.className = 'level';
+                levelEl.innerText = 1;
+                cell.appendChild(levelEl);
+                player.cells.push(cell);
+                changePlayerInfo(player);
+              }
+            } else if (cell.className.includes(player.color)) {
+              if (player.money >= CAN_BUY) {
+                player.money -= LEVEL_MONEY_BUY;
+                setCellLevel(cell, cellLevel + 1);
+                changePlayerInfo(player);
+              }
+            } else {
+              player.money -= LEVEL_MONEY_PAY * cellLevel;
+              if (player.money < 0) {
+                let n = Math.ceil((0 - player.money) / LEVEL_MONEY_BUY);
+                const addMoney = n * LEVEL_MONEY_BUY;
+                while (n > 0 && player.cells.length > 0) {
+                  const sellI = Math.floor(Math.random() * player.cells.length);
+                  const sellCell = player.cells[sellI];
+                  const sellLevel = +sellCell.getAttribute('data-level');
+                  if (sellLevel > n) {
+                    sellCell.setAttribute('data-level', sellLevel - n);
+                    sellCell.querySelector('.level').innerText = sellLevel - n;
+                    console.log(
+                      `%c 金钱不足 ${sellLevel} 级方格降为 ${sellLevel - n} 级`,
+                      `color:${player.color}`
+                    );
+                    n = 0;
+                  } else {
+                    n -= sellLevel;
+                    resetCell(sellCell);
+                    player.cells.splice(sellI, 1);
+                    console.log(
+                      `%c 金钱不足 ${sellLevel} 级方格被摧毁`,
+                      `color:${player.color}`
+                    );
+                  }
+                  console.log(sellCell);
+                }
+                player.money += addMoney - n * LEVEL_MONEY_BUY;
+              }
+              const otherI = +cell.getAttribute('data-player');
+              const otherPlayer = players[otherI];
+              otherPlayer.money += LEVEL_MONEY_PAY * cellLevel;
+              changePlayerInfo(player);
+              changePlayerInfo(otherPlayer);
+            }
+          }
+        }
+        currentPlay = (currentPlay + 1) % players.length;
+        dice.style.backgroundColor = players[currentPlay].color;
+      };
+      const changePlayerInfo = (player) => {
+        player.moneyEl.innerText = player.money;
+        const levels = player.cells.map((el) => +el.getAttribute('data-level'));
+        const sum = levels.reduce((s, el) => s + el, 0);
+        player.infoEl.innerText = `；总等级：${sum}；总格数：${
+          levels.length
+        }；平均等级：${
+          levels.length ? Math.floor((sum / levels.length) * 100) / 100 : 0
+        }；总资产：${sum * LEVEL_MONEY_BUY + player.money}；`;
+      };
+      const events = [
+        {
+          num: 90,
+          text: `获得${ROUND_MONEY}金钱`,
+          fn: () => {
+            players[currentPlay].money += ROUND_MONEY;
+          },
+        },
+        {
+          num: 9,
+          text: `获得${ROUND_MONEY * 2}金钱`,
+          fn: () => {
+            players[currentPlay].money += ROUND_MONEY * 2;
+          },
+        },
+        {
+          num: 9,
+          text: `获得${ROUND_MONEY / 2}金钱；随机方格升一级`,
+          fn: () => {
+            players[currentPlay].money += ROUND_MONEY / 2;
+            if (players[currentPlay].cells.length > 0) {
+              const { item: cell } = getRandomListItem(
+                players[currentPlay].cells
+              );
+              const cellLevel = +cell.getAttribute('data-level');
+              setCellLevel(cell, cellLevel + 1);
+            }
+          },
+        },
+        {
+          num: 9,
+          text: `获得${ROUND_MONEY / 2}金钱；对方随机方格降一级`,
+          fn: () => {
+            players[currentPlay].money += ROUND_MONEY / 2;
+            if (players[1 - currentPlay].cells.length > 0) {
+              const { item: cell, i } = getRandomListItem(
+                players[1 - currentPlay].cells
+              );
+              const cellLevel = +cell.getAttribute('data-level');
+              if (cellLevel > 1) {
+                setCellLevel(cell, cellLevel - 1);
+              } else {
+                resetCell(cell);
+                players[1 - currentPlay].cells.splice(i, 1);
+              }
+            }
+          },
+        },
+        {
+          num: 5,
+          text: `获得${ROUND_MONEY}金钱；所有方格升一级`,
+          fn: () => {
+            players[currentPlay].money += ROUND_MONEY;
+            if (players[currentPlay].cells.length > 0) {
+              players[currentPlay].cells.forEach((cell) => {
+                const cellLevel = +cell.getAttribute('data-level');
+                setCellLevel(cell, cellLevel + 1);
+              });
+            }
+          },
+        },
+        {
+          num: 5,
+          text: `获得${ROUND_MONEY}金钱；对方所有方格降一级`,
+          fn: () => {
+            players[currentPlay].money += ROUND_MONEY;
+            if (players[1 - currentPlay].cells.length > 0) {
+              players[1 - currentPlay].cells = players[
+                1 - currentPlay
+              ].cells.filter((cell) => {
+                const cellLevel = +cell.getAttribute('data-level');
+                if (cellLevel > 1) {
+                  setCellLevel(cell, cellLevel - 1);
+                  return true;
+                } else {
+                  resetCell(cell);
+                  return false;
+                }
+              });
+            }
+          },
+        },
+        {
+          num: 5,
+          text: `获得${ROUND_MONEY * 5}金钱`,
+          fn: () => {
+            players[currentPlay].money += ROUND_MONEY * 5;
+            if (players[currentPlay].cells.length > 0) {
+              players[currentPlay].cells.forEach((cell) => {
+                const cellLevel = +cell.getAttribute('data-level');
+                setCellLevel(cell, cellLevel + 1);
+              });
+            }
+          },
+        },
+        {
+          num: 1,
+          text: `获得${ROUND_MONEY * 10}金钱`,
+          fn: () => {
+            players[currentPlay].money += ROUND_MONEY * 10;
+            if (players[currentPlay].cells.length > 0) {
+              players[currentPlay].cells.forEach((cell) => {
+                const cellLevel = +cell.getAttribute('data-level');
+                setCellLevel(cell, cellLevel + 1);
+              });
+            }
+          },
+        },
+        {
+          num: 1,
+          text: `获得对方随机一个方格`,
+          fn: () => {
+            players[currentPlay].money += ROUND_MONEY * 10;
+            if (players[1 - currentPlay].cells.length > 0) {
+              const { item: cell, i } = getRandomListItem(
+                players[1 - currentPlay].cells
+              );
+              cell.className = `cell cell-${players[currentPlay].color}`;
+              cell.setAttribute('data-player', currentPlay);
+              players[currentPlay].cells.push(cell);
+              players[1 - currentPlay].cells.splice(i, 1);
+            }
+          },
+        },
+        {
+          num: 1,
+          text: `摧毁对方随机一个方格`,
+          fn: () => {
+            players[currentPlay].money += ROUND_MONEY * 10;
+            if (players[1 - currentPlay].cells.length > 0) {
+              const { item: cell, i } = getRandomListItem(
+                players[1 - currentPlay].cells
+              );
+              resetCell(cell);
+              players[1 - currentPlay].cells.splice(i, 1);
+            }
+          },
+        },
+      ];
+      const sumEventsProbability = events.reduce((sum, el) => sum + el.num, 0);
+      const getRandomEvent = () => {
+        let n = Math.random() * sumEventsProbability;
+        for (let i = 0; i < events.length; i++) {
+          n -= events[i].num;
+          if (n <= 0) {
+            return events[i];
+          }
+        }
+        return events[events.length - 1];
+      };
+      dice.addEventListener('click', () => {
+        if (diceStatus === 0 && diceAnimate) {
+          diceStatus = 1;
+          diceLoop();
+        } else {
+          diceStatus = 0;
+          if (diceSto) {
+            clearTimeout(diceSto);
+          }
+          const n = Math.floor(Math.random() * 6) + 1;
+          dice.innerText = n;
+          players[currentPlay].n += n;
+          if (players[currentPlay].n >= 36) {
+            players[currentPlay].n %= 36;
+            players[currentPlay].money += ROUND_MONEY;
+            changePlayerInfo(players[currentPlay]);
+          }
+          changePlay();
+        }
+      });
+    </script>
+  </body>
+</html>
