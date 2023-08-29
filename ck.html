@@ -112,19 +112,19 @@
                 },
                 levelUp:function(){
                     var lv = this.level + 1;
-                    if(Math.round(lv / 20) + 1 > this.F || Math.round(lv / 30) > this.E || Math.round(lv / 40) > this.D || Math.round(lv / 50) > this.C || Math.round(lv / 60) > this.B || Math.round(lv / 70) > this.A || Math.round(lv / 80) > this.S || Math.round(lv / 90) > this.SS || Math.round(lv / 100) > this.SSR){
+                    if(Math.floor(lv / 20) + 1 > this.F || Math.floor(lv / 30) > this.E || Math.floor(lv / 40) > this.D || Math.floor(lv / 50) > this.C || Math.floor(lv / 60) > this.B || Math.floor(lv / 70) > this.A || Math.floor(lv / 80) > this.S || Math.floor(lv / 90) > this.SS || Math.floor(lv / 100) > this.SSR){
                         // alert("卡片不足")
                         return false;
                     }else{
-                        this.F -= Math.round(lv / 20) + 1;
-                        this.E -= Math.round(lv / 30);
-                        this.D -= Math.round(lv / 40);
-                        this.C -= Math.round(lv / 50);
-                        this.B -= Math.round(lv / 60);
-                        this.A -= Math.round(lv / 70);
-                        this.S -= Math.round(lv / 80);
-                        this.SS -= Math.round(lv / 90);
-                        this.SSR -= Math.round(lv / 100);
+                        this.F -= Math.floor(lv / 20) + 1;
+                        this.E -= Math.floor(lv / 30);
+                        this.D -= Math.floor(lv / 40);
+                        this.C -= Math.floor(lv / 50);
+                        this.B -= Math.floor(lv / 60);
+                        this.A -= Math.floor(lv / 70);
+                        this.S -= Math.floor(lv / 80);
+                        this.SS -= Math.floor(lv / 90);
+                        this.SSR -= Math.floor(lv / 100);
                         this.level++;
                         return true;
                     }
