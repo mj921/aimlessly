@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=2.0" />
+    <title>排序算法</title>
+    <style>
+      #showArea {
+        position: relative;
+        height: 200px;
+      }
+      .item {
+        position: absolute;
+        width: 10px;
+        bottom: 0;
+        background-color: gray;
+        box-sizing: border-box;
+        transition: left 0.6s;
+        margin: 0;
+      }
+      .item.active {
+        background-color: #cd8705;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <button id="reset">打乱</button>
+      <button id="bubble">冒泡排序</button>
+      <button id="selection">选择排序</button>
+      <button id="insertion">插入排序</button>
+      <!-- <button id="quick">快速排序</button> -->
+      <div id="showArea"></div>
+    </div>
+    <script>
+      const reset = document.getElementById('reset');
+      const bubble = document.getElementById('bubble');
+      const selection = document.getElementById('selection');
+      const insertion = document.getElementById('insertion');
+      // const quick = document.getElementById('quick');
+      const showArea = document.getElementById('showArea');
+      let arr = [];
+      let len = 20;
+      for (let i = 0; i < len; i++) {
+        arr.push(i + 1);
+      }
+      arr.sort(() => Math.random() - 0.5);
+      showArea.innerHTML = '';
+      arr.forEach((el, i) => {
+        const item = document.createElement('dl');
+        item.id = `item${el}`;
+        item.className = 'item';
+        item.style = `height: ${(el / len) * 200}px; left: ${11 * i}px`;
+        item.setAttribute('data-i', i);
+        showArea.appendChild(item);
+      });
+      const exchangeItem = (val1, val2) => {
+        const item1 = document.getElementById(`item${val1}`);
+        const item2 = document.getElementById(`item${val2}`);
+        const i1 = +item1.dataset.i;
+        const i2 = +item2.dataset.i;
+        item1.className += ' active';
+        item2.className += ' active';
+        item1.style.left = `${11 * i2}px`;
+        item1.setAttribute('data-i', i2);
+        item2.style.left = `${11 * i1}px`;
+        item2.setAttribute('data-i', i1);
+        setTimeout(() => {
+          item1.className = 'item';
+          item2.className = 'item';
+        }, 700);
+      };
+      const resetArr = () => {
+        for (let i = 0; i < len - 1; i++) {
+          for (let j = 0; j < len - i - 1; j++) {
+            if (Math.random() < 0.5) {
+              let temp = arr[j];
+              arr[j] = arr[j + 1];
+              arr[j + 1] = temp;
+              exchangeItem(arr[j], arr[j + 1]);
+            }
+          }
+        }
+      };
+      const sleep = (time = 800) =>
+        new Promise((resolve) => setTimeout(resolve, time));
+      const bubbleSort = async () => {
+        for (let i = 0; i < len - 1; i++) {
+          for (let j = 0; j < len - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+              let temp = arr[j];
+              arr[j] = arr[j + 1];
+              arr[j + 1] = temp;
+              exchangeItem(arr[j], arr[j + 1]);
+              await sleep();
+            }
+          }
+        }
+      };
+      const selectionSort = async () => {
+        for (let i = 0; i < len - 1; i++) {
+          let min = i;
+          for (let j = i + 1; j < len; j++) {
+            if (arr[j] < arr[min]) {
+              min = j;
+            }
+          }
+          let temp = arr[min];
+          arr[min] = arr[i];
+          arr[i] = temp;
+          exchangeItem(arr[min], arr[i]);
+          await sleep();
+        }
+      };
+      const insertionSort = async () => {
+        for (let i = 1; i < len; i++) {
+          let cur = arr[i];
+          let j = i - 1;
+          while (j >= 0 && arr[j] > cur) {
+            exchangeItem(arr[j], cur);
+            await sleep();
+            arr[j + 1] = arr[j];
+            j--;
+          }
+          arr[j + 1] = cur;
+        }
+      };
+      const quickSort = async () => {
+        if (arr.length <= 1) {
+          return arr;
+        }
+        let pivotIndex = Math.floor(arr.length / 2);
+        let pivot = arr.splice(pivotIndex, 1)[0];
+        let left = [];
+        let right = [];
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i] < pivot) {
+            left.push(arr[i]);
+          } else {
+            right.push(arr[i]);
+          }
+        }
+        return quickSort(left).concat([pivot], quickSort(right));
+      };
+      reset.addEventListener('click', () => resetArr());
+      bubble.addEventListener('click', () => bubbleSort());
+      selection.addEventListener('click', () => selectionSort());
+      insertion.addEventListener('click', () => insertionSort());
+      // quick.addEventListener('click', () => quickSort());
+    </script>
+  </body>
+</html>
