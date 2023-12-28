@@ -1,4 +1,4 @@
-<!-- 填满结束 -->
+<!-- 基于 4, 快进 -->
 <!DOCTYPE html>
 <html lang="zh">
   <head>
@@ -74,12 +74,14 @@
       <button id="create">create</button>
       <button id="export">export</button>
       <input id="import" type="file" />
+      <input type="number" min="60" max="5000" id="timer" />
+      <button id="step">step</button>
     </div>
     <div id="createDialog" class="hide">
       <input
         type="number"
         id="createMapSizeNum"
-        value="300"
+        value="301"
         placeholder="mapSizeNum"
       />
       <input
@@ -120,6 +122,8 @@
       const createBtn = document.getElementById('create');
       const exportBtn = document.getElementById('export');
       const importBtn = document.getElementById('import');
+      const timerBtn = document.getElementById('timer');
+      const stepBtn = document.getElementById('step');
       const createGroupNumEl = document.getElementById('createGroupNum');
       const createLaunchPointNumEl = document.getElementById(
         'createLaunchPointNum'
@@ -161,18 +165,17 @@
       };
       const groupList = [
         'red',
-        'lightskyblue', // 'blue',
-        'green',
+        'lightskyblue',
+        'lightseagreen',
         'yellow',
-        'purple',
+        'mediumpurple',
         'orange',
         'pink',
-        'brown',
-        'gray',
+        'rosybrown',
+        'darkgray',
       ];
       let groupMap = {};
       let launchPoint = [];
-      let occupyCell = 0;
       let currMaxCellNum = {
         cellNum: 0,
         type: '',
@@ -234,10 +237,11 @@
         raf = null;
         ctxClear(mainCtx);
         ctxClear(cellCtx);
+        ballCtx.fillStyle = '#000';
         if (['load', 'import'].includes(initType)) {
           let data = {};
           if (initType === 'load') {
-            data = JSON.parse(localStorage.getItem('lingtu6Save') || '{}');
+            data = JSON.parse(localStorage.getItem('lingtu8Save') || '{}');
           } else {
             data = initData;
           }
@@ -353,7 +357,6 @@
               startAngle: 0,
               range: 360,
               status: GroupStatus.CREATE_BALL,
-              oldType: key,
               ballInfo: {
                 wait: 1,
                 total: 1,
@@ -402,46 +405,16 @@
               : b.time - a.time
             : b.cellNum - a.cellNum
         );
-
-        if (
-          currMaxCellHistory?.length === 0 ||
-          currMaxCellNum.type !== arr[0].type
-        ) {
-          if (currMaxCellHistory.length) {
-            const continuedTime =
-              time -
-              currMaxCellHistory[currMaxCellHistory.length - 1].startTime;
-            if (
-              currMaxCellNum.cellNum >= totalCellNum / 10 ||
-              continuedTime >= 3600 ||
-              currMaxCellHistory.length > 1
-            ) {
-              currMaxCellHistory[currMaxCellHistory.length - 1].endTime = time;
-              currMaxCellHistory[currMaxCellHistory.length - 1].endNum =
-                currMaxCellNum.cellNum;
-              currMaxCellHistory[currMaxCellHistory.length - 1].continuedTime =
-                continuedTime;
-            } else {
-              currMaxCellHistory.pop();
-            }
-            currMaxCellHistory.push({
-              cellNum: arr[0].cellNum,
-              type: arr[0].type,
-              startTime: time,
-            });
-            currMaxCellHistory = currMaxCellHistory.slice(-10);
-          } else {
-            currMaxCellHistory.push({
-              cellNum: arr[0].cellNum,
-              type: arr[0].type,
-              startTime: time,
-            });
-          }
+        if (arr[0].type === currMaxCellNum.type) {
+          currMaxCellNum.time++;
+        } else {
+          currMaxCellNum = {
+            cellNum: arr[0].cellNum,
+            type: arr[0].type,
+            time: 0,
+            startTime: time,
+          };
         }
-        currMaxCellNum = {
-          cellNum: arr[0].cellNum,
-          type: arr[0].type,
-        };
 
         const maxCellHistoryItem = maxCellHistory.length
           ? maxCellHistory[maxCellHistory.length - 1]
@@ -449,7 +422,7 @@
         const currMaxCellHistoryItem = currMaxCellHistory.length
           ? currMaxCellHistory[currMaxCellHistory.length - 1]
           : null;
-        occupyCell = arr.reduce((s, el) => s + el.cellNum, 0);
+        const occupyCell = arr.reduce((s, el) => s + el.cellNum, 0);
         let html = `<div>
           <dl>time: ${time} lpTotal：${
           launchPoint.length
@@ -600,7 +573,7 @@
           );
         }
       };
-      const ballMove = () => {
+      const ballMove = (drawFlag = true) => {
         for (let i = 0; i < ballList.length; ) {
           const ball = ballList[i];
           ball.time++;
@@ -698,7 +671,9 @@
             groupMap[ball.type].cellNum++;
             setMax(groupMap[ball.type]);
             collisionCell.type = ball.type;
-            drawCell(collisionCell);
+            if (drawFlag) {
+              drawCell(collisionCell);
+            }
             ballList.splice(i, 1);
             ball.launchPoint.ballInfo.total--;
             continue;
@@ -708,21 +683,20 @@
             ball.launchPoint.ballInfo.total--;
             continue;
           }
-          ballCtx.beginPath();
-          ballCtx.arc(ball.x, ball.y, ballSize, 0, 180);
-          ballCtx.fill();
+          if (drawFlag) {
+            ballCtx.beginPath();
+            ballCtx.arc(ball.x, ball.y, ballSize, 0, 180);
+            ballCtx.fill();
+          }
           i++;
         }
       };
-      const loop = () => {
-        if (occupyCell >= totalCellNum) {
-          toggle();
-          return;
-        }
+      const loop = (drawFlag = true, loopTimer = 0) => {
         time++;
-        ctxClear(mainCtx);
-        ctxClear(ballCtx);
-        ballCtx.fillStyle = '#000';
+        if (drawFlag) {
+          ctxClear(mainCtx);
+          ctxClear(ballCtx);
+        }
         Object.keys(groupMap).forEach((key) => {
           if (groupMap[key].cellNum > 0) {
             groupMap[key].time++;
@@ -733,27 +707,13 @@
         });
         launchPoint.forEach((point) => {
           const { position, startAngle, x, y, range } = point;
-          let type = mapCells[y][x].type;
+          const type = mapCells[y][x].type;
           if (!type) return;
           if (
             point.status === GroupStatus.BALL_MOVE &&
             point.ballInfo.total <= 0
           ) {
             point.status = GroupStatus.CREATE_BALL;
-            const groupObj = groupMap[type];
-            const oldGroupObj = groupMap[point.oldType];
-            if (
-              point.oldType &&
-              point.oldType !== type &&
-              groupObj.launchPointNum > 1 &&
-              Math.random() <
-                Math.min(0.1, Math.max(1, oldGroupObj) / groupObj.cellNum)
-            ) {
-              groupMap[point.oldType].launchPointNum++;
-              groupMap[type].launchPointNum--;
-              mapCells[y][x].type = point.oldType;
-              type = point.oldType;
-            }
             point.ballInfo = {
               wait: 1,
               total: 1,
@@ -779,7 +739,9 @@
                 val /= 2;
                 r = Math.random() - Math.min(bl / 1000, 0.1);
               }
-              ballInfo.total *= Math.pow(2, bl - 1);
+              ballInfo.total *=
+                Math.pow(2, bl - 1) *
+                Math.floor(Math.pow(groupMap[type].launchPointNum, 1 / 3));
               if (maxBallNum.ballNum < ballInfo.total) {
                 maxBallNum = {
                   ballNum: ballInfo.total,
@@ -813,11 +775,33 @@
         });
 
         maxTotalNum = Math.max(maxTotalNum, ballList.length);
-        ballMove();
-        mainCtx.drawImage(cellCanvas, 0, 0, screenWidth, screenHeight);
-        mainCtx.drawImage(ballCanvas, 0, 0, screenWidth, screenHeight);
+        ballMove(drawFlag);
+        if (drawFlag) {
+          mainCtx.drawImage(cellCanvas, 0, 0, screenWidth, screenHeight);
+          mainCtx.drawImage(ballCanvas, 0, 0, screenWidth, screenHeight);
+        }
         createDataHtml();
-        if (
+        if (!drawFlag) {
+          if (loopTimer > 0) {
+            loop(drawFlag, loopTimer - 1);
+          } else {
+            ctxClear(mainCtx);
+            ctxClear(ballCtx);
+            ctxClear(cellCtx);
+            mapCells.forEach((el) =>
+              el.forEach((item) => {
+                drawCell(item);
+              })
+            );
+            ballList.forEach((el) => {
+              ballCtx.beginPath();
+              ballCtx.arc(el.x, el.y, ballSize, 0, 180);
+              ballCtx.fill();
+            });
+            mainCtx.drawImage(cellCanvas, 0, 0, screenWidth, screenHeight);
+            mainCtx.drawImage(ballCanvas, 0, 0, screenWidth, screenHeight);
+          }
+        } else if (
           Object.keys(groupMap).some(
             (key) => groupMap[key].cellNum === totalCellNum
           )
@@ -825,27 +809,8 @@
           cancelAnimationFrame(raf);
           raf = null;
           createDataHtml();
-          // const history = JSON.parse(
-          //   localStorage.getItem('lingtu6History') || '[]'
-          // );
-          // history.push({
-          //   maxBallNum,
-          //   maxTotalNum,
-          //   groupMap,
-          //   mapSize,
-          //   cellSize,
-          //   ballSize,
-          //   ballSpeed,
-          //   launchPoint,
-          //   maxCellNum,
-          //   maxCellHistory,
-          //   currMaxCellNum,
-          //   currMaxCellHistory,
-          //   currTotalLaunchPointNum,
-          // });
-          // localStorage.setItem('lingtu6History', JSON.stringify(history));
         } else if (status === 'play') {
-          raf = requestAnimationFrame(loop);
+          raf = requestAnimationFrame(() => loop(drawFlag));
         }
       };
       const setBtnDisabled = () => {
@@ -854,6 +819,7 @@
         exportBtn.disabled = status !== 'pause';
         importBtn.disabled = status !== 'pause';
         createBtn.disabled = status !== 'pause';
+        stepBtn.disabled = status !== 'pause';
       };
       const toggle = () => {
         if (status === 'play') {
@@ -886,7 +852,7 @@
           currMaxCellHistory,
           currTotalLaunchPointNum,
         };
-        localStorage.setItem('lingtu6Save', JSON.stringify(data));
+        localStorage.setItem('lingtu8Save', JSON.stringify(data));
       });
       loadBtn.addEventListener('click', (e) => {
         if (status !== 'pause') return;
@@ -917,7 +883,7 @@
         });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `lingtu6_${new Date().getTime()}.json`;
+        a.download = `lingtu8_${new Date().getTime()}.json`;
         a.click();
       });
       importBtn.addEventListener('change', (e) => {
@@ -944,9 +910,9 @@
         init('create');
         createDialog.className = 'hide';
       });
-      /**
-       * time: 76953 pink 35279， 13， 2713.77，39.19%
-       */
+      stepBtn.addEventListener('click', () => {
+        loop(false, timerBtn.value || 5000);
+      });
     </script>
   </body>
 </html>

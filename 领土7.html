@@ -1,4 +1,4 @@
-<!-- 填满结束 -->
+<!-- 叛变 -->
 <!DOCTYPE html>
 <html lang="zh">
   <head>
@@ -79,7 +79,7 @@
       <input
         type="number"
         id="createMapSizeNum"
-        value="300"
+        value="301"
         placeholder="mapSizeNum"
       />
       <input
@@ -136,6 +136,8 @@
       const resizeHandle = () => {
         main.width = screenWidth;
         main.height = screenHeight;
+        main.style.width = `${screenWidth}px`;
+        main.style.height = `${screenWidth}px`;
         ballCanvas.width = screenWidth;
         ballCanvas.height = screenHeight;
         cellCanvas.width = screenWidth;
@@ -161,18 +163,17 @@
       };
       const groupList = [
         'red',
-        'lightskyblue', // 'blue',
-        'green',
+        'dodgerblue ',
+        'chartreuse ',
         'yellow',
-        'purple',
+        'blueviolet',
         'orange',
         'pink',
-        'brown',
-        'gray',
+        'peru',
+        'lightgray',
       ];
       let groupMap = {};
       let launchPoint = [];
-      let occupyCell = 0;
       let currMaxCellNum = {
         cellNum: 0,
         type: '',
@@ -237,7 +238,7 @@
         if (['load', 'import'].includes(initType)) {
           let data = {};
           if (initType === 'load') {
-            data = JSON.parse(localStorage.getItem('lingtu6Save') || '{}');
+            data = JSON.parse(localStorage.getItem('lingtu7Save') || '{}');
           } else {
             data = initData;
           }
@@ -353,11 +354,12 @@
               startAngle: 0,
               range: 360,
               status: GroupStatus.CREATE_BALL,
-              oldType: key,
               ballInfo: {
                 wait: 1,
                 total: 1,
               },
+              cell: cellItem,
+              origin: key,
             });
             drawCell(cellItem);
           });
@@ -429,7 +431,6 @@
               type: arr[0].type,
               startTime: time,
             });
-            currMaxCellHistory = currMaxCellHistory.slice(-10);
           } else {
             currMaxCellHistory.push({
               cellNum: arr[0].cellNum,
@@ -449,7 +450,7 @@
         const currMaxCellHistoryItem = currMaxCellHistory.length
           ? currMaxCellHistory[currMaxCellHistory.length - 1]
           : null;
-        occupyCell = arr.reduce((s, el) => s + el.cellNum, 0);
+        const occupyCell = arr.reduce((s, el) => s + el.cellNum, 0);
         let html = `<div>
           <dl>time: ${time} lpTotal：${
           launchPoint.length
@@ -715,24 +716,20 @@
         }
       };
       const loop = () => {
-        if (occupyCell >= totalCellNum) {
-          toggle();
-          return;
-        }
         time++;
         ctxClear(mainCtx);
         ctxClear(ballCtx);
         ballCtx.fillStyle = '#000';
         Object.keys(groupMap).forEach((key) => {
           if (groupMap[key].cellNum > 0) {
-            groupMap[key].time++;
+            groupMap[key].time = time;
           }
           if (groupMap[key].launchPointNum > 0) {
-            groupMap[key].launchPointTime++;
+            groupMap[key].launchPointTime = time;
           }
         });
         launchPoint.forEach((point) => {
-          const { position, startAngle, x, y, range } = point;
+          const { startAngle, x, y, range } = point;
           let type = mapCells[y][x].type;
           if (!type) return;
           if (
@@ -740,20 +737,6 @@
             point.ballInfo.total <= 0
           ) {
             point.status = GroupStatus.CREATE_BALL;
-            const groupObj = groupMap[type];
-            const oldGroupObj = groupMap[point.oldType];
-            if (
-              point.oldType &&
-              point.oldType !== type &&
-              groupObj.launchPointNum > 1 &&
-              Math.random() <
-                Math.min(0.1, Math.max(1, oldGroupObj) / groupObj.cellNum)
-            ) {
-              groupMap[point.oldType].launchPointNum++;
-              groupMap[type].launchPointNum--;
-              mapCells[y][x].type = point.oldType;
-              type = point.oldType;
-            }
             point.ballInfo = {
               wait: 1,
               total: 1,
@@ -761,6 +744,29 @@
           }
           const { ballInfo } = point;
           if (point.status === GroupStatus.CREATE_BALL) {
+            // 叛变
+            if (
+              point.origin &&
+              point.origin !== type &&
+              groupMap[type].launchPointNum > 1 &&
+              Math.random() <
+                Math.min(
+                  10,
+                  groupMap[point.origin].cellNum / groupMap[type].cellNum
+                ) /
+                  100
+            ) {
+              groupMap[type].cellNum--;
+              setMax(groupMap[type]);
+              groupMap[type].launchPointNum--;
+              groupMap[point.origin].launchPointNum++;
+              groupMap[point.origin].cellNum++;
+              setMax(groupMap[point.origin]);
+              type = point.origin;
+              mapCells[y][x].type = point.origin;
+              drawCell(point.cell);
+            }
+
             const { wait, total } = ballInfo;
             for (let i = 0; i < wait; i++) {
               if (Math.random() < (wait / (total * total)) * 0.618) {
@@ -825,25 +831,25 @@
           cancelAnimationFrame(raf);
           raf = null;
           createDataHtml();
-          // const history = JSON.parse(
-          //   localStorage.getItem('lingtu6History') || '[]'
-          // );
-          // history.push({
-          //   maxBallNum,
-          //   maxTotalNum,
-          //   groupMap,
-          //   mapSize,
-          //   cellSize,
-          //   ballSize,
-          //   ballSpeed,
-          //   launchPoint,
-          //   maxCellNum,
-          //   maxCellHistory,
-          //   currMaxCellNum,
-          //   currMaxCellHistory,
-          //   currTotalLaunchPointNum,
-          // });
-          // localStorage.setItem('lingtu6History', JSON.stringify(history));
+          const history = JSON.parse(
+            localStorage.getItem('lingtu7History') || '[]'
+          );
+          history.push({
+            maxBallNum,
+            maxTotalNum,
+            groupMap,
+            mapSize,
+            cellSize,
+            ballSize,
+            ballSpeed,
+            launchPoint,
+            maxCellNum,
+            maxCellHistory,
+            currMaxCellNum,
+            currMaxCellHistory,
+            currTotalLaunchPointNum,
+          });
+          localStorage.setItem('lingtu7History', JSON.stringify(history));
         } else if (status === 'play') {
           raf = requestAnimationFrame(loop);
         }
@@ -886,7 +892,7 @@
           currMaxCellHistory,
           currTotalLaunchPointNum,
         };
-        localStorage.setItem('lingtu6Save', JSON.stringify(data));
+        localStorage.setItem('lingtu7Save', JSON.stringify(data));
       });
       loadBtn.addEventListener('click', (e) => {
         if (status !== 'pause') return;
@@ -917,7 +923,7 @@
         });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `lingtu6_${new Date().getTime()}.json`;
+        a.download = `lingtu7_${new Date().getTime()}.json`;
         a.click();
       });
       importBtn.addEventListener('change', (e) => {
@@ -944,9 +950,6 @@
         init('create');
         createDialog.className = 'hide';
       });
-      /**
-       * time: 76953 pink 35279， 13， 2713.77，39.19%
-       */
     </script>
   </body>
 </html>
