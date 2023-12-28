@@ -45,10 +45,12 @@
             },
             _initPush: function(){
                 var img = new Image();
-                img.src = imgList[imgNum];
-                img.onload = function(){
-                    while(this.imgNum < this.imgList.length
-                        && (this.minCloumn.top + this.space + img.width / this.imgWidth * img.height) <= this.height){
+                img.src = this.imgList[this.imgNum];
+                img.onload = () => {
+                    console.dir(img);
+                    console.log(this.minCloumn.top + this.space + this.width / img.width * img.height);
+                    if(this.imgNum < this.imgList.length
+                        && (this.minCloumn.top + this.space + this.width / img.width * img.height) <= this.height){
                         this.pushToAlbum();
                     }
                 }
@@ -71,7 +73,8 @@
         }
         var album = document.getElementById("album");
         var ab = new Album({
-            el: album
+            el: album,
+            imgList: Array(5).fill('').map((el, i) => `images/img${i+1}.jpg`),
         })
     </script>
 </body>

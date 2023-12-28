@@ -38,15 +38,13 @@ class Fee {
     }
     // 如果最后一项为 0 则删除 直到最后一项不为 0 或 数组为空
     removeEndZero (arr) {
-        let index = arr.length;
-        for (let i = arr.length - 1; i >= 0; i--) {
-            if (arr[i] === 0) {
-                index = i + 1;
-            } else {
+        let i = arr.length - 1;
+        for (; i >= 0; i--) {
+            if (arr[i] > 0) {
                 break;
             }
         }
-        return arr.slice(0, index);
+        return arr.slice(0, i + 1);
     }
     // 加
     add (fee) {
@@ -188,19 +186,15 @@ class Fee {
             return -1;
         }
         if (fee.len === this.len) {
-            let flag = true;
             for (let i = this.len - 1; i >= 0; i--) {
                 if (fee.arr[i] > this.arr[i]) {
                     return -1;
                 }
                 if (fee.arr[i] < this.arr[i]) {
-                    flag = false;
-                    break;
+                    return 1
                 }
             }
-            if (flag) {
-                return 0;
-            }
+            return 0;
         }
         return 1;
     }
