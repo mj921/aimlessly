@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script src="index.js"></script>
+    <script>
+      var ifeRestaurant = new Restaurant({
+        cash: 1000000,
+        seats: 20,
+        staff: [],
+      });
+
+      var newCook = new Cook('Tony', 10000);
+      ifeRestaurant.hire(newCook);
+
+      console.log(ifeRestaurant.staff);
+
+      ifeRestaurant.fire(newCook);
+      console.log(ifeRestaurant.staff);
+
+      const dishes = [
+        new Dish('番茄炒蛋', 3, 10),
+        new Dish('小炒肉', 10, 24),
+        new Dish('香干肉丝', 7, 17),
+      ];
+
+      const customerList = [];
+      customerList.push(new Customer());
+      // if (customerList.length) 
+    </script>
+  </body>
+</html>
