@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        overflow: hidden;
+      }
+      * {
+        margin: 0;
+        box-sizing: border-box;
+        font-size: 12px;
+      }
+      .btns {
+        position: absolute;
+        left: 2px;
+        top: 2px;
+        display: flex;
+        align-items: center;
+      }
+      .btns > * {
+        margin-right: 4px;
+      }
+      button.active {
+        background-color: #4b8cf0;
+        color: #ffffff;
+        border-color: #4b8cf0;
+      }
+      #rubber {
+        position: absolute;
+        border: 1px solid #000000;
+        background-color: #ffffff;
+        width: 4px;
+        height: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="rubber"></div>
+    <div class="btns">
+      <button id="clear">清空</button>
+      <button id="brush" class="active">画笔</button>
+      <button id="rubberBtn">橡皮</button>
+      <label for="rubberSize" id="rubberLabel">橡皮大小(20)</label>
+      <input type="range" id="rubberSize" min="4" max="100" value="20" />
+    </div>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const clearBtn = document.getElementById('clear');
+      const brushBtn = document.getElementById('brush');
+      const rubberBtn = document.getElementById('rubberBtn');
+      const rubber = document.getElementById('rubber');
+      const rubberLabel = document.getElementById('rubberLabel');
+      const rubberSize = document.getElementById('rubberSize');
+      let rubberSizeValue = rubberSize.value;
+      const setRubberSize = () => {
+        rubberLabel.innerText = `橡皮大小(${rubberSize.value})`;
+        rubber.style.width = rubberSize.value + 'px';
+        rubber.style.height = rubberSize.value + 'px';
+        rubberSizeValue = rubberSize.value;
+      };
+      setRubberSize();
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const mouseStatus = { x: 0, y: 0, draw: false, type: 'brush' };
+      const isCanvas = (target) => {
+        return target === canvas || target === rubber;
+      };
+      const downEvent = (clientX, clientY) => {
+        mouseStatus.x = clientX;
+        mouseStatus.y = clientY;
+        mouseStatus.draw = true;
+        if (mouseStatus.type === 'rubber') {
+          rubber.style.left = clientX - rubberSizeValue / 2 + 'px';
+          rubber.style.top = clientY - rubberSizeValue / 2 + 'px';
+          ctx.clearRect(
+            clientX - rubberSizeValue / 2,
+            clientY - rubberSizeValue / 2,
+            rubberSizeValue,
+            rubberSizeValue
+          );
+        } else {
+          ctx.fillRect(clientX, clientY, 1, 1);
+        }
+      };
+      const moveEvent = (clientX, clientY) => {
+        if (mouseStatus.type === 'rubber') {
+          rubber.style.left = clientX - rubberSizeValue / 2 + 'px';
+          rubber.style.top = clientY - rubberSizeValue / 2 + 'px';
+          if (mouseStatus.draw) {
+            ctx.clearRect(
+              clientX - rubberSizeValue / 2,
+              clientY - rubberSizeValue / 2,
+              rubberSizeValue,
+              rubberSizeValue
+            );
+          }
+          mouseStatus.x = clientX;
+          mouseStatus.y = clientY;
+        } else if (mouseStatus.draw) {
+          ctx.beginPath();
+          ctx.moveTo(mouseStatus.x, mouseStatus.y);
+          mouseStatus.x = clientX;
+          mouseStatus.y = clientY;
+          ctx.lineTo(mouseStatus.x, mouseStatus.y);
+          ctx.stroke();
+        }
+      };
+      window.addEventListener('mousedown', (e) => {
+        if (isCanvas(e.target)) {
+          downEvent(e.clientX, e.clientY);
+        }
+      });
+      window.addEventListener('mousemove', (e) => {
+        moveEvent(e.clientX, e.clientY);
+      });
+      window.addEventListener('mouseup', (e) => {
+        mouseStatus.draw = false;
+      });
+      clearBtn.addEventListener('click', (e) => {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        e.stopPropagation();
+      });
+      brushBtn.addEventListener('click', (e) => {
+        mouseStatus.type = 'brush';
+        brushBtn.className = 'active';
+        rubberBtn.className = '';
+        rubber.style.display = 'none';
+        e.stopPropagation();
+      });
+      rubberBtn.addEventListener('click', (e) => {
+        mouseStatus.type = 'rubber';
+        rubberBtn.className = 'active';
+        brushBtn.className = '';
+        rubber.style.display = 'block';
+        console.dir(rubberSize);
+        e.stopPropagation();
+      });
+      rubberSize.addEventListener('change', () => {
+        setRubberSize();
+      });
+      window.addEventListener('touchstart', (e) => {
+        console.log(e);
+        if (isCanvas(e.target)) {
+          downEvent(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        }
+      });
+      window.addEventListener('touchmove', (e) => {
+        console.log('e', e);
+        moveEvent(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      });
+      window.addEventListener('touchend', (e) => {
+        mouseStatus.draw = false;
+      });
+    </script>
+  </body>
+</html>
