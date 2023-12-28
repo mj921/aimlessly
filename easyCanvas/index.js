@@ -55,7 +55,7 @@ Scene.prototype.render = function () {
   children.forEach((sprite) => {
     sprite.render();
     const { canvas, x, y, width, height } = sprite;
-    ctx.drawImage(canvas, x, y, width, height);
+    ctx.drawImage(canvas, x - width / 2, y - height / 2, width, height);
   });
   ctx.restore();
 };
@@ -83,10 +83,8 @@ const Sprite = function (options) {
   if (el) {
     this.canvas = document.getElementById(el);
   } else {
-    this.canvas = document.createElement('canvas');
+    this.canvas = new OffscreenCanvas(width, height);
   }
-  this.canvas.width = width;
-  this.canvas.height = height;
   this.type = type;
   this.x = x;
   this.y = y;
@@ -281,9 +279,9 @@ extend(RectSprite, Sprite);
 RectSprite.prototype.draw = function () {
   const { ctx, x, y, width, height, mode } = this;
   if (mode === Sprite.MODE.FILL) {
-    ctx.fillRect(text, x, y, width, height);
+    ctx.fillRect(0, 0, width, height);
   } else {
-    ctx.strokeRect(text, x, y, width, height);
+    ctx.strokeRect(0, 0, width, height);
   }
 };
 
@@ -361,7 +359,6 @@ CircleSprite.prototype.draw = function () {
   ctx.beginPath();
   ctx.arc(radius, radius, radius, 0, Math.PI * 2);
   if (mode === Sprite.MODE.FILL) {
-    console.log(this);
     ctx.fill();
   } else {
     ctx.stroke();
