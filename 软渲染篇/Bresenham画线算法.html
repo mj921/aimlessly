@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script src="./index.js"></script>
+    <script src="./modelJson.js"></script>
+    <script>
+      const scale = 500;
+      const scene = new Scene({ width: scale, height: scale });
+      const swap = (a, b) => {
+        a = a + b;
+        b = a - b;
+        a = a - b;
+        return [a, b];
+      };
+      const fillLine = ({ x: x0, y: y0 }, { x: x1, y: y1 }) => {
+        if (x0 > x1) {
+          [x0, x1] = swap(x0, x1);
+          [y0, y1] = swap(y0, y1);
+        }
+        const calcFlag = Math.abs((x0 - x1) / (y0 - y1)) < 1;
+        if (calcFlag ? y0 > y1 : x0 > x1) {
+          [x0, x1] = swap(x0, x1);
+          [y0, y1] = swap(y0, y1);
+        }
+        const step = calcFlag ? (x0 - x1) / (y0 - y1) : (y0 - y1) / (x0 - x1);
+        let prev = (calcFlag ? x0 : y0) - step;
+        for (
+          let i = calcFlag ? y0 : x0, len = calcFlag ? y1 : x1;
+          i < len;
+          i++
+        ) {
+          prev = prev + step;
+          scene.add({
+            x: calcFlag ? Math.floor(prev) : i,
+            y: calcFlag ? i : Math.floor(prev),
+          });
+        }
+      };
+      console.time();
+      for (let index = 0; index < modelJson.f.length; index++) {
+        for (let i = 0; i < 3; i++) {
+          fillLine(
+            {
+              x:
+                ((modelJson.v[modelJson.f[index][i][0]][0] + 1) / 2) *
+                scale,
+              y:
+                (1 - (modelJson.v[modelJson.f[index][i][0]][1] + 1) / 2) *
+                scale,
+            },
+            {
+              x:
+                ((modelJson.v[modelJson.f[index][(i + 1) % 3][0]][0] + 1) /
+                  2) *
+                scale,
+              y:
+                (1 -
+                  (modelJson.v[modelJson.f[index][(i + 1) % 3][0]][1] + 1) /
+                    2) *
+                scale,
+            }
+          );
+        }
+      }
+      console.timeEnd();
+      console.time('render');
+      scene.render();
+      console.timeEnd('render');
+    </script>
+  </body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+      }
+      body {
+        background-color: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="./index.js"></script>
+    <script src="./modelJson.js"></script>
+    <script src="./tgaImageData.js"></script>
+    <script src="./Matrix.js"></script>
+    <script src="./Matrix3.js"></script>
+    <script src="./Matrix4.js"></script>
+    <script src="./Vector2.js"></script>
+    <script src="./Vector3.js"></script>
+    <script src="./Vector4.js"></script>
+    <script>
+      const scale = 1024;
+      console.time('buffer init');
+      const zBuffer = new Array(scale * scale).fill(-Infinity);
+      console.timeEnd('buffer init');
+      const scene = new Scene({
+        width: scale,
+        height: scale,
+      });
+
+      const clamp = (value, min, max) => {
+        return Math.max(Math.min(value, max), min);
+      };
+
+      const lookAt = (eye, center, up) => {
+        const zV = eye.sub(center).normalize();
+        const xV = up.cross(zV).normalize();
+        const yV = zV.clone().cross(xV).normalize();
+
+        const m = new Matrix(4, 4);
+        m.setRows(xV.toArray().concat([0]), 0);
+        m.setRows(yV.toArray().concat([0]), 1);
+        m.setRows(zV.toArray().concat([0]), 2);
+        m.setRows([0, 0, 0, 1], 3);
+
+        const translateMat = new Matrix(4, 4);
+        translateMat.setRows([1, 0, 0, -eye.x], 0);
+        translateMat.setRows([0, 1, 0, -eye.y], 1);
+        translateMat.setRows([0, 0, 1, -eye.z], 2);
+        translateMat.setRows([0, 0, 0, 1], 3);
+        return m.multiply(translateMat);
+      };
+      const viewport = (x, y, w, h) => {
+        const m = Matrix.identity(4);
+        m.setByIndex(w / 2, 0, 0);
+        m.setByIndex(h / 2, 1, 1);
+        m.setByIndex(255 / 2, 2, 2);
+
+        m.setByIndex(w / 2 + x, 0, 3);
+        m.setByIndex(h / 2 + y, 1, 3);
+        m.setByIndex(255 / 2, 2, 3);
+        return m;
+      };
+      const fillSJX = (points) => {
+        const len = points.length;
+        const xs = [];
+        const ys = [];
+        const sides = [];
+        for (let i = 0; i < len; i++) {
+          xs[i] = points[i].x;
+          ys[i] = points[i].y;
+          sides[i] = {
+            x: points[(i + 1) % len].x - points[i].x,
+            y: points[(i + 1) % len].y - points[i].y,
+          };
+        }
+        const minX = Math.max(0, Math.min.apply(null, xs));
+        const maxX = Math.min(scale - 1, Math.max.apply(null, xs));
+        const minY = Math.max(0, Math.min.apply(null, ys));
+        const maxY = Math.min(scale - 1, Math.max.apply(null, ys));
+        for (let i = minX; i <= maxX; i++) {
+          for (let j = minY; j <= maxY; j++) {
+            let result = 0;
+            for (let k = 0; k < len; k++) {
+              const r =
+                (i - points[k].x) * sides[k].y - (j - points[k].y) * sides[k].x;
+              result += r > 0 ? 1 : r < 0 ? -1 : r;
+            }
+            if (result === len || result === -len) {
+              scene.add({
+                x: i,
+                y: j,
+              });
+            }
+          }
+        }
+      };
+
+      const fillLine = ({ x: x0, y: y0 }, { x: x1, y: y1 }, color) => {
+        if (x0 > x1) {
+          [x0, x1] = [x1, x0];
+          [y0, y1] = [y1, y0];
+        }
+        const calcFlag = Math.abs((x0 - x1) / (y0 - y1)) < 1;
+        if (calcFlag ? y0 > y1 : x0 > x1) {
+          [x0, x1] = [x1, x0];
+          [y0, y1] = [y1, y0];
+        }
+        const step = calcFlag ? (x0 - x1) / (y0 - y1) : (y0 - y1) / (x0 - x1);
+        let prev = (calcFlag ? x0 : y0) - step;
+        for (
+          let i = calcFlag ? y0 : x0, len = calcFlag ? y1 : x1;
+          i < len;
+          i++
+        ) {
+          prev = prev + step;
+          scene.add({
+            x: calcFlag ? Math.floor(prev) : i,
+            y: calcFlag ? i : Math.floor(prev),
+            color,
+          });
+        }
+      };
+      /** 叉乘判断角度 都是一个方向 */
+      // fillSJX([
+      //   { x: 65, y: 5 },
+      //   { x: 3, y: 37 },
+      //   { x: 7, y: 10 },
+      // ]);
+      const barycentric = (pts, p) => {
+        const p1 = new Vector3(
+          pts[1].x - pts[0].x,
+          pts[2].x - pts[0].x,
+          pts[0].x - p.x
+        );
+        const p2 = new Vector3(
+          pts[1].y - pts[0].y,
+          pts[2].y - pts[0].y,
+          pts[0].y - p.y
+        );
+        const u = p1.cross(p2);
+        if (Math.abs(u.z) < 1) return { x: -1, y: 1, z: 1 };
+        return { x: 1 - (u.x + u.y) / u.z, y: u.x / u.z, z: u.y / u.z };
+      };
+      const rasterize = (points, uvPoints, intensity) => {
+        const len = points.length;
+        const xs = [];
+        const ys = [];
+        const sides = [];
+        for (let i = 0; i < len; i++) {
+          xs[i] = points[i].x;
+          ys[i] = points[i].y;
+          sides[i] = {
+            x: points[(i + 1) % len].x - points[i].x,
+            y: points[(i + 1) % len].y - points[i].y,
+          };
+        }
+        const minX = Math.floor(Math.max(0, Math.min.apply(null, xs)));
+        const maxX = Math.min(scale - 1, Math.max.apply(null, xs));
+        const minY = Math.floor(Math.max(0, Math.min.apply(null, ys)));
+        const maxY = Math.min(scale - 1, Math.max.apply(null, ys));
+        for (let i = minX; i <= maxX; i++) {
+          for (let j = minY; j <= maxY; j++) {
+            const result = barycentric(points, { x: i, y: j });
+            if (result.x < 0 || result.y < 0 || result.z < 0) {
+              continue;
+            }
+            const z =
+              result.x * points[0].z +
+              result.y * points[1].z +
+              result.z * points[2].z;
+            if (zBuffer[i + j * scale] < z) {
+              zBuffer[i + j * scale] = z;
+              const u = Math.round(
+                (uvPoints[0].x * result.x +
+                  uvPoints[1].x * result.y +
+                  uvPoints[2].x * result.z) *
+                  scale
+              );
+              const v = Math.round(
+                (uvPoints[0].y * result.x +
+                  uvPoints[1].y * result.y +
+                  uvPoints[2].y * result.z) *
+                  scale
+              );
+              const color = [
+                Math.round(tgaImageData[u * 4 + v * scale * 4] * intensity),
+                Math.round(tgaImageData[u * 4 + v * scale * 4 + 1] * intensity),
+                Math.round(tgaImageData[u * 4 + v * scale * 4 + 2] * intensity),
+                tgaImageData[u * 4 + v * scale * 4 + 3],
+              ];
+              scene.add({
+                x: i,
+                y: j,
+                color,
+              });
+            }
+          }
+        }
+      };
+      const fillHeader = () => {
+        const viewPort = viewport(0, 0, scale, scale);
+        const eye = new Vector3(-1, 0, -1);
+        const center = new Vector3(0, 0, 0);
+        const eyeDir = center.clone().sub(eye).normalize();
+        eyeDir.y = -eyeDir.y;
+        const distance = eyeDir.length();
+        const lightDir = new Vector3(0, 0, 1);
+        const modelView = lookAt(eye, center, new Vector3(0, 1, 0));
+
+        const projection = new Matrix(4, 4);
+        projection.identity();
+        projection.setByIndex(-1 / 5, 3, 2);
+
+        console.log(modelView, projection, viewPort);
+
+        const transformTS = (v) =>
+          v.toVector4().applyMatrix4(projection).toVector3().toVector4();
+
+        for (let index = 0; index < modelJson.f.length; index++) {
+          const line1 = new Vector3(
+            modelJson.v[modelJson.f[index][1][0]][0] -
+              modelJson.v[modelJson.f[index][0][0]][0],
+            modelJson.v[modelJson.f[index][1][0]][1] -
+              modelJson.v[modelJson.f[index][0][0]][1],
+            modelJson.v[modelJson.f[index][1][0]][2] -
+              modelJson.v[modelJson.f[index][0][0]][2]
+          );
+          const line2 = new Vector3(
+            modelJson.v[modelJson.f[index][2][0]][0] -
+              modelJson.v[modelJson.f[index][0][0]][0],
+            modelJson.v[modelJson.f[index][2][0]][1] -
+              modelJson.v[modelJson.f[index][0][0]][1],
+            modelJson.v[modelJson.f[index][2][0]][2] -
+              modelJson.v[modelJson.f[index][0][0]][2]
+          );
+          const verticalVector = line2.cross(line1).normalize();
+          const culling = verticalVector.dot(eyeDir);
+          const intensity = Math.max(verticalVector.dot(lightDir), 0);
+          if (culling <= 0) continue;
+          // if (culling > 0) continue;
+          const [f1, f2, f3] = modelJson.f[index];
+          const v1 = modelJson.v[f1[0]];
+          const v2 = modelJson.v[f2[0]];
+          const v3 = modelJson.v[f3[0]];
+          const vt1 = modelJson.vt[f1[1]];
+          const vt2 = modelJson.vt[f2[1]];
+          const vt3 = modelJson.vt[f3[1]];
+          rasterize(
+            [
+              transformTS(new Vector3(v1[0], -v1[1], v1[2]))
+                .applyMatrix4(modelView)
+                .applyMatrix4(viewPort)
+                .toVector3(),
+              transformTS(new Vector3(v2[0], -v2[1], v2[2]))
+                .applyMatrix4(modelView)
+                .applyMatrix4(viewPort)
+                .toVector3(),
+              transformTS(new Vector3(v3[0], -v3[1], v3[2]))
+                .applyMatrix4(modelView)
+                .applyMatrix4(viewPort)
+                .toVector3(),
+            ],
+            [
+              new Vector2(vt1[0], 1 - vt1[1]),
+              new Vector2(vt2[0], 1 - vt2[1]),
+              new Vector2(vt3[0], 1 - vt3[1]),
+            ],
+            intensity
+          );
+        }
+      };
+
+      console.time();
+      fillHeader();
+      console.timeEnd();
+      console.time('render');
+      scene.render();
+      console.timeEnd('render');
+    </script>
+  </body>
+</html>

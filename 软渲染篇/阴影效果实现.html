@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+      }
+      body {
+        background-color: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="./index.js"></script>
+    <script src="./modelJson.js"></script>
+    <script src="./tgaDiffuseData.js"></script>
+    <script src="./tgaNmData.js"></script>
+    <script src="./tgaSpecData.js"></script>
+    <script src="./tgaNmTangentData.js"></script>
+    <script src="./Matrix.js"></script>
+    <script src="./Matrix3.js"></script>
+    <script src="./Matrix4.js"></script>
+    <script src="./Vector2.js"></script>
+    <script src="./Vector3.js"></script>
+    <script src="./Vector4.js"></script>
+    <script>
+      const scale = 1024;
+      console.time('buffer init');
+      const zBuffer = new Array(scale * scale).fill(-Infinity);
+      console.timeEnd('buffer init');
+      const scene = new Scene({
+        width: scale,
+        height: scale,
+      });
+
+      class Shader {
+        varying_intensity = new Vector3();
+        varying_uv = [];
+        uniform_M;
+        uniform_MIT;
+        lightDir;
+        viewport;
+        projection;
+        modelView;
+        constructor(lightDir, viewport, projection, modelView) {
+          this.lightDir = lightDir;
+          this.viewport = viewport;
+          this.projection = projection;
+          this.modelView = modelView;
+          this.uniform_M = modelView.clone().multiply(modelView);
+          this.uniform_MIT = projection
+            .clone()
+            .multiply(modelView)
+            .invert()
+            .transpose();
+        }
+        vertex(iface, nthvert) {
+          const faces = modelJson.f[iface];
+          const vv = modelJson.v[faces[nthvert][0]];
+          const v = new Vector4(vv[0], -vv[1], vv[2], 1);
+          const vt = modelJson.vt[faces[nthvert][1]];
+          this.varying_uv[nthvert] = new Vector2(vt[0], 1 - vt[1]);
+          const normal = Vector3.fromArray(
+            modelJson.vn[faces[nthvert][2]]
+          ).normalize();
+          this.varying_intensity.raw(
+            Math.max(0, normal.dot(this.lightDir)),
+            nthvert
+          );
+          return v.applyMatrix4(
+            this.viewport
+              .clone()
+              .multiply(this.projection)
+              .multiply(this.modelView)
+          );
+        }
+        // fragment(bar) {
+        //   const u = Math.round(
+        //     (this.varying_uv[0].x * bar.x +
+        //       this.varying_uv[1].x * bar.y +
+        //       this.varying_uv[2].x * bar.z) *
+        //       scale
+        //   );
+        //   const v = Math.round(
+        //     (this.varying_uv[0].y * bar.x +
+        //       this.varying_uv[1].y * bar.y +
+        //       this.varying_uv[2].y * bar.z) *
+        //       scale
+        //   );
+        //   const color = tgaDiffuseData.slice(
+        //     u * 4 + v * scale * 4,
+        //     u * 4 + v * scale * 4 + 4
+        //   );
+        //   const tColor = tgaNmData.slice(
+        //     u * 4 + v * scale * 4,
+        //     u * 4 + v * scale * 4 + 4
+        //   );
+        //   const specColor = tgaSpecData.slice(
+        //     u * 4 + v * scale * 4,
+        //     u * 4 + v * scale * 4 + 4
+        //   );
+        //   let normal = new Vector3(
+        //     (tColor[0] / 255) * 2 - 1,
+        //     (tColor[1] / 255) * 2 - 1,
+        //     (tColor[2] / 255) * 2 - 1
+        //   ).normalize();
+        //   const normal4 = normal.toVector4(0).applyMatrix4(this.uniform_MIT);
+        //   normal = new Vector3(normal4.x, normal4.y, normal4.z).normalize();
+        //   let light4 = this.lightDir.toVector4(0).applyMatrix4(this.uniform_M);
+        //   const light = new Vector3(light4.x, light4.y, light4.z)
+        //     .normalize()
+        //     .multiplyScalar(-1);
+        //   const reflect = normal
+        //     .clone()
+        //     .multiplyScalar(normal.dot(light) * 2)
+        //     .sub(light);
+        //   let diff = Math.max(0, normal.dot(light));
+        //   const spec = Math.max(0, Math.pow(reflect.z, specColor[2]));
+        //   const intensity = diff + 0.6 * spec;
+        //   const env = 5;
+        //   return {
+        //     color: [
+        //       Math.min(255, env + Math.round(color[0] * intensity)),
+        //       Math.min(255, env + Math.round(color[1] * intensity)),
+        //       Math.min(255, env + Math.round(color[2] * intensity)),
+        //       255,
+        //     ],
+        //     discard: false,
+        //   };
+        // }
+
+        fragment(bar) {
+          const u = Math.round(
+            (this.varying_uv[0].x * bar.x +
+              this.varying_uv[1].x * bar.y +
+              this.varying_uv[2].x * bar.z) *
+              scale
+          );
+          const v = Math.round(
+            (this.varying_uv[0].y * bar.x +
+              this.varying_uv[1].y * bar.y +
+              this.varying_uv[2].y * bar.z) *
+              scale
+          );
+          const color = tgaDiffuseData.slice(
+            u * 4 + v * scale * 4,
+            u * 4 + v * scale * 4 + 4
+          );
+          const tColor = tgaNmData.slice(
+            u * 4 + v * scale * 4,
+            u * 4 + v * scale * 4 + 4
+          );
+          const specColor = tgaSpecData.slice(
+            u * 4 + v * scale * 4,
+            u * 4 + v * scale * 4 + 4
+          );
+          const normalTanColor = tgaNmTangentData.slice(
+            u * 4 + v * scale * 4,
+            u * 4 + v * scale * 4 + 4
+          );
+          const normalTan = Vector3.fromArray(normalTanColor);
+          const e0 = Vector3.subVector(this.varying_uv[1], this.varying_uv[0]);
+          e0.z = 0;
+          const e1 = Vector3.subVector(this.varying_uv[2], this.varying_uv[0]);
+          e1.z = 0;
+          const m1 = new Matrix(2, 3);
+          m1.setRows(e0.toArray(), 0);
+          m1.setRows(e0.toArray(), 1);
+          const m2 = new Matrix(2, 2);
+          m2.setByIndex(e1.y, 0, 0);
+          m2.setByIndex(-e0.y, 0, 1);
+          m2.setByIndex(-e1.x, 1, 0);
+          m2.setByIndex(e0.x, 1, 1);
+          const f = 1 / (e0.x * e1.y - e0.y * e1.x);
+          const tb = m2.multiplyMatrices(m1).multiplyScalar(f);
+          const tAxis = Vector3.fromArray(tb.elements[0]).normalize();
+          const bAxis = Vector3.fromArray(tb.elements[1]).normalize();
+          const nAxis = Vector3.cross(bAxis, tAxis).normalize();
+          const tangentToObject = new Matrix(4, 4);
+          tangentToObject.setCols(tAxis.toVector4(0), 0);
+          tangentToObject.setCols(bAxis.toVector4(0), 1);
+          tangentToObject.setCols(nAxis.toVector4(0), 2);
+          tangentToObject.setCols([0, 0, 0, 1], 3);
+          const nor = normalTan.toVector4(0).applyMatrix4(tangentToObject);
+          const normal4 = nor
+            .clone()
+            .applyMatrix4(this.modelView.clone().invert().transpose());
+          const normal = new Vector3(
+            normal4.x,
+            normal4.y,
+            normal4.z
+          ).normalize();
+          const intensity = clamp(normal.dot(this.lightDir), 0, 1);
+
+          return {
+            color: [
+              Math.min(255, Math.round(color[0] * intensity)),
+              Math.min(255, Math.round(color[1] * intensity)),
+              Math.min(255, Math.round(color[2] * intensity)),
+              255,
+            ],
+            discard: false,
+          };
+        }
+        // fragment(bar) {
+        //   const u = Math.round(
+        //     (this.varying_uv[0].x * bar.x +
+        //       this.varying_uv[1].x * bar.y +
+        //       this.varying_uv[2].x * bar.z) *
+        //       scale
+        //   );
+        //   const v = Math.round(
+        //     (this.varying_uv[0].y * bar.x +
+        //       this.varying_uv[1].y * bar.y +
+        //       this.varying_uv[2].y * bar.z) *
+        //       scale
+        //   );
+        //   const color = tgaDiffuseData.slice(
+        //     u * 4 + v * scale * 4,
+        //     u * 4 + v * scale * 4 + 4
+        //   );
+        //   const tColor = tgaNmData.slice(
+        //     u * 4 + v * scale * 4,
+        //     u * 4 + v * scale * 4 + 4
+        //   );
+        //   const specColor = tgaSpecData.slice(
+        //     u * 4 + v * scale * 4,
+        //     u * 4 + v * scale * 4 + 4
+        //   );
+        //   let normal = new Vector3(
+        //     (tColor[0] / 255) * 2 - 1,
+        //     (tColor[1] / 255) * 2 - 1,
+        //     (tColor[2] / 255) * 2 - 1
+        //   ).normalize();
+        //   const normal4 = normal.toVector4(0).applyMatrix4(this.uniform_MIT);
+        //   normal = new Vector3(normal4.x, normal4.y, normal4.z).normalize();
+        //   const light4 = this.lightDir.toVector4().applyMatrix4(this.uniform_M);
+        //   const light = new Vector3(light4.x, light4.y, light4.z)
+        //     .normalize()
+        //     .multiplyScalar(-1);
+
+        //   let diff = Math.max(0, normal.dot(light));
+        //   const reflect = normal
+        //     .clone()
+        //     .multiplyScalar(normal.dot(light) * 2)
+        //     .sub(light);
+        //   const spec = Math.max(0, Math.pow(reflect.z, specColor[2]));
+        //   const intensity = diff + 0.6 * spec;
+        //   const env = 5;
+        //   return {
+        //     color: [
+        //       Math.min(255, env + Math.round(color[0] * intensity)),
+        //       Math.min(255, env + Math.round(color[1] * intensity)),
+        //       Math.min(255, env + Math.round(color[2] * intensity)),
+        //       255,
+        //     ],
+        //     discard: false,
+        //   };
+        // }
+        // fragment(bar) {
+        //   const u = Math.round(
+        //     (this.varying_uv[0].x * bar.x +
+        //       this.varying_uv[1].x * bar.y +
+        //       this.varying_uv[2].x * bar.z) *
+        //       scale
+        //   );
+        //   const v = Math.round(
+        //     (this.varying_uv[0].y * bar.x +
+        //       this.varying_uv[1].y * bar.y +
+        //       this.varying_uv[2].y * bar.z) *
+        //       scale
+        //   );
+        //   const color = tgaDiffuseData.slice(
+        //     u * 4 + v * scale * 4,
+        //     u * 4 + v * scale * 4 + 4
+        //   );
+        //   const tColor = tgaNmData.slice(
+        //     u * 4 + v * scale * 4,
+        //     u * 4 + v * scale * 4 + 4
+        //   );
+        //   let normal = new Vector3(
+        //     (tColor[0] / 255) * 2 - 1,
+        //     (tColor[1] / 255) * 2 - 1,
+        //     (tColor[2] / 255) * 2 - 1
+        //   ).normalize();
+        //   const normal4 = normal.toVector4(0).applyMatrix4(this.uniform_MIT);
+        //   normal = new Vector3(normal4.x, normal4.y, normal4.z);
+        //   const light4 = this.lightDir.toVector4();
+        //   const light = Vector3.fromArray(
+        //     light4.applyMatrix4(this.uniform_M).normalize().toArray()
+        //   ).normalize();
+        //   let intensity = Math.max(0, -normal.dot(light));
+        //   return {
+        //     color: [
+        //       Math.round(color[0] * intensity),
+        //       Math.round(color[1] * intensity),
+        //       Math.round(color[2] * intensity),
+        //       255,
+        //     ],
+        //     discard: false,
+        //   };
+        // }
+      }
+      const clamp = (value, min, max) => {
+        return Math.max(Math.min(value, max), min);
+      };
+
+      const lookAt = (eye, center, up) => {
+        const zV = eye.sub(center).normalize();
+        const xV = up.cross(zV).normalize();
+        const yV = zV.clone().cross(xV).normalize();
+
+        const m = new Matrix(4, 4);
+        m.setRows(xV.toArray().concat([0]), 0);
+        m.setRows(yV.toArray().concat([0]), 1);
+        m.setRows(zV.toArray().concat([0]), 2);
+        m.setRows([0, 0, 0, 1], 3);
+
+        const translateMat = new Matrix(4, 4);
+        translateMat.setRows([1, 0, 0, -eye.x], 0);
+        translateMat.setRows([0, 1, 0, -eye.y], 1);
+        translateMat.setRows([0, 0, 1, -eye.z], 2);
+        translateMat.setRows([0, 0, 0, 1], 3);
+        return m.multiply(translateMat);
+      };
+      const viewport = (x, y, w, h) => {
+        const m = Matrix.identity(4);
+        m.setByIndex(w / 2, 0, 0);
+        m.setByIndex(h / 2, 1, 1);
+        m.setByIndex(255 / 2, 2, 2);
+
+        m.setByIndex(w / 2 + x, 0, 3);
+        m.setByIndex(h / 2 + y, 1, 3);
+        m.setByIndex(255 / 2, 2, 3);
+        return m;
+      };
+      const fillSJX = (points) => {
+        const len = points.length;
+        const xs = [];
+        const ys = [];
+        const sides = [];
+        for (let i = 0; i < len; i++) {
+          xs[i] = points[i].x;
+          ys[i] = points[i].y;
+          sides[i] = {
+            x: points[(i + 1) % len].x - points[i].x,
+            y: points[(i + 1) % len].y - points[i].y,
+          };
+        }
+        const minX = Math.max(0, Math.min.apply(null, xs));
+        const maxX = Math.min(scale - 1, Math.max.apply(null, xs));
+        const minY = Math.max(0, Math.min.apply(null, ys));
+        const maxY = Math.min(scale - 1, Math.max.apply(null, ys));
+        for (let i = minX; i <= maxX; i++) {
+          for (let j = minY; j <= maxY; j++) {
+            let result = 0;
+            for (let k = 0; k < len; k++) {
+              const r =
+                (i - points[k].x) * sides[k].y - (j - points[k].y) * sides[k].x;
+              result += r > 0 ? 1 : r < 0 ? -1 : r;
+            }
+            if (result === len || result === -len) {
+              scene.add({
+                x: i,
+                y: j,
+              });
+            }
+          }
+        }
+      };
+
+      const fillLine = ({ x: x0, y: y0 }, { x: x1, y: y1 }, color) => {
+        if (x0 > x1) {
+          [x0, x1] = [x1, x0];
+          [y0, y1] = [y1, y0];
+        }
+        const calcFlag = Math.abs((x0 - x1) / (y0 - y1)) < 1;
+        if (calcFlag ? y0 > y1 : x0 > x1) {
+          [x0, x1] = [x1, x0];
+          [y0, y1] = [y1, y0];
+        }
+        const step = calcFlag ? (x0 - x1) / (y0 - y1) : (y0 - y1) / (x0 - x1);
+        let prev = (calcFlag ? x0 : y0) - step;
+        for (
+          let i = calcFlag ? y0 : x0, len = calcFlag ? y1 : x1;
+          i < len;
+          i++
+        ) {
+          prev = prev + step;
+          scene.add({
+            x: calcFlag ? Math.floor(prev) : i,
+            y: calcFlag ? i : Math.floor(prev),
+            color,
+          });
+        }
+      };
+      /** 叉乘判断角度 都是一个方向 */
+      // fillSJX([
+      //   { x: 65, y: 5 },
+      //   { x: 3, y: 37 },
+      //   { x: 7, y: 10 },
+      // ]);
+      const barycentric = (pts, p) => {
+        const p1 = new Vector3(
+          pts[1].x - pts[0].x,
+          pts[2].x - pts[0].x,
+          pts[0].x - p.x
+        );
+        const p2 = new Vector3(
+          pts[1].y - pts[0].y,
+          pts[2].y - pts[0].y,
+          pts[0].y - p.y
+        );
+        const u = p1.cross(p2);
+        if (Math.abs(u.z) < 1) return { x: -1, y: 1, z: 1 };
+        return new Vector3(1 - (u.x + u.y) / u.z, u.x / u.z, u.y / u.z);
+      };
+      const rasterize = (points, shader) => {
+        const len = points.length;
+        const xs = [];
+        const ys = [];
+        const sides = [];
+        for (let i = 0; i < len; i++) {
+          xs[i] = points[i].x;
+          ys[i] = points[i].y;
+          sides[i] = {
+            x: points[(i + 1) % len].x - points[i].x,
+            y: points[(i + 1) % len].y - points[i].y,
+          };
+        }
+        const minX = Math.floor(Math.max(0, Math.min.apply(null, xs)));
+        const maxX = Math.min(scale - 1, Math.max.apply(null, xs));
+        const minY = Math.floor(Math.max(0, Math.min.apply(null, ys)));
+        const maxY = Math.min(scale - 1, Math.max.apply(null, ys));
+        for (let i = minX; i <= maxX; i++) {
+          for (let j = minY; j <= maxY; j++) {
+            const result = barycentric(points, { x: i, y: j });
+            if (result.x < 0 || result.y < 0 || result.z < 0) {
+              continue;
+            }
+            const { color, discard } = shader.fragment(result);
+            const z = result.dot(
+              Vector3.fromArray([points[0].z, points[1].z, points[2].z])
+            );
+            if (zBuffer[i + j * scale] < z) {
+              // if (!discard) {
+              zBuffer[i + j * scale] = z;
+              scene.add({
+                x: i,
+                y: j,
+                color,
+              });
+            }
+          }
+        }
+      };
+      const fillHeader = () => {
+        const viewPort = viewport(0, 0, scale, scale);
+        const eye = new Vector3(1, -1, 3);
+        const center = new Vector3(0, 0, 0);
+        const up = new Vector3(0, 1, 0);
+        const eyeDir = center.clone().sub(eye).normalize();
+        eyeDir.y = -eyeDir.y;
+        const distance = eyeDir.length();
+        const lightDir = new Vector3(1, 1, 1).normalize();
+        const modelView = lookAt(eye, center, up);
+
+        const projection = new Matrix(4, 4);
+        projection.identity();
+        projection.setByIndex(-1 / distance, 3, 2);
+
+        const transformTS = (v) =>
+          v.applyMatrix4(
+            viewPort.clone().multiply(projection).multiply(modelView)
+          );
+        const shader = new Shader(lightDir, viewPort, projection, modelView);
+        for (let index = 0; index < modelJson.f.length; index++) {
+          const [f1, f2, f3] = modelJson.f[index];
+          const v1 = modelJson.v[f1[0]];
+          const v2 = modelJson.v[f2[0]];
+          const v3 = modelJson.v[f3[0]];
+          const vt1 = modelJson.vt[f1[1]];
+          const vt2 = modelJson.vt[f2[1]];
+          const vt3 = modelJson.vt[f3[1]];
+          const vn1 = Vector3.fromArray(modelJson.vn[f1[2]]);
+          const vn2 = Vector3.fromArray(modelJson.vn[f2[2]]);
+          const vn3 = Vector3.fromArray(modelJson.vn[f3[2]]);
+          const line1 = new Vector3(
+            v2[0] - v1[0],
+            v2[1] - v1[1],
+            v2[2] - v1[2]
+          );
+          const line2 = new Vector3(
+            v3[0] - v1[0],
+            v3[1] - v1[1],
+            v3[2] - v1[2]
+          );
+          const verticalVector = line2.cross(line1).normalize();
+          const culling = verticalVector.dot(eyeDir);
+          const intensity = Math.max(verticalVector.dot(lightDir), 0);
+          const points = [];
+          for (let i = 0; i < 3; i++) {
+            points.push(shader.vertex(index, i).toVector3());
+          }
+          // if (culling <= 0) continue;
+          rasterize(points, shader);
+        }
+      };
+
+      console.time();
+      fillHeader();
+      console.timeEnd();
+      console.time('render');
+      scene.render();
+      console.timeEnd('render');
+    </script>
+  </body>
+</html>
