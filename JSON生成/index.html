@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script src="createJSON.js"></script>
+    <script>
+      console.log(
+        createJSON({
+          name: '{{name}}', //随机生成一个名字
+          age: '{{integer(18, 40)}}', //随机生成一个18-40范围内的数字
+          email: '{{email}}', //随机生成一个邮箱字符串
+          projects: [
+            '{{repeat(3)}}', //这个对象重复创建三次
+            {
+              prjectName: '{{word(5)}}', //随机生成长度为5的字符串
+              progress: '{{percentage(0, 100)}}', // 随机生成一个范围0-100的百分数
+            },
+          ],
+          names: [
+            '{{repeat(3)}}', //这个对象重复创建三次
+            '{{name}}',
+          ],
+          say: function (util) {
+            return 'Hello ' + this.name + '！' + util.integer(1, 10);
+          },
+          say1: (util) => {
+            return 'Hello ' + this.name + '！' + util.integer(1, 10);
+          },
+        })
+      );
+    </script>
+  </body>
+</html>
