@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="1100" height="750"></canvas>
+    <script src="geoData.js"></script>
+    <script>
+      const canvas = document.getElementById('canvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const unit = 15;
+      const startX = 70;
+      const startY = 35;
+      const checkoutPoint = ([x, y], lines) => {
+        let n = 0;
+        lines.forEach(([[x1, y1], [x2, y2]]) => {
+          // 排除平行
+          if (
+            y1 !== y2 &&
+            ((y - y1) * (y - y2) < 0 || Math.min(y1, y2) === y) &&
+            ((x1 > x && x2 > x) || x1 - x > x - x2 || x2 - x > x - x1)
+          ) {
+            n++;
+          }
+        });
+        return n % 2 === 1;
+      };
+      let curr = null;
+      window.addEventListener('click', ({ clientX, clientY }) => {
+        console.time();
+        geoData.features.find(({ geometry, properties }) => {
+          const flag = geometry.lines.some((l) =>
+            checkoutPoint(
+              [clientX / unit / 0.81 + startX, 90 - (clientY / unit + startY)],
+              l
+            )
+          );
+          if (flag) {
+            curr = properties.name;
+          }
+          return flag;
+        });
+        draw();
+        console.timeEnd();
+      });
+      let minX = 180;
+      let maxX = 0;
+      let minY = 90;
+      let maxY = 0;
+      geoData.features.forEach(({ geometry, properties }) => {
+        const data =
+          geometry.type === 'MultiPolygon'
+            ? geometry.coordinates
+            : [geometry.coordinates];
+        geometry.lines = [];
+        data.forEach(([item]) => {
+          const len = item.length;
+          geometry.lines.push(
+            item
+              .slice(1)
+              .map((el, i) => [item[i], el])
+              .concat([[item[len - 1], item[0]]])
+          );
+        });
+      });
+      const draw = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        geoData.features.forEach(({ geometry, properties }) => {
+          const data =
+            geometry.type === 'MultiPolygon'
+              ? geometry.coordinates
+              : [geometry.coordinates];
+          data.forEach(([item]) => {
+            ctx.beginPath();
+            ctx.moveTo(
+              (item[0][0] - startX) * unit * 0.81,
+              (90 - item[0][1] - startY) * unit
+            );
+            item.slice(1).forEach((el) => {
+              ctx.lineTo(
+                (el[0] - startX) * unit * 0.81,
+                (90 - el[1] - startY) * unit
+              );
+            });
+            ctx.closePath();
+            ctx.stroke();
+            if (properties.name === curr) {
+              ctx.fillStyle = 'rgba(255,0,0,0.3)';
+              ctx.fill();
+            }
+          });
+        });
+      };
+      draw();
+    </script>
+  </body>
+</html>

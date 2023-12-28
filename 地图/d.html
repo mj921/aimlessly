@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <canvas id="canvas" width="1100" height="750"></canvas>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const points = [
+        [250, 100],
+        [400, 300],
+        [300, 300],
+        [300, 400],
+        [200, 400],
+        [200, 300],
+        [100, 300],
+      ];
+      const len = points.length;
+      const point = [110, 300];
+      ctx.fillStyle = 'blue';
+      ctx.beginPath();
+      ctx.arc(point[0], point[1], 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.fill();
+      const lines = points
+        .slice(1)
+        .map((el, i) => [points[i], el])
+        .concat([[points[len - 1], points[0]]]);
+      ctx.beginPath();
+      ctx.moveTo(points[len - 1][0], points[len - 1][1]);
+      points.forEach((el) => {
+        ctx.lineTo(el[0], el[1]);
+      });
+      ctx.stroke();
+
+      const [x, y] = point;
+
+      let n = 0;
+      ctx.strokeStyle = 'red';
+      lines.forEach(([[x1, y1], [x2, y2]]) => {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.closePath();
+        ctx.stroke();
+        // 排除平行
+        if (
+          y1 !== y2 &&
+          ((y - y1) * (y - y2) < 0 || Math.min(y1, y2) === y) &&
+          ((x1 > x && x2 > x) || x1 - x > x - x2 || x2 - x > x - x1)
+        ) {
+          n++;
+        }
+        // if (
+        //   y1 !== y2 &&
+        //   y < Math.max(y1, y2) &&
+        //   y > Math.min(y1, y2) &&
+        //   ((y - y1) * (x2 - x1)) / (y2 - y1) + x > 0
+        // ) {
+        //   n++;
+        // }
+      });
+      console.log(n % 2 === 1, n);
+    </script>
+  </body>
+</html>
