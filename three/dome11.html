@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <canvas width="800" height="500" id="canvas"></canvas>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.strokeStyle = '#f00';
+      ctx.beginPath();
+      ctx.moveTo(77, 244);
+      ctx.lineTo(77, 81);
+      ctx.stroke();
+      ctx.strokeStyle = '#000';
+      ctx.beginPath();
+      ctx.moveTo(77, 81);
+      ctx.lineTo(102, 109);
+      ctx.lineTo(102, 326);
+      ctx.lineTo(77, 244);
+      ctx.stroke();
+    </script>
+  </body>
+</html>

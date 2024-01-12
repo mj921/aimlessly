@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>数字识别</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.8.0"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@3.0.0"></script> -->
+  </head>
+  <body>
+    <h1>数字识别</h1>
+    <canvas id="canvas" width="280" height="280"></canvas>
+    <button id="clear-button">清除</button>
+    <button id="predict-button">预测</button>
+    <div id="prediction"></div>
+
+    <script>
+      const numClasses = 10;
+      const model = tf.sequential();
+      model.add(tf.layers.conv2d({
+        inputShape: [28, 28, 1],
+        filters: 32,
+        kernelSize: 3,
+        activation: 'relu'
+      }));
+      model.add(tf.layers.maxPooling2d({poolSize: [2, 2]}));
+      model.add(tf.layers.flatten());
+      model.add(tf.layers.dense({units: numClasses, activation: 'softmax'}));
+      model.compile({
+        optimizer: 'adam',
+        loss: 'categoricalCrossentropy',
+        metrics: ['accuracy']
+      });
+
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.lineWidth = 20;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000000';
+
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+
+      function startDrawing(event) {
+        isDrawing = true;
+        lastX = event.offsetX;
+        lastY = event.offsetY;
+      }
+
+      function draw(event) {
+        if (!isDrawing) return;
+        const x = event.offsetX;
+        const y = event.offsetY;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        lastX = x;
+        lastY = y;
+      }
+
+      function stopDrawing() {
+        isDrawing = false;
+      }
+
+      function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function predict() {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const img = tf.browser.fromPixels(imgData);
+        const resizedImg = tf.image.resizeBilinear(img, [28, 28]);
+        const grayscaleImg = resizedImg.mean(2);
+        const normalizedImg = grayscaleImg.div(255);
+        const input = normalizedImg.expandDims(0).expandDims(3);
+        const prediction = model.predict(input).dataSync();
+        console.log(prediction);
+        const digit = prediction.indexOf(Math.max(...prediction));
+        document.getElementById('prediction').textContent = `预测的数字是 ${digit}`;
+      }
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseout', stopDrawing);
+      document.getElementById('clear-button').addEventListener('click', clearCanvas);
+      document.getElementById('predict-button').addEventListener('click', predict);
+    </script>
+  </body>
+</html>

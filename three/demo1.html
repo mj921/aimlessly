@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <title>从零开始学习时空数据可视化示例 - glmaps</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <style>
+      body {
+        background: #fff;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"></script>
+    <script>
+      const {
+        BoxGeometry,
+        BufferAttribute,
+        BufferGeometry,
+        WebGLRenderer,
+        CircleGeometry,
+        ConeGeometry,
+        CylinderGeometry,
+        DirectionalLight,
+        Euler,
+        LineBasicMaterial,
+        Matrix4,
+        Mesh,
+        MeshBasicMaterial,
+        MeshStandardMaterial,
+        Object3D,
+        OrthographicCamera,
+        PerspectiveCamera,
+        Quaternion,
+        Scene,
+        SphereGeometry,
+        Vector3,
+        Vector4,
+        PlaneGeometry,
+        TorusGeometry,
+      } = THREE;
+
+      const renderer = new WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.append(renderer.domElement);
+
+      const scene = new Scene();
+
+      const sphere = new Mesh(
+        new SphereGeometry(),
+        // new MeshBasicMaterial({ color: 0xff0000 })
+        new MeshStandardMaterial({ color: 0xff0000 })
+        // new LineBasicMaterial({ color: 0x00ff00 })
+      );
+      sphere.position.set(2, 2, 2);
+      scene.add(sphere);
+
+      const cone = new Mesh(
+        new ConeGeometry(),
+        // new MeshBasicMaterial({ color: 0xff0000 })
+        new MeshStandardMaterial({ color: 0xff0000 })
+        // new LineBasicMaterial({ color: 0x00ff00 })
+      );
+      cone.position.set(-1, -1, 2);
+      cone.rotation.x = Math.PI / 4;
+      scene.add(cone);
+
+      const cylinder = new Mesh(
+        new CylinderGeometry(0.5, 1, 1, 8),
+        // new MeshBasicMaterial({ color: 0xff0000 })
+        new MeshStandardMaterial({ color: 0xff0000 })
+        // new LineBasicMaterial({ color: 0x00ff00 })
+      );
+      cylinder.position.set(2, -0.9, 2);
+      cylinder.rotation.x = Math.PI / 6;
+
+      scene.add(cylinder);
+
+      const torus = new Mesh(
+        new TorusGeometry(),
+        // new MeshBasicMaterial({ color: 0xff0000 })
+        new MeshStandardMaterial({ color: 0xff0000 })
+        // new LineBasicMaterial({ color: 0x00ff00 })
+      );
+      torus.position.set(-3, -3, 2);
+
+      scene.add(torus);
+
+      const cirlce = new Mesh(
+        new CircleGeometry(),
+        // new MeshBasicMaterial({ color: 0xff0000 })
+        // new MeshStandardMaterial({ color: 0xff0000 })
+        new LineBasicMaterial({ color: 0x00ff00 })
+      );
+      cirlce.position.set(-2, 2, 2);
+      scene.add(cirlce);
+
+      const plane = new Mesh(
+        new PlaneGeometry(),
+        // new MeshBasicMaterial({ color: 0xff0000 })
+        // new MeshStandardMaterial({ color: 0xff0000 })
+        new LineBasicMaterial({ color: 0x00ff00 })
+      );
+      plane.position.set(-2, 0.4, 2);
+      scene.add(plane);
+
+      const box = new Mesh(
+        new BoxGeometry(),
+        new MeshStandardMaterial({ color: 0xff0000 })
+        // new MeshBasicMaterial({ color: 0xff0000 })
+      );
+      box.position.set(0, 0.5, 0.5);
+      box.scale.set(1, 1, 1);
+      box.lookAt(1, -0.5, -0.5);
+      // box.rotation.x = Math.PI / 4;
+      scene.add(box);
+      console.log(box);
+
+      const box1 = new Mesh(
+        new BoxGeometry(),
+        new LineBasicMaterial({ color: 0x00ff00 })
+      );
+      box1.position.set(0.2, 0.2, 0);
+      // scene.add(box1);
+      const box2 = new Mesh(
+        new BoxGeometry(),
+        new MeshBasicMaterial({ color: 0x0000ff })
+      );
+      box2.position.set(0, -0.5, 0.5);
+      scene.add(box2);
+      const box3 = new Mesh(
+        new BoxGeometry(),
+        new MeshBasicMaterial({ color: 0xffff00 })
+      );
+      box3.position.set(0, 0.5, -0.5);
+      // scene.add(box3);
+      const box4 = new Mesh(
+        new BoxGeometry(),
+        new MeshBasicMaterial({ color: 0x00ffff })
+      );
+      box4.position.set(0, -0.5, -0.5);
+      scene.add(box4);
+      // const geo = new BufferGeometry();
+      // geo.setAttribute(
+      //   'position',
+      //   new BufferAttribute([1, 1, 0, -1, -1, 0, 1, -1, 0], 3)
+      // );
+      // const mesh = new Mesh(geo, new MeshBasicMaterial({ color: 0x00ffff }));
+      // const mesh1 = new Mesh(geo, new MeshBasicMaterial({ color: 0xff0000 }));
+      // // mesh.position.set(0.2, 0, 0);
+      // // mesh1.position.set(0.2, 0, 0);
+      // mesh.scale.set(2, 1, 1);
+      // mesh.lookAt(0, 0, 10);
+      // mesh1.lookAt(0, 0, 10);
+      // scene.add(mesh);
+      // scene.add(mesh1);
+      const light = new DirectionalLight(0xffffff, 1);
+      scene.add(light);
+      light.position.y = 10;
+      const size = 5;
+      const aspect = window.innerWidth / window.innerHeight;
+      const camera = new OrthographicCamera(
+        -size * aspect,
+        size * aspect,
+        size,
+        -size,
+        0.1,
+        1000
+      );
+      // const camera = new PerspectiveCamera(
+      //   75,
+      //   aspect,
+      //   0.1,
+      //   2000
+      // );
+      // camera.position.z = 5;
+      camera.position.set(0, 0, 5);
+      camera.lookAt(0, 0, 0);
+      let t = 10;
+      const loop = () => {
+        console.time();
+        renderer.render(scene, camera);
+        console.timeEnd();
+        t--;
+        if (t > 0) {
+          requestAnimationFrame(loop);
+        }
+      };
+      loop();
+    </script>
+  </body>
+</html>

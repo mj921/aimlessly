@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TensorFlow.js Image Classification Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.0.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.0.4/dist/mobilenet.min.js"></script>
+  </head>
+  <body>
+    <h1>TensorFlow.js Image Classification Example</h1>
+    <img
+      id="image"
+      style="width: 100%"
+      crossorigin="anonymous"
+      src="https://images.pexels.com/photos/356056/pexels-photo-356056.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260"
+    />
+    <br /><br />
+    <button onclick="loadModel()">预测</button>
+    <br />
+    <canvas width="28" height="28" id="canvas"></canvas>
+    <br /><br />
+    <div id="result"></div>
+    <script type="text/javascript">
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      async function loadModel() {
+        const numClasses = 10;
+        console.log(111);
+        // 加载模型
+        // const model = await mobilenet.load();
+
+        const model = tf.sequential();
+        model.add(
+          tf.layers.conv2d({
+            inputShape: [28, 28, 1],
+            kernelSize: 5,
+            filters: 8,
+            strides: 1,
+            activation: 'relu',
+            kernelInitializer: 'VarianceScaling',
+          })
+        );
+
+        model.add(
+          tf.layers.maxPooling2d({
+            poolSize: [2, 2],
+            strides: [2, 2],
+          })
+        );
+
+        model.add(
+          tf.layers.conv2d({
+            kernelSize: 5,
+            filters: 16,
+            strides: 1,
+            activation: 'relu',
+            kernelInitializer: 'VarianceScaling',
+          })
+        );
+
+        model.add(
+          tf.layers.maxPooling2d({
+            poolSize: [2, 2],
+            strides: [2, 2],
+          })
+        );
+
+        model.add(tf.layers.flatten());
+
+        model.add(
+          tf.layers.dense({
+            units: 10,
+            kernelInitializer: 'VarianceScaling',
+            activation: 'softmax',
+          })
+        );
+
+        const LEARNING_RATE = 0.15;
+        const optimizer = tf.train.sgd(LEARNING_RATE);
+
+        model.compile({
+          // optimizer: optimizer,
+          optimizer: 'adam',
+          loss: 'categoricalCrossentropy',
+          metrics: ['accuracy'],
+        });
+
+        console.log(model);
+        // 加载图像
+        const img = document.getElementById('image');
+
+        // console.log(tf.browser.fromPixels(canvas).toFloat())
+
+        // 将图像转换为张量
+        const tensor = tf.browser.fromPixels(canvas).mean(2);
+        console.log(tensor);
+
+        // 对图像进行归一化
+        const normalized = tensor.div(255).expandDims(2);
+        console.log(normalized);
+        console.log(tf);
+        const a = await model.fit(
+          normalized,
+          tf.oneHot([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], numClasses),
+          {
+            epochs: 10,
+            validationSplit: 0.2,
+            // callbacks: tfvis.show.fitCallbacks(
+            //   { name: 'Training Performance' },
+            //   ['loss', 'val_loss', 'acc', 'val_acc']
+            // ),
+          }
+        ).then((...args) => {
+          console.log(args);
+        });
+        console.log(a);
+
+        // // 进行预测
+        // const predictions = await model.predict(normalized, { batchSize: 4 });
+        // console.log(predictions);
+
+        // 显示预测结果
+        // const result = document.getElementById('result');
+        // result.innerHTML = `预测结果：${predictions[0].className}`;
+      }
+    </script>
+  </body>
+</html>

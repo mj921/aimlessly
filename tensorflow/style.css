@@ -1,0 +1,9 @@
+.wrapper {
+  width: 600px;
+  margin: 0 auto;
+}
+
+#result {
+  color: #f00;
+  font-size: 2em;
+}

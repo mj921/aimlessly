@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+      }
+      body {
+        overflow: hidden;
+      }
+      #root {
+        height: 100vh;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div>111</div>
+    </div>
+    <script>
+      const root = document.getElementById('root');
+      let flag = false;
+      let type = 0;
+      let y = 0;
+      root.addEventListener('touchstart', (e) => {
+        y = e.touches[0].clientY;
+        if (root.scrollTop === 0) {
+          type = 1;
+        } else if (root.scrollHeight - root.offsetHeight - root.scrollTop < 1) {
+          type = 2;
+        }
+      });
+      root.addEventListener('touchmove', (e) => {
+        if (
+          (type === 1 && e.touches[0].clientY > y) ||
+          (type === 2 && e.touches[0].clientY < y)
+        ) {
+          flag = true;
+        }
+      });
+      root.addEventListener('touchend', (e) => {
+        flag = false;
+        type = 0;
+      });
+      document.body.addEventListener(
+        'touchmove',
+        (e) => {
+          if (flag) {
+            e.preventDefault();
+          }
+        },
+        { passive: false }
+      );
+      for (let i = 0; i < 100; i++) {
+        root.innerHTML += `<div>${i}</div>`;
+      }
+    </script>
+  </body>
+</html>

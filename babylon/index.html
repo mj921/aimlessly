@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="renderCanvas" touch-action="none"></canvas>
+    <script>
+      const canvas = document.getElementById('renderCanvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const engine = new BABYLON.Engine(canvas, true);
+      const createScene = () => {
+        const scene = new BABYLON.Scene(engine);
+        const camera = new BABYLON.ArcRotateCamera(
+          'Camera',
+          Math.PI / 2,
+          Math.PI / 2,
+          2,
+          new BABYLON.Vector3(0, 0, 5),
+          scene
+        );
+        camera.attachControl(canvas, true);
+        const light1 = new BABYLON.HemisphericLight(
+          'light1',
+          new BABYLON.Vector3(1, 1, 0),
+          scene
+        );
+        const light2 = new BABYLON.PointLight(
+          'light2',
+          new BABYLON.Vector3(0, 1, -1),
+          scene
+        );
+
+        const sphere = BABYLON.MeshBuilder.CreateSphere(
+          'sphere',
+          { diameter: 2 },
+          scene
+        );
+
+        return scene;
+      };
+      const scene = createScene();
+      engine.runRenderLoop(function () {
+        scene.render();
+      });
+      window.addEventListener('resize', function () {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        engine.resize();
+      });
+    </script>
+  </body>
+</html>

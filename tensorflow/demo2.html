@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>手动训练数字识别模型</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.8.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@3.0.0/dist/tf-vis.min.js"></script>
+</head>
+<body>
+  <canvas id="canvas" width="280" height="280" style="border:1px solid #000000;"></canvas>
+  <button id="clear-button">清除</button>
+  <button id="predict-button">预测</button>
+  <div id="result"></div>
+
+  <script>
+    // 获取画布对象和上下文
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 定义画笔样式
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#000000';
+
+    // 定义变量
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    // 监听鼠标事件
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      [lastX, lastY] = [e.offsetX, e.offsetY];
+    });
+    canvas.addEventListener('mousemove', (e) => {
+      if (isDrawing) {
+        drawLine(lastX, lastY, e.offsetX, e.offsetY);
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+      }
+    });
+    canvas.addEventListener('mouseup', () => {
+      isDrawing = false;
+    });
+    canvas.addEventListener('mouseout', () => {
+      isDrawing = false;
+    });
+
+    // 定义函数：绘制线段
+    function drawLine(x1, y1, x2, y2) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    // 监听清除按钮事件
+    const clearButton = document.getElementById('clear-button');
+    clearButton.addEventListener('click', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById('result').innerHTML = '';
+    });
+
+    // 监听预测按钮事件
+    const predictButton = document.getElementById('predict-button');
+    predictButton.addEventListener('click', () => {
+      // 将画布内容转换为张量
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const tensor = tf.browser.fromPixels(imageData, 1).reshape([1, 28, 28, 1]).toFloat().div(255);
+
+
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const img = tf.browser.fromPixels(imgData);
+        const resizedImg = tf.image.resizeBilinear(img, [28, 28]);
+        const grayscaleImg = resizedImg.mean(2);
+        const normalizedImg = grayscaleImg.div(255);
+        const input = normalizedImg.expandDims(0).expandDims(3);
+        const prediction = model.predict(input).dataSync();
+
+      // 加载模型
+      tf.loadLayersModel('model.json').then((model) => {
+        // 使用模型进行预测
+        const prediction = model.predict(tensor).argMax(-1).dataSync()[0];
+        document.getElementById('result').innerHTML = `预测结果为：${prediction}`;
+      });
+    });
+
+  </script>
+</body>
+</html>

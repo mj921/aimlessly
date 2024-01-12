@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>手写数字识别</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <h2>手写数字识别</h2>
+      <div class="inputs">
+        <input type="file" id="image-file" accept="image/*" />
+      </div>
+      <button id="submit">识别</button>
+      <div id="result">请上传手写数字图片进行识别</div>
+    </div>
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
