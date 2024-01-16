@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-size: 12px;
+      }
+      #main {
+        position: absolute;
+        left: 100px;
+        top: 100px;
+      }
+      #main > dl {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-bottom: 1px solid #24461e;
+        border-right: 1px solid #24461e;
+        text-align: center;
+      }
+      #main > dl.active {
+        background-color: #000;
+      }
+      #main > dl.delete::after {
+        content: 'x';
+        color: #24461e;
+        line-height: 18px;
+        font-size: 18px;
+        display: block;
+      }
+      #main > dl[id$='-cell-4'],
+      #main > dl[id$='-cell-9'],
+      #main > dl[id$='-cell-14'],
+      #main > dl[id$='-cell-19'],
+      #main > dl[id$='-cell-24'],
+      #main > dl[id$='-cell-29'] {
+        border-right-color: red;
+      }
+      #main > dl[id^='4-cell-'],
+      #main > dl[id^='9-cell-'],
+      #main > dl[id^='14-cell-'],
+      #main > dl[id^='19-cell-'],
+      #main > dl[id^='24-cell-'],
+      #main > dl[id^='29-cell-'] {
+        border-bottom-color: red;
+      }
+      #left {
+        height: 100%;
+        width: 100px;
+        position: absolute;
+        left: -100px;
+        top: 0;
+      }
+      #left dl {
+        height: 20px;
+        border-bottom: 1px solid #24461e;
+        border-right: 1px solid #24461e;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+      }
+      #left dl dd {
+        width: 16px;
+        text-align: center;
+      }
+      #top {
+        height: 100px;
+        width: 100%;
+        position: absolute;
+        top: -100px;
+        left: 0;
+        display: flex;
+      }
+      #top dl {
+        width: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        border-right: 1px solid #24461e;
+        border-bottom: 1px solid #24461e;
+      }
+      #top dl dd {
+        line-height: 16px;
+        text-align: center;
+      }
+      #left dl.hover,
+      #top dl.hover {
+        background-color: rgba(255, 0, 0, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <div id="left"></div>
+      <div id="top"></div>
+    </div>
+    <input type="checkbox" id="checkbox" checked /> 填充
+    <button id="save">保存</button>
+    <button id="reset">重置</button>
+    <script>
+      const rows = [
+        [2],
+        [3, 3],
+        [2, 1],
+        [3, 1],
+        [3, 3],
+        [1, 5],
+        [1, 8],
+        [4, 9, 3],
+        [5, 7, 1],
+        [13, 2],
+        [13, 2],
+        [16, 5],
+        [22],
+        [22],
+        [22],
+        [22],
+        [10, 10],
+        [8, 8],
+        [8, 8],
+        [8, 8],
+        [7, 2, 10],
+        [7, 12],
+        [7, 12],
+        [7, 12],
+        [9, 15],
+        [2, 7, 12, 2],
+        [2, 7, 12, 1],
+        [1, 6, 11, 1],
+        [3, 4, 10, 1],
+        [2, 2, 8, 2],
+        [3, 1, 6, 2],
+        [3, 6, 3],
+        [3, 1, 3],
+        [3, 3],
+        [5],
+      ];
+      const cols = [
+        [1],
+        [1, 1],
+        [1, 1],
+        [1, 2],
+        [1, 1],
+        [1, 1],
+        [1, 1],
+        [23, 1],
+        [1, 21, 2],
+        [1, 21, 1],
+        [1, 22, 2],
+        [1, 21, 1],
+        [1, 21, 1],
+        [1, 22, 1],
+        [1, 13, 1, 1],
+        [1, 10, 1, 1, 1],
+        [1, 11, 1, 1, 1],
+        [1, 10, 11, 1],
+        [1, 10, 12, 1],
+        [1, 12, 12, 1],
+        [1, 3, 6, 12, 1],
+        [1, 4, 20, 1],
+        [1, 4, 20, 1],
+        [5, 18, 1],
+        [1, 19, 1],
+        [1, 18, 1],
+        [1, 18, 1],
+        [20, 1],
+        [18, 1],
+        [1, 2],
+        [1, 1],
+        [1, 1],
+        [1, 1],
+        [1, 1],
+        [2],
+      ];
+      const main = document.getElementById('main');
+      main.style.width = 20 * cols.length + 'px';
+      main.style.height = 20 * rows.length + 'px';
+      const leftEl = document.getElementById('left');
+      const topEl = document.getElementById('top');
+      const checkbox = document.getElementById('checkbox');
+      const save = document.getElementById('save');
+      const cells = [];
+      let localCells = [];
+      const cellsStr = localStorage.getItem('cells');
+      if (cellsStr) {
+        localCells = JSON.parse(cellsStr);
+      }
+      for (let i = 0, rowLen = rows.length; i < rowLen; i++) {
+        const dl = document.createElement('dl');
+        rows[i].forEach((item) => {
+          const dd = document.createElement('dd');
+          dd.innerText = item;
+          dl.appendChild(dd);
+        });
+        leftEl.appendChild(dl);
+        const arr = [];
+        for (let j = 0, colLen = cols.length; j < colLen; j++) {
+          const status = localCells[i]?.[j] ?? 0;
+          const dl = document.createElement('dl');
+          dl.setAttribute('data-row', i);
+          dl.setAttribute('data-col', j);
+          dl.id = `${i}-cell-${j}`;
+          dl.className = 'cell';
+          if (status === 1) {
+            dl.className += ' active';
+          } else if (status === -1) {
+            dl.className += ' delete';
+          }
+          dl.style.top = i * 20 + 'px';
+          dl.style.left = j * 20 + 'px';
+          main.appendChild(dl);
+          arr.push(status);
+        }
+        cells.push(arr);
+      }
+      for (let j = 0, colLen = cols.length; j < colLen; j++) {
+        const dl = document.createElement('dl');
+        cols[j].forEach((item) => {
+          const dd = document.createElement('dd');
+          dd.innerText = item;
+          dl.appendChild(dd);
+        });
+        topEl.appendChild(dl);
+      }
+      const checkFinish = (row, col) => {
+        const rowItem = [...rows[row]];
+        let n = rowItem.shift() ?? 0;
+        let flag = true;
+        for (let i = 0; i < cols.length; i++) {
+          if (cells[row][i] === 1) {
+            if (n > 0) {
+              n--;
+            } else {
+              flag = false;
+              break;
+            }
+          } else {
+            if (n === 0) {
+              n = rowItem.shift() ?? 0;
+            } else {
+              flag = false;
+              break;
+            }
+          }
+        }
+        if (n !== 0) {
+          flag = false;
+        }
+        if (flag) {
+          for (let i = 0; i < cols.length; i++) {
+            if (cells[row][i] === 0) {
+              cells[row][i] = -1;
+              document.getElementById(`${row}-cell-${i}`).className =
+                'cell delete';
+            }
+          }
+        }
+
+        const colItem = [...cols[col]];
+        n = colItem.shift() ?? 0;
+        flag = true;
+        for (let i = 0; i < rows.length; i++) {
+          if (cells[i][col] === 1) {
+            if (n > 0) {
+              n--;
+            } else {
+              flag = false;
+              break;
+            }
+          } else {
+            if (n === 0) {
+              n = colItem.shift() ?? 0;
+            } else {
+              flag = false;
+              break;
+            }
+          }
+        }
+        if (n !== 0) {
+          flag = false;
+        }
+        if (flag) {
+          for (let i = 0; i < rows.length; i++) {
+            if (cells[i][col] === 0) {
+              cells[i][col] = -1;
+              document.getElementById(`${i}-cell-${col}`).className =
+                'cell delete';
+            }
+          }
+        }
+      };
+      let downflag = null;
+
+      const setCellStatus = (row, col, el) => {
+        const status = cells[row][col];
+        if (checkbox.checked) {
+          if (status === 1) {
+            el.className = 'cell';
+            cells[row][col] = 0;
+          } else if (status === 0) {
+            el.className = 'cell active';
+            cells[row][col] = 1;
+          }
+          checkFinish(row, col);
+        } else {
+          if (status === -1) {
+            el.className = 'cell';
+            cells[row][col] = 0;
+          } else if (status === 0) {
+            el.className = 'cell delete';
+            cells[row][col] = -1;
+          }
+        }
+      };
+      main.addEventListener('mousedown', (e) => {
+        if (e.target.className.includes('cell')) {
+          const { row, col } = e.target.dataset;
+          downflag = { i: +row, j: +col, beforeEl: e.target };
+          setCellStatus(+row, +col, e.target);
+        }
+      });
+      main.addEventListener('mousemove', (e) => {
+        if (downflag && e.target.className.includes('cell')) {
+          const { i, j, beforeEl } = downflag;
+          const { row, col } = e.target.dataset;
+          if ((+row === i || +col === j) && beforeEl !== e.target) {
+            setCellStatus(+row, +col, e.target);
+            downflag.beforeEl = e.target;
+          }
+        }
+      });
+      window.addEventListener('mouseup', () => {
+        downflag = null;
+      });
+      let hoverRow = -1;
+      let hoverCol = -1;
+      let hoverCell = {};
+      const leftDls = leftEl.querySelectorAll('dl');
+      const topDls = topEl.querySelectorAll('dl');
+      Object.defineProperty(hoverCell, 'row', {
+        get: () => hoverRow,
+        set: (val) => {
+          if (hoverRow > -1) {
+            leftDls[hoverRow].className = '';
+          }
+          hoverRow = val;
+          if (val > -1) {
+            leftDls[val].className = 'hover';
+          }
+        },
+      });
+      Object.defineProperty(hoverCell, 'col', {
+        get: () => hoverCol,
+        set: (val) => {
+          if (hoverCol > -1) {
+            topDls[hoverCol].className = '';
+          }
+          hoverCol = val;
+          if (val > -1) {
+            topDls[val].className = 'hover';
+          }
+        },
+      });
+      main.querySelectorAll('dl').forEach((el) => {
+        el.addEventListener('mouseenter', () => {
+          const { row, col } = el.dataset;
+          hoverCell.row = +row;
+          hoverCell.col = +col;
+        });
+      });
+      main.addEventListener('mouseleave', () => {
+        hoverCell.row = -1;
+        hoverCell.col = -1;
+      });
+      save.addEventListener('click', () => {
+        localStorage.setItem('cells', JSON.stringify(cells));
+      });
+      reset.addEventListener('click', () => {
+        localStorage.clear();
+        window.location.reload();
+      });
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 's') {
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            localStorage.setItem('cells', JSON.stringify(cells));
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
