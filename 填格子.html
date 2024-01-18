@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
+      body {
+        background-color: #8c96e2;
+      }
       * {
         box-sizing: border-box;
         margin: 0;
@@ -13,23 +16,24 @@
       }
       #main {
         position: absolute;
-        left: 100px;
-        top: 100px;
+        left: 120px;
+        top: 110px;
       }
       #main > dl {
         position: absolute;
         width: 20px;
         height: 20px;
-        border-bottom: 1px solid #24461e;
-        border-right: 1px solid #24461e;
+        border-bottom: 1px solid #8c96e2;
+        border-right: 1px solid #8c96e2;
         text-align: center;
+        background-color: #f2eec1;
       }
       #main > dl.active {
-        background-color: #000;
+        background-color: #1e544d;
       }
       #main > dl.delete::after {
         content: 'x';
-        color: #24461e;
+        color: #8c96e2;
         line-height: 18px;
         font-size: 18px;
         display: block;
@@ -40,7 +44,8 @@
       #main > dl[id$='-cell-19'],
       #main > dl[id$='-cell-24'],
       #main > dl[id$='-cell-29'] {
-        border-right-color: red;
+        /* border-right-color: red; */
+        border-right-width: 2px;
       }
       #main > dl[id^='4-cell-'],
       #main > dl[id^='9-cell-'],
@@ -48,7 +53,8 @@
       #main > dl[id^='19-cell-'],
       #main > dl[id^='24-cell-'],
       #main > dl[id^='29-cell-'] {
-        border-bottom-color: red;
+        /* border-bottom-color: red; */
+        border-bottom-width: 2px;
       }
       #left {
         height: 100%;
@@ -59,11 +65,13 @@
       }
       #left dl {
         height: 20px;
-        border-bottom: 1px solid #24461e;
-        border-right: 1px solid #24461e;
+        border-bottom: 1px solid #8c96e2;
+        border-right: 1px solid #8c96e2;
         display: flex;
         justify-content: flex-end;
         align-items: center;
+        background-color: #e6e8f6;
+        font-weight: bold;
       }
       #left dl dd {
         width: 16px;
@@ -83,8 +91,10 @@
         flex-direction: column;
         justify-content: flex-end;
         align-items: center;
-        border-right: 1px solid #24461e;
-        border-bottom: 1px solid #24461e;
+        border-right: 1px solid #8c96e2;
+        border-bottom: 1px solid #8c96e2;
+        background-color: #e6e8f6;
+        font-weight: bold;
       }
       #top dl dd {
         line-height: 16px;
@@ -92,7 +102,12 @@
       }
       #left dl.hover,
       #top dl.hover {
-        background-color: rgba(255, 0, 0, 0.3);
+        background-color: rgba(255, 0, 0, 1);
+      }
+      #left dl.finish,
+      #top dl.finish {
+        font-weight: normal;
+        color: #aaa;
       }
     </style>
   </head>
@@ -105,79 +120,323 @@
     <button id="save">保存</button>
     <button id="reset">重置</button>
     <script>
+      const addClass = (el, className) => {
+        const set = new Set((el.className || '').split(/\s+/));
+        set.add(className);
+        el.className = Array.from(set).join(' ');
+      };
+      const removeClass = (el, className) => {
+        const set = new Set((el.className || '').split(/\s+/));
+        set.delete(className);
+        el.className = Array.from(set).join(' ');
+      };
       const rows = [
-        [2],
-        [3, 3],
-        [2, 1],
-        [3, 1],
-        [3, 3],
-        [1, 5],
-        [1, 8],
-        [4, 9, 3],
-        [5, 7, 1],
-        [13, 2],
-        [13, 2],
-        [16, 5],
-        [22],
-        [22],
-        [22],
-        [22],
-        [10, 10],
-        [8, 8],
-        [8, 8],
-        [8, 8],
-        [7, 2, 10],
-        [7, 12],
-        [7, 12],
-        [7, 12],
-        [9, 15],
-        [2, 7, 12, 2],
-        [2, 7, 12, 1],
-        [1, 6, 11, 1],
-        [3, 4, 10, 1],
-        [2, 2, 8, 2],
-        [3, 1, 6, 2],
-        [3, 6, 3],
-        [3, 1, 3],
-        [3, 3],
-        [5],
+        [{ value: 2, status: false }],
+        [
+          { value: 3, status: false },
+          { value: 3, status: false },
+        ],
+        [
+          { value: 2, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 3, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 3, status: false },
+          { value: 3, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 5, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 8, status: false },
+        ],
+        [
+          { value: 4, status: false },
+          { value: 9, status: false },
+          { value: 3, status: false },
+        ],
+        [
+          { value: 5, status: false },
+          { value: 7, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 13, status: false },
+          { value: 2, status: false },
+        ],
+        [
+          { value: 13, status: false },
+          { value: 2, status: false },
+        ],
+        [
+          { value: 16, status: false },
+          { value: 5, status: false },
+        ],
+        [{ value: 22, status: false }],
+        [{ value: 22, status: false }],
+        [{ value: 22, status: false }],
+        [{ value: 22, status: false }],
+        [
+          { value: 10, status: false },
+          { value: 10, status: false },
+        ],
+        [
+          { value: 8, status: false },
+          { value: 8, status: false },
+        ],
+        [
+          { value: 8, status: false },
+          { value: 8, status: false },
+        ],
+        [
+          { value: 8, status: false },
+          { value: 8, status: false },
+        ],
+        [
+          { value: 7, status: false },
+          { value: 2, status: false },
+          { value: 10, status: false },
+        ],
+        [
+          { value: 7, status: false },
+          { value: 12, status: false },
+        ],
+        [
+          { value: 7, status: false },
+          { value: 12, status: false },
+        ],
+        [
+          { value: 7, status: false },
+          { value: 12, status: false },
+        ],
+        [
+          { value: 9, status: false },
+          { value: 15, status: false },
+        ],
+        [
+          { value: 2, status: false },
+          { value: 7, status: false },
+          { value: 12, status: false },
+          { value: 2, status: false },
+        ],
+        [
+          { value: 2, status: false },
+          { value: 7, status: false },
+          { value: 12, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 6, status: false },
+          { value: 11, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 3, status: false },
+          { value: 4, status: false },
+          { value: 10, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 2, status: false },
+          { value: 2, status: false },
+          { value: 8, status: false },
+          { value: 2, status: false },
+        ],
+        [
+          { value: 3, status: false },
+          { value: 1, status: false },
+          { value: 6, status: false },
+          { value: 2, status: false },
+        ],
+        [
+          { value: 3, status: false },
+          { value: 6, status: false },
+          { value: 3, status: false },
+        ],
+        [
+          { value: 3, status: false },
+          { value: 1, status: false },
+          { value: 3, status: false },
+        ],
+        [
+          { value: 3, status: false },
+          { value: 3, status: false },
+        ],
+        [{ value: 5, status: false }],
       ];
       const cols = [
-        [1],
-        [1, 1],
-        [1, 1],
-        [1, 2],
-        [1, 1],
-        [1, 1],
-        [1, 1],
-        [23, 1],
-        [1, 21, 2],
-        [1, 21, 1],
-        [1, 22, 2],
-        [1, 21, 1],
-        [1, 21, 1],
-        [1, 22, 1],
-        [1, 13, 1, 1],
-        [1, 10, 1, 1, 1],
-        [1, 11, 1, 1, 1],
-        [1, 10, 11, 1],
-        [1, 10, 12, 1],
-        [1, 12, 12, 1],
-        [1, 3, 6, 12, 1],
-        [1, 4, 20, 1],
-        [1, 4, 20, 1],
-        [5, 18, 1],
-        [1, 19, 1],
-        [1, 18, 1],
-        [1, 18, 1],
-        [20, 1],
-        [18, 1],
-        [1, 2],
-        [1, 1],
-        [1, 1],
-        [1, 1],
-        [1, 1],
-        [2],
+        [{ value: 1, status: false }],
+        [
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 2, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 23, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 21, status: false },
+          { value: 2, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 21, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 22, status: false },
+          { value: 2, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 21, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 21, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 22, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 13, status: false },
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 10, status: false },
+          { value: 1, status: false },
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 11, status: false },
+          { value: 1, status: false },
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 10, status: false },
+          { value: 11, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 10, status: false },
+          { value: 12, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 12, status: false },
+          { value: 12, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 3, status: false },
+          { value: 6, status: false },
+          { value: 12, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 4, status: false },
+          { value: 20, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 4, status: false },
+          { value: 20, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 5, status: false },
+          { value: 18, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 19, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 18, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 18, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 20, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 18, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 2, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [
+          { value: 1, status: false },
+          { value: 1, status: false },
+        ],
+        [{ value: 2, status: false }],
       ];
       const main = document.getElementById('main');
       main.style.width = 20 * cols.length + 'px';
@@ -196,7 +455,7 @@
         const dl = document.createElement('dl');
         rows[i].forEach((item) => {
           const dd = document.createElement('dd');
-          dd.innerText = item;
+          dd.innerText = item.value;
           dl.appendChild(dd);
         });
         leftEl.appendChild(dl);
@@ -224,33 +483,44 @@
         const dl = document.createElement('dl');
         cols[j].forEach((item) => {
           const dd = document.createElement('dd');
-          dd.innerText = item;
+          dd.innerText = item.value;
           dl.appendChild(dd);
         });
         topEl.appendChild(dl);
       }
+      const leftDls = leftEl.querySelectorAll('dl');
+      const topDls = topEl.querySelectorAll('dl');
       const checkFinish = (row, col) => {
-        const rowItem = [...rows[row]];
-        let n = rowItem.shift() ?? 0;
+        const rowItem = rows[row];
+        let n = -1;
         let flag = true;
         for (let i = 0; i < cols.length; i++) {
           if (cells[row][i] === 1) {
-            if (n > 0) {
-              n--;
+            if (n === -1) {
+              n++;
+              if (rowItem[n]) {
+                rowItem[n].n = rowItem[n].value;
+              }
+            }
+            if (rowItem[n]?.n > 0) {
+              rowItem[n].n--;
             } else {
               flag = false;
               break;
             }
           } else {
-            if (n === 0) {
-              n = rowItem.shift() ?? 0;
-            } else {
+            if (rowItem[n] && rowItem[n].n === 0) {
+              n++;
+              if (rowItem[n]) {
+                rowItem[n].n = rowItem[n].value;
+              }
+            } else if (rowItem[n] && rowItem[n].n > 0) {
               flag = false;
               break;
             }
           }
         }
-        if (n !== 0) {
+        if (rowItem[n] && rowItem[n].n > 0) {
           flag = false;
         }
         if (flag) {
@@ -262,28 +532,45 @@
             }
           }
         }
+        rowItem.forEach((el) => {
+          el.status = flag;
+          if (flag) {
+            addClass(leftDls[row], 'finish');
+          } else {
+            removeClass(leftDls[row], 'finish');
+          }
+        });
 
-        const colItem = [...cols[col]];
-        n = colItem.shift() ?? 0;
+        const colItem = cols[col];
+        n = -1;
         flag = true;
         for (let i = 0; i < rows.length; i++) {
           if (cells[i][col] === 1) {
-            if (n > 0) {
-              n--;
+            if (n === -1) {
+              n++;
+              if (colItem[n]) {
+                colItem[n].n = colItem[n].value;
+              }
+            }
+            if (colItem[n]?.n > 0) {
+              colItem[n].n--;
             } else {
               flag = false;
               break;
             }
           } else {
-            if (n === 0) {
-              n = colItem.shift() ?? 0;
-            } else {
+            if (colItem[n] && colItem[n].n === 0) {
+              n++;
+              if (colItem[n]) {
+                colItem[n].n = colItem[n].value;
+              }
+            } else if (colItem[n] && colItem[n].n > 0) {
               flag = false;
               break;
             }
           }
         }
-        if (n !== 0) {
+        if (colItem[n] && colItem[n].n > 0) {
           flag = false;
         }
         if (flag) {
@@ -295,6 +582,15 @@
             }
           }
         }
+        colItem.forEach((el) => el.status === flag);
+        colItem.forEach((el) => {
+          el.status = flag;
+          if (flag) {
+            addClass(topDls[col], 'finish');
+          } else {
+            removeClass(topDls[col], 'finish');
+          }
+        });
       };
       let downflag = null;
 
@@ -342,17 +638,15 @@
       let hoverRow = -1;
       let hoverCol = -1;
       let hoverCell = {};
-      const leftDls = leftEl.querySelectorAll('dl');
-      const topDls = topEl.querySelectorAll('dl');
       Object.defineProperty(hoverCell, 'row', {
         get: () => hoverRow,
         set: (val) => {
           if (hoverRow > -1) {
-            leftDls[hoverRow].className = '';
+            removeClass(leftDls[hoverRow], 'hover');
           }
           hoverRow = val;
           if (val > -1) {
-            leftDls[val].className = 'hover';
+            addClass(leftDls[val], 'hover');
           }
         },
       });
@@ -360,11 +654,11 @@
         get: () => hoverCol,
         set: (val) => {
           if (hoverCol > -1) {
-            topDls[hoverCol].className = '';
+            removeClass(topDls[hoverCol], 'hover');
           }
           hoverCol = val;
           if (val > -1) {
-            topDls[val].className = 'hover';
+            addClass(topDls[val], 'hover');
           }
         },
       });
@@ -392,6 +686,9 @@
             e.preventDefault();
             localStorage.setItem('cells', JSON.stringify(cells));
           }
+        } else if (e.key === 'w') {
+          e.preventDefault();
+          checkbox.checked = !checkbox.checked;
         }
       });
     </script>
