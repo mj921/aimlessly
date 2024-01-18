@@ -130,313 +130,79 @@
         set.delete(className);
         el.className = Array.from(set).join(' ');
       };
-      const rows = [
-        [{ value: 2, status: false }],
-        [
-          { value: 3, status: false },
-          { value: 3, status: false },
-        ],
-        [
-          { value: 2, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 3, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 3, status: false },
-          { value: 3, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 5, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 8, status: false },
-        ],
-        [
-          { value: 4, status: false },
-          { value: 9, status: false },
-          { value: 3, status: false },
-        ],
-        [
-          { value: 5, status: false },
-          { value: 7, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 13, status: false },
-          { value: 2, status: false },
-        ],
-        [
-          { value: 13, status: false },
-          { value: 2, status: false },
-        ],
-        [
-          { value: 16, status: false },
-          { value: 5, status: false },
-        ],
-        [{ value: 22, status: false }],
-        [{ value: 22, status: false }],
-        [{ value: 22, status: false }],
-        [{ value: 22, status: false }],
-        [
-          { value: 10, status: false },
-          { value: 10, status: false },
-        ],
-        [
-          { value: 8, status: false },
-          { value: 8, status: false },
-        ],
-        [
-          { value: 8, status: false },
-          { value: 8, status: false },
-        ],
-        [
-          { value: 8, status: false },
-          { value: 8, status: false },
-        ],
-        [
-          { value: 7, status: false },
-          { value: 2, status: false },
-          { value: 10, status: false },
-        ],
-        [
-          { value: 7, status: false },
-          { value: 12, status: false },
-        ],
-        [
-          { value: 7, status: false },
-          { value: 12, status: false },
-        ],
-        [
-          { value: 7, status: false },
-          { value: 12, status: false },
-        ],
-        [
-          { value: 9, status: false },
-          { value: 15, status: false },
-        ],
-        [
-          { value: 2, status: false },
-          { value: 7, status: false },
-          { value: 12, status: false },
-          { value: 2, status: false },
-        ],
-        [
-          { value: 2, status: false },
-          { value: 7, status: false },
-          { value: 12, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 6, status: false },
-          { value: 11, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 3, status: false },
-          { value: 4, status: false },
-          { value: 10, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 2, status: false },
-          { value: 2, status: false },
-          { value: 8, status: false },
-          { value: 2, status: false },
-        ],
-        [
-          { value: 3, status: false },
-          { value: 1, status: false },
-          { value: 6, status: false },
-          { value: 2, status: false },
-        ],
-        [
-          { value: 3, status: false },
-          { value: 6, status: false },
-          { value: 3, status: false },
-        ],
-        [
-          { value: 3, status: false },
-          { value: 1, status: false },
-          { value: 3, status: false },
-        ],
-        [
-          { value: 3, status: false },
-          { value: 3, status: false },
-        ],
-        [{ value: 5, status: false }],
+      let rows = [
+        { value: [2], status: false },
+        { value: [3, 3], status: false },
+        { value: [2, 1], status: false },
+        { value: [3, 1], status: false },
+        { value: [3, 3], status: false },
+        { value: [1, 5], status: false },
+        { value: [1, 8], status: false },
+        { value: [4, 9, 3], status: false },
+        { value: [5, 7, 1], status: false },
+        { value: [13, 2], status: false },
+        { value: [13, 2], status: false },
+        { value: [16, 5], status: false },
+        { value: [22], status: false },
+        { value: [22], status: false },
+        { value: [22], status: false },
+        { value: [22], status: false },
+        { value: [10, 10], status: false },
+        { value: [8, 8], status: false },
+        { value: [8, 8], status: false },
+        { value: [8, 8], status: false },
+        { value: [7, 2, 10], status: false },
+        { value: [7, 12], status: false },
+        { value: [7, 12], status: false },
+        { value: [7, 12], status: false },
+        { value: [9, 15], status: false },
+        { value: [2, 7, 12, 2], status: false },
+        { value: [2, 7, 12, 1], status: false },
+        { value: [1, 6, 11, 1], status: false },
+        { value: [3, 4, 10, 1], status: false },
+        { value: [2, 2, 8, 2], status: false },
+        { value: [3, 1, 6, 2], status: false },
+        { value: [3, 6, 3], status: false },
+        { value: [3, 1, 3], status: false },
+        { value: [3, 3], status: false },
+        { value: [5], status: false },
       ];
-      const cols = [
-        [{ value: 1, status: false }],
-        [
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 2, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 23, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 21, status: false },
-          { value: 2, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 21, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 22, status: false },
-          { value: 2, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 21, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 21, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 22, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 13, status: false },
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 10, status: false },
-          { value: 1, status: false },
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 11, status: false },
-          { value: 1, status: false },
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 10, status: false },
-          { value: 11, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 10, status: false },
-          { value: 12, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 12, status: false },
-          { value: 12, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 3, status: false },
-          { value: 6, status: false },
-          { value: 12, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 4, status: false },
-          { value: 20, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 4, status: false },
-          { value: 20, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 5, status: false },
-          { value: 18, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 19, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 18, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 18, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 20, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 18, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 2, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [
-          { value: 1, status: false },
-          { value: 1, status: false },
-        ],
-        [{ value: 2, status: false }],
+      let cols = [
+        { value: [1], status: false },
+        { value: [1, 1], status: false },
+        { value: [1, 1], status: false },
+        { value: [1, 2], status: false },
+        { value: [1, 1], status: false },
+        { value: [1, 1], status: false },
+        { value: [1, 1], status: false },
+        { value: [23, 1], status: false },
+        { value: [1, 21, 2], status: false },
+        { value: [1, 21, 1], status: false },
+        { value: [1, 22, 2], status: false },
+        { value: [1, 21, 1], status: false },
+        { value: [1, 21, 1], status: false },
+        { value: [1, 22, 1], status: false },
+        { value: [1, 13, 1, 1], status: false },
+        { value: [1, 10, 1, 1, 1], status: false },
+        { value: [1, 11, 1, 1, 1], status: false },
+        { value: [1, 10, 11, 1], status: false },
+        { value: [1, 10, 12, 1], status: false },
+        { value: [1, 12, 12, 1], status: false },
+        { value: [1, 3, 6, 12, 1], status: false },
+        { value: [1, 4, 20, 1], status: false },
+        { value: [1, 4, 20, 1], status: false },
+        { value: [5, 18, 1], status: false },
+        { value: [1, 19, 1], status: false },
+        { value: [1, 18, 1], status: false },
+        { value: [1, 18, 1], status: false },
+        { value: [20, 1], status: false },
+        { value: [18, 1], status: false },
+        { value: [1, 2], status: false },
+        { value: [1, 1], status: false },
+        { value: [1, 1], status: false },
+        { value: [1, 1], status: false },
+        { value: [1, 1], status: false },
+        { value: [2], status: false },
       ];
       const main = document.getElementById('main');
       main.style.width = 20 * cols.length + 'px';
@@ -448,14 +214,25 @@
       const cells = [];
       let localCells = [];
       const cellsStr = localStorage.getItem('cells');
+      const rowsStr = localStorage.getItem('rows');
+      const colsStr = localStorage.getItem('cols');
       if (cellsStr) {
         localCells = JSON.parse(cellsStr);
       }
+      if (rowsStr) {
+        rows = JSON.parse(rowsStr);
+      }
+      if (colsStr) {
+        cols = JSON.parse(colsStr);
+      }
       for (let i = 0, rowLen = rows.length; i < rowLen; i++) {
         const dl = document.createElement('dl');
-        rows[i].forEach((item) => {
+        if (rows[i].status) {
+          addClass(dl, 'finish');
+        }
+        rows[i].value.forEach((item) => {
           const dd = document.createElement('dd');
-          dd.innerText = item.value;
+          dd.innerText = item;
           dl.appendChild(dd);
         });
         leftEl.appendChild(dl);
@@ -481,9 +258,12 @@
       }
       for (let j = 0, colLen = cols.length; j < colLen; j++) {
         const dl = document.createElement('dl');
-        cols[j].forEach((item) => {
+        if (cols[j].status) {
+          addClass(dl, 'finish');
+        }
+        cols[j].value.forEach((item) => {
           const dd = document.createElement('dd');
-          dd.innerText = item.value;
+          dd.innerText = item;
           dl.appendChild(dd);
         });
         topEl.appendChild(dl);
@@ -491,36 +271,30 @@
       const leftDls = leftEl.querySelectorAll('dl');
       const topDls = topEl.querySelectorAll('dl');
       const checkFinish = (row, col) => {
-        const rowItem = rows[row];
+        const rowItem = [...rows[row].value];
         let n = -1;
         let flag = true;
         for (let i = 0; i < cols.length; i++) {
           if (cells[row][i] === 1) {
             if (n === -1) {
-              n++;
-              if (rowItem[n]) {
-                rowItem[n].n = rowItem[n].value;
-              }
+              n = rowItem.shift() ?? 0;
             }
-            if (rowItem[n]?.n > 0) {
-              rowItem[n].n--;
+            if (n > 0) {
+              n--;
             } else {
               flag = false;
               break;
             }
           } else {
-            if (rowItem[n] && rowItem[n].n === 0) {
-              n++;
-              if (rowItem[n]) {
-                rowItem[n].n = rowItem[n].value;
-              }
-            } else if (rowItem[n] && rowItem[n].n > 0) {
+            if (n === 0) {
+              n = rowItem.shift() ?? 0;
+            } else if (n !== -1) {
               flag = false;
               break;
             }
           }
         }
-        if (rowItem[n] && rowItem[n].n > 0) {
+        if (n !== 0) {
           flag = false;
         }
         if (flag) {
@@ -531,46 +305,36 @@
                 'cell delete';
             }
           }
+          addClass(leftDls[row], 'finish');
+        } else {
+          removeClass(leftDls[row], 'finish');
         }
-        rowItem.forEach((el) => {
-          el.status = flag;
-          if (flag) {
-            addClass(leftDls[row], 'finish');
-          } else {
-            removeClass(leftDls[row], 'finish');
-          }
-        });
+        rows[row].status = flag;
 
-        const colItem = cols[col];
+        const colItem = [...cols[col].value];
         n = -1;
         flag = true;
         for (let i = 0; i < rows.length; i++) {
           if (cells[i][col] === 1) {
             if (n === -1) {
-              n++;
-              if (colItem[n]) {
-                colItem[n].n = colItem[n].value;
-              }
+              n = colItem.shift() ?? 0;
             }
-            if (colItem[n]?.n > 0) {
-              colItem[n].n--;
+            if (n > 0) {
+              n--;
             } else {
               flag = false;
               break;
             }
           } else {
-            if (colItem[n] && colItem[n].n === 0) {
-              n++;
-              if (colItem[n]) {
-                colItem[n].n = colItem[n].value;
-              }
-            } else if (colItem[n] && colItem[n].n > 0) {
+            if (n === 0) {
+              n = colItem.shift() ?? 0;
+            } else if (n !== -1) {
               flag = false;
               break;
             }
           }
         }
-        if (colItem[n] && colItem[n].n > 0) {
+        if (n !== 0) {
           flag = false;
         }
         if (flag) {
@@ -581,16 +345,11 @@
                 'cell delete';
             }
           }
+          addClass(topDls[col], 'finish');
+        } else {
+          removeClass(topDls[col], 'finish');
         }
-        colItem.forEach((el) => el.status === flag);
-        colItem.forEach((el) => {
-          el.status = flag;
-          if (flag) {
-            addClass(topDls[col], 'finish');
-          } else {
-            removeClass(topDls[col], 'finish');
-          }
-        });
+        cols[col].status = flag;
       };
       let downflag = null;
 
@@ -673,9 +432,12 @@
         hoverCell.row = -1;
         hoverCell.col = -1;
       });
-      save.addEventListener('click', () => {
+      const onSave = () => {
         localStorage.setItem('cells', JSON.stringify(cells));
-      });
+        localStorage.setItem('rows', JSON.stringify(rows));
+        localStorage.setItem('cols', JSON.stringify(cols));
+      };
+      save.addEventListener('click', onSave);
       reset.addEventListener('click', () => {
         localStorage.clear();
         window.location.reload();
@@ -684,7 +446,7 @@
         if (e.key === 's') {
           if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
-            localStorage.setItem('cells', JSON.stringify(cells));
+            onSave();
           }
         } else if (e.key === 'w') {
           e.preventDefault();
