@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <button id="btn1">打开1</button>
+  <button id="btn2">打开2</button>
+  <button id="btn3">打开3</button>
+  <script>
+
+    const generateUuid = () =>
+      'xxxxxxxx-xxxx-xxxx-xxxx-xxxxx'.replace(/x/g, () =>
+        ((Math.random() * 16) | 0).toString(16),
+      ) + Date.now().toString(16);
+
+    const openMap = {}
+    const defaultMap = {}
+    
+    const getLoad = (url, uuid, target) => {
+      const load = function (e) {
+        const opener = target ? openMap[target]?.opener : defaultMap[uuid]?.opener
+        if (e.data.msgType === 'loaded' && opener) {
+          opener.postMessage({
+            msgType: 'openUrl',
+            data: url,
+          }, 'http://localhost:8888');
+          if (target) {
+            delete openMap[target];
+          } else {
+            delete defaultMap[uuid];
+          }
+          window.removeEventListener('message', load);
+        }
+      }
+      return load;
+    }
+    const windowopen = (url, target) => {
+      if (target) {
+        if (openMap[target]?.load) {
+          window.removeEventListener('message', openMap[target].load);
+        }
+        delete openMap[target];
+      }
+      const uuid = generateUuid();
+      const load = getLoad(url, uuid, target);
+      if (target) {
+        openMap[target] = {
+          url,
+          load,
+          opener: window.open('http://localhost:8888/rhyysshl/pc/child-manager/main/home?ticket=111', target)
+        }
+      } else {
+        defaultMap[uuid] = {
+          url,
+          load,
+          opener: window.open('http://localhost:8888/rhyysshl/pc/child-manager/main/home?ticket=111', target)
+        }
+      }
+      window.addEventListener('message', load)
+    };
+    document.getElementById('btn1').addEventListener('click', () => {
+      windowopen('/rhyysshl/pc/child-manager/main/home?aa=111', 'postmessage')
+    });
+    document.getElementById('btn2').addEventListener('click', () => {
+      windowopen('/rhyysshl/pc/child-manager/main/home?bb=111', 'postmessage')
+    });
+    document.getElementById('btn3').addEventListener('click', () => {
+      windowopen('/rhyysshl/pc/child-manager/main/home?cc=111', 'bb')
+    });
+  </script>
+</body>
+
+</html>

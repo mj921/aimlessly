@@ -1,6 +1,5 @@
 'use strict';
 
-const { log } = require('console');
 const { readFileSync, writeFileSync, readdir, readdirSync } = require('fs');
 
 /*global Buffer*/

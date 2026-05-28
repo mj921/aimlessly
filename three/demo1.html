@@ -111,7 +111,7 @@
       scene.add(plane);
 
       const box = new Mesh(
-        new BoxGeometry(),
+        new BoxGeometry(1, 1, 1, 2),
         new MeshStandardMaterial({ color: 0xff0000 })
         // new MeshBasicMaterial({ color: 0xff0000 })
       );
@@ -198,7 +198,8 @@
           console.log(tt / timer);
         }
       };
-      loop();
+      // loop();
+      console.log(box);
     </script>
   </body>
 </html>

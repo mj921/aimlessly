@@ -79,7 +79,7 @@
       <input
         type="number"
         id="createMapSizeNum"
-        value="301"
+        value="316"
         placeholder="mapSizeNum"
       />
       <input
@@ -94,11 +94,12 @@
         value="4"
         placeholder="ballSpeedNum"
       />
-      <input type="number" id="createGroupNum" placeholder="groupNum" max="9" />
+      <input type="number" id="createGroupNum" placeholder="groupNum" max="9" value="7" />
       <input
         type="number"
         id="createLaunchPointNum"
         placeholder="launchPointNum"
+        value="36"
       />
       <div>
         <button id="createConfirm">confirm</button>
@@ -107,6 +108,76 @@
     </div>
     <div id="data"></div>
     <script>
+      const storeKey = 'lingtu7';
+      window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || msIndexedDB;
+      let dbRes;
+      const createDB = () => {
+        return new Promise((resolve, reject) => {
+          if (dbRes) {
+            resolve(dbRes);
+          } else {
+            const DBOpenRequest = window.indexedDB.open(storeKey);
+            DBOpenRequest.onsuccess = function (e) {
+              dbRes = DBOpenRequest.result;
+              resolve(dbRes)
+            }
+            DBOpenRequest.onerror = (err) => {
+              reject(err)
+            }
+            DBOpenRequest.onupgradeneeded = function (event) {
+              db = event.target.result;
+              var objectStore;
+              console.log(db.objectStoreNames);
+              if (!db.objectStoreNames.contains('save')) {
+                db.createObjectStore('save');
+              }
+              if (!db.objectStoreNames.contains('history')) {
+                db.createObjectStore('history');
+              }
+            }
+          }
+        })
+      }
+      const getTransaction = (db) => {
+          if (!db.objectStoreNames.contains(storeName)) {
+            db.createObjectStore(storeName);
+          }
+      }
+      createDB();
+      const saveData = (data, storeName) => {
+        if (window.indexedDB) {
+          createDB().then(db => {
+            const transaction = db.transaction(storeName, 'readwrite');
+            const objectStore = transaction.objectStore(storeName);
+            objectStore.put(data, storeKey)
+          })
+        } else {
+          localStorage.setItem(storeKey + storeName, JSON.stringify(data));
+        }
+      }
+
+      const loadData = (storeName) => {
+        return new Promise((resolve, reject) => {
+          if (window.indexedDB) {
+            createDB().then(db => {
+              const transaction = db.transaction(storeName, 'readwrite');
+              const objectStore = transaction.objectStore(storeName);
+              const req = objectStore.get(storeKey);
+              req.onsuccess = (e) => {
+                resolve(e.target.result)
+              }
+            })
+          } else {
+            try {
+              const data = JSON.parse(localStorage.getetItem(storeKey + storeName));
+              resolve(data);
+            } catch (error) {
+              resolve(null)
+            }
+          }
+        })
+      }
+
       const main = document.getElementById('main');
       const mainCtx = main.getContext('2d');
       const ballCanvas = document.createElement('canvas');
@@ -149,13 +220,17 @@
         resizeHandle();
       };
       let time = 0;
-      let mapSize = 301;
+      let mapSize = 316;
       let cellSize = 2;
       let ballSpeed = 4;
       let ballSize = 1;
       let mapCells = [];
       let ballList = [];
+      let ballListType = {}
       let totalCellNum = mapSize * mapSize;
+
+      let occupyCell = 1;
+
       const GroupStatus = {
         CREATE_BALL: 1,
         BALL_MOVE: 2,
@@ -220,16 +295,16 @@
       const ctxClear = (ctx) => {
         ctx.clearRect(0, 0, screenWidth, screenHeight);
       };
-      const getRandomCell = (isEmpty) => {
-        let x = Math.floor(Math.random() * mapSize);
-        let y = Math.floor(Math.random() * mapSize);
+      const getRandomCell = (isEmpty, offset = 0) => {
+        let x = Math.floor(Math.random() * (mapSize - offset * 2) + offset);
+        let y = Math.floor(Math.random() * (mapSize - offset * 2) + offset);
         if (isEmpty(mapCells[x][y])) {
           return mapCells[x][y];
         } else {
-          return getRandomCell(isEmpty);
+          return getRandomCell(isEmpty, offset);
         }
       };
-      const init = (initType = '', initData = {}) => {
+      const init = async (initType = '', initData = {}) => {
         setBtnDisabled();
         cancelAnimationFrame(raf);
         raf = null;
@@ -238,7 +313,7 @@
         if (['load', 'import'].includes(initType)) {
           let data = {};
           if (initType === 'load') {
-            data = JSON.parse(localStorage.getItem('lingtu7Save') || '{}');
+            data = (await loadData('save')) || {};
           } else {
             data = initData;
           }
@@ -252,6 +327,7 @@
             ballSpeed = data.ballSpeed;
             time = data.time;
             ballList = [];
+            ballListType = Object.keys(groupMap).reduce((prev, key) => ({...prev, [key]: []}), {});
             launchPoint = data.launchPoint;
             mapCells = data.mapCells;
             maxCellNum = data.maxCellNum;
@@ -259,6 +335,7 @@
               cellNum: 0,
               type: '',
             };
+            occupyCell = Object.keys(groupMap).reduce((s, el) => s + groupMap[el].cellNum, 0);
             maxCellHistory = data.maxCellHistory || [];
             currMaxCellNum = data.currMaxCellNum;
             currMaxCellHistory = data.currMaxCellHistory || [];
@@ -279,6 +356,7 @@
           }
         } else {
           ballList = [];
+          ballListType = {};
           maxCellHistory = [];
           currMaxCellHistory = [];
           const cellNum = 1;
@@ -291,7 +369,7 @@
             type: '',
           };
           mapCells = [];
-          mapSize = 301;
+          mapSize = 316;
           cellSize = 2;
           ballSpeed = 4;
           let groupNum = Math.max(
@@ -343,8 +421,9 @@
               time: 0,
               launchPointTime: 0,
             };
+            ballListType[key] = [];
             const cellItem = getRandomCell(
-              (randomCell) => randomCell.type === ''
+              (randomCell) => randomCell.type === '', Math.floor(mapSize * 0.05)
             );
             cellItem.type = key;
             cellItem.isLaunch = true;
@@ -366,7 +445,7 @@
           currTotalLaunchPointNum = groupNum;
           for (let i = groupNum; i < launchPointNum; i++) {
             const cellItem = getRandomCell(
-              (randomCell) => !randomCell.launchPoint
+              (randomCell) => !randomCell.launchPoint, Math.floor(mapSize * 0.05)
             );
             cellItem.isLaunch = true;
             launchPoint.push({
@@ -450,7 +529,6 @@
         const currMaxCellHistoryItem = currMaxCellHistory.length
           ? currMaxCellHistory[currMaxCellHistory.length - 1]
           : null;
-        const occupyCell = arr.reduce((s, el) => s + el.cellNum, 0);
         let html = `<div>
           <dl>time: ${time} lpTotal：${
           launchPoint.length
@@ -602,117 +680,119 @@
         }
       };
       const ballMove = () => {
-        for (let i = 0; i < ballList.length; ) {
-          const ball = ballList[i];
-          ball.time++;
-          let collisionCell = null;
-          for (let i = 0, len = ballSpeed / cellSize; i < len; i++) {
-            const speed = i + 1 >= len ? ballSpeed - cellSize * i : cellSize;
-            ball.x += Math.cos((ball.angle * Math.PI) / 180) * speed;
-            ball.y += Math.sin((ball.angle * Math.PI) / 180) * speed;
-            const { x, y } = ball;
-            const cellX = Math.floor(x / cellSize);
-            const cellY = Math.floor(y / cellSize);
-            if (cellX < 0) {
-              ball.angle =
-                ball.angle > 180 ? 540 - ball.angle : 180 - ball.angle;
-            } else if (cellX > mapSize - 1) {
-              ball.angle =
-                ball.angle > 180 ? 540 - ball.angle : 180 - ball.angle;
-            } else if (cellY < 0) {
-              ball.angle = (ball.angle > 180 ? 360 : 180) - ball.angle;
-            } else if (cellY > mapSize - 1) {
-              ball.angle = (ball.angle > 180 ? 180 : 360) - ball.angle;
-            } else {
-              let flag = false;
-              if (cellX > 0 && x % cellSize <= ballSize) {
-                if (
-                  cellY > 0 &&
-                  y % cellSize <= ballSize &&
-                  mapCells[cellY - 1][cellX - 1] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY - 1][cellX - 1];
-                } else if (
-                  cellY < mapSize - 1 &&
-                  (y + ballSize) / cellSize >= cellY &&
-                  mapCells[cellY + 1][cellX - 1] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY + 1][cellX - 1];
-                } else if (mapCells[cellY][cellX - 1] !== ball.type) {
-                  collisionCell = mapCells[cellY][cellX - 1];
-                }
-              } else if (
-                cellX < mapSize - 1 &&
-                (x + ballSize) / cellSize >= cellX
-              ) {
-                if (
-                  cellY > 0 &&
-                  y % cellSize <= ballSize &&
-                  mapCells[cellY - 1][cellX + 1] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY - 1][cellX + 1];
-                } else if (
-                  cellY < mapSize - 1 &&
-                  (y + ballSize) / cellSize >= cellY &&
-                  mapCells[cellY + 1][cellX + 1] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY + 1][cellX + 1];
-                } else if (mapCells[cellY][cellX + 1] !== ball.type) {
-                  collisionCell = mapCells[cellY][cellX + 1];
-                }
+        for (let typeKey in ballListType) {
+          for (let ii = 0; ii < ballListType[typeKey].length; ) {
+            const ball = ballListType[typeKey][ii];
+            ball.time++;
+            let collisionCell = null;
+            for (let i = 0, len = ballSpeed / cellSize; i < len; i++) {
+              const speed = i + 1 >= len ? ballSpeed - cellSize * i : cellSize;
+              ball.x += Math.cos((ball.angle * Math.PI) / 180) * speed;
+              ball.y += Math.sin((ball.angle * Math.PI) / 180) * speed;
+              const { x, y } = ball;
+              const cellX = Math.floor(x / cellSize);
+              const cellY = Math.floor(y / cellSize);
+              if (cellX < 0) {
+                ball.angle =
+                  ball.angle > 180 ? 540 - ball.angle : 180 - ball.angle;
+              } else if (cellX > mapSize - 1) {
+                ball.angle =
+                  ball.angle > 180 ? 540 - ball.angle : 180 - ball.angle;
+              } else if (cellY < 0) {
+                ball.angle = (ball.angle > 180 ? 360 : 180) - ball.angle;
+              } else if (cellY > mapSize - 1) {
+                ball.angle = (ball.angle > 180 ? 180 : 360) - ball.angle;
               } else {
-                if (
-                  cellY > 0 &&
-                  y % cellSize <= ballSize &&
-                  mapCells[cellY - 1][cellX] !== ball.type
-                ) {
-                  collisionCell = mapCells[cellY - 1][cellX];
+                let flag = false;
+                if (cellX > 0 && x % cellSize <= ballSize) {
+                  if (
+                    cellY > 0 &&
+                    y % cellSize <= ballSize &&
+                    mapCells[cellY - 1][cellX - 1] !== ball.type
+                  ) {
+                    collisionCell = mapCells[cellY - 1][cellX - 1];
+                  } else if (
+                    cellY < mapSize - 1 &&
+                    (y + ballSize) / cellSize >= cellY &&
+                    mapCells[cellY + 1][cellX - 1] !== ball.type
+                  ) {
+                    collisionCell = mapCells[cellY + 1][cellX - 1];
+                  } else if (mapCells[cellY][cellX - 1] !== ball.type) {
+                    collisionCell = mapCells[cellY][cellX - 1];
+                  }
                 } else if (
-                  cellY < mapSize - 1 &&
-                  (y + ballSize) / cellSize >= cellY &&
-                  mapCells[cellY + 1][cellX] !== ball.type
+                  cellX < mapSize - 1 &&
+                  (x + ballSize) / cellSize >= cellX
                 ) {
-                  collisionCell = mapCells[cellY + 1][cellX];
-                } else if (mapCells[cellY][cellX] !== ball.type) {
-                  collisionCell = mapCells[cellY][cellX];
+                  if (
+                    cellY > 0 &&
+                    y % cellSize <= ballSize &&
+                    mapCells[cellY - 1][cellX + 1] !== ball.type
+                  ) {
+                    collisionCell = mapCells[cellY - 1][cellX + 1];
+                  } else if (
+                    cellY < mapSize - 1 &&
+                    (y + ballSize) / cellSize >= cellY &&
+                    mapCells[cellY + 1][cellX + 1] !== ball.type
+                  ) {
+                    collisionCell = mapCells[cellY + 1][cellX + 1];
+                  } else if (mapCells[cellY][cellX + 1] !== ball.type) {
+                    collisionCell = mapCells[cellY][cellX + 1];
+                  }
+                } else {
+                  if (
+                    cellY > 0 &&
+                    y % cellSize <= ballSize &&
+                    mapCells[cellY - 1][cellX] !== ball.type
+                  ) {
+                    collisionCell = mapCells[cellY - 1][cellX];
+                  } else if (
+                    cellY < mapSize - 1 &&
+                    (y + ballSize) / cellSize >= cellY &&
+                    mapCells[cellY + 1][cellX] !== ball.type
+                  ) {
+                    collisionCell = mapCells[cellY + 1][cellX];
+                  } else if (mapCells[cellY][cellX] !== ball.type) {
+                    collisionCell = mapCells[cellY][cellX];
+                  }
                 }
               }
+              if (collisionCell) {
+                break;
+              }
             }
-            if (collisionCell) {
-              break;
-            }
-          }
-          ball.angle %= 360;
-          if (collisionCell && collisionCell.type !== ball.type) {
-            if (collisionCell.type) {
-              groupMap[collisionCell.type].cellNum--;
-              setMax(groupMap[collisionCell.type]);
-            }
-            if (collisionCell.isLaunch) {
+            ball.angle %= 360;
+            if (collisionCell && collisionCell.type !== ball.type) {
               if (collisionCell.type) {
-                groupMap[collisionCell.type].launchPointNum--;
-              } else {
-                currTotalLaunchPointNum++;
+                groupMap[collisionCell.type].cellNum--;
+                setMax(groupMap[collisionCell.type]);
               }
-              groupMap[ball.type].launchPointNum++;
+              if (collisionCell.isLaunch) {
+                if (collisionCell.type) {
+                  groupMap[collisionCell.type].launchPointNum--;
+                } else {
+                  currTotalLaunchPointNum++;
+                }
+                groupMap[ball.type].launchPointNum++;
+              }
+              groupMap[ball.type].cellNum++;
+              setMax(groupMap[ball.type]);
+              collisionCell.type = ball.type;
+              drawCell(collisionCell);
+              ballListType[typeKey].splice(ii, 1);
+              ball.launchPoint.ballInfo.total--;
+              continue;
             }
-            groupMap[ball.type].cellNum++;
-            setMax(groupMap[ball.type]);
-            collisionCell.type = ball.type;
-            drawCell(collisionCell);
-            ballList.splice(i, 1);
-            ball.launchPoint.ballInfo.total--;
-            continue;
+            if (ball.time > 1000) {
+              ballListType[typeKey].splice(ii, 1);
+              ball.launchPoint.ballInfo.total--;
+              continue;
+            }
+            ballCtx.beginPath();
+            ballCtx.arc(ball.x, ball.y, ballSize, 0, 180);
+            ballCtx.fill();
+            ii++;
           }
-          if (ball.time > 1000) {
-            ballList.splice(i, 1);
-            ball.launchPoint.ballInfo.total--;
-            continue;
-          }
-          ballCtx.beginPath();
-          ballCtx.arc(ball.x, ball.y, ballSize, 0, 180);
-          ballCtx.fill();
-          i++;
         }
       };
       const loop = () => {
@@ -751,10 +831,10 @@
               groupMap[type].launchPointNum > 1 &&
               Math.random() <
                 Math.min(
-                  10,
-                  groupMap[point.origin].cellNum / groupMap[type].cellNum
-                ) /
-                  100
+                  0.1,
+                  (groupMap[point.origin].cellNum || 1) / groupMap[type].cellNum
+                )
+                  
             ) {
               groupMap[type].cellNum--;
               setMax(groupMap[type]);
@@ -780,12 +860,19 @@
               let r = Math.random();
               let val = 0.5;
               let bl = 1;
+              const step = 1 + groupMap[type].cellNum / groupMap[type].launchPointNum / (totalCellNum / launchPoint.length) + groupMap[type].launchPointNum / launchPoint.length * 2;
+              const flag = Math.random() < 0.001;
               while (r < val && bl <= 1024) {
-                bl *= 2;
+                if (flag) {
+                  bl *= 2;
+                } else {
+                  bl += step;
+                }
                 val /= 2;
                 r = Math.random() - Math.min(bl / 1000, 0.1);
               }
-              ballInfo.total *= Math.pow(2, bl - 1);
+              bl = Math.floor(bl)
+              ballInfo.total *= Math.pow(2, bl);
               if (maxBallNum.ballNum < ballInfo.total) {
                 maxBallNum = {
                   ballNum: ballInfo.total,
@@ -796,23 +883,23 @@
               const createMaxBallNum =
                 1000 +
                 Math.floor(
-                  (currTotalLaunchPointNum / launchPoint.length) * 4000
+                  (currTotalLaunchPointNum / launchPoint.length) * launchPoint.length * 120
                 );
-              let max = Math.floor(createMaxBallNum - ballList.length);
+              let max = Math.floor(createMaxBallNum - ballListType[type].length);
               if (max < 0) max += createMaxBallNum;
               max = Math.max(max, Math.floor(10000 / launchPoint.length));
               ballInfo.total = Math.min(max, ballInfo.total);
               point.status = GroupStatus.BALL_MOVE;
               const ballNum = ballInfo.total;
               for (let i = 0; i < ballNum; i++) {
-                ballList.push({
+                ballListType[type].push({
                   x: (x + 0.5) * cellSize,
                   y: (y + 0.5) * cellSize,
                   angle: startAngle + Math.random() * range,
                   type,
                   launchPoint: point,
                   time: 0,
-                });
+                })
               }
             }
           }
@@ -820,6 +907,7 @@
 
         maxTotalNum = Math.max(maxTotalNum, ballList.length);
         ballMove();
+        occupyCell = Object.keys(groupMap).reduce((s, el) => s + groupMap[el].cellNum, 0)
         mainCtx.drawImage(cellCanvas, 0, 0, screenWidth, screenHeight);
         mainCtx.drawImage(ballCanvas, 0, 0, screenWidth, screenHeight);
         createDataHtml();
@@ -831,25 +919,26 @@
           cancelAnimationFrame(raf);
           raf = null;
           createDataHtml();
-          const history = JSON.parse(
-            localStorage.getItem('lingtu7History') || '[]'
-          );
-          history.push({
-            maxBallNum,
-            maxTotalNum,
-            groupMap,
-            mapSize,
-            cellSize,
-            ballSize,
-            ballSpeed,
-            launchPoint,
-            maxCellNum,
-            maxCellHistory,
-            currMaxCellNum,
-            currMaxCellHistory,
-            currTotalLaunchPointNum,
-          });
-          localStorage.setItem('lingtu7History', JSON.stringify(history));
+          const saveHistory = async () => {
+            const history = (await loadData('history')) || [];
+            history.push({
+              maxBallNum,
+              maxTotalNum,
+              groupMap,
+              mapSize,
+              cellSize,
+              ballSize,
+              ballSpeed,
+              launchPoint,
+              maxCellNum,
+              maxCellHistory,
+              currMaxCellNum,
+              currMaxCellHistory,
+              currTotalLaunchPointNum,
+            });
+            saveData(history, 'history');
+          }
+          saveHistory();
         } else if (status === 'play') {
           raf = requestAnimationFrame(loop);
         }
@@ -892,7 +981,8 @@
           currMaxCellHistory,
           currTotalLaunchPointNum,
         };
-        localStorage.setItem('lingtu7Save', JSON.stringify(data));
+        saveData(data, 'save');
+        // localStorage.setItem('lingtu7Save', JSON.stringify(data));
       });
       loadBtn.addEventListener('click', (e) => {
         if (status !== 'pause') return;

@@ -1,4 +1,4 @@
-const gl = getWebGLContext('webgl');
+const { gl } = getWebGLContext('webgl');
 
 const vertexSource = `
   void main() {

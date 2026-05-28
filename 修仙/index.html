@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>修仙</title>
+  <!-- <script src="https://unpkg.com/vue@3.4.33/dist/vue.global.js"></script> -->
+  <script src="../thirdJs//vue.global.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <button @click="loop" :disabled="autoFlag">next</button>
+    <button @click="toggleAuto">auto({{autoFlag ? '开' : '关'}})</button>
+    <div id="info">
+      <dl>{{year}}</dl>
+      <dl>{{ p.ps.map(k => p.pm[k]) }}</dl>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive } = Vue
+
+    const requestAnimationFrame = window.requestAnimationFrame || ((cb) => {
+      setTimeout(cb, 1000 / 60);
+    })
+    createApp({
+      setup() {
+        const infoEl = document.getElementById('info');
+        const lv = [
+          '练气',
+          '筑基',
+          '金丹',
+          '元婴',
+          '出窍',
+          '化神',
+          '合体',
+          '大乘',
+          '渡劫',
+        ];
+        const age = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000]
+        const addAge = [0, 100, 300, 500, 1000, 3000, 5000, 10000, 30000];
+        const exp = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000]
+        const rate = (lv, wuxing) => {
+          return 1000 / age[lv] * wuxing / 100
+        }
+        const year = ref(1);
+        const id = ref(1);
+        const p = reactive({
+          ps: [],
+          deathps: [],
+          pm: {}
+        });
+        const createP = (parentId) => ({
+          id: id.value++,
+          zizhi: 1 + Math.floor(Math.random() * 100),
+          wuxing: 1 + Math.floor(Math.random() * 100),
+          genggu: 1 + Math.floor(Math.random() * 100),
+          tizhi: 1 + Math.floor(Math.random() * 100),
+          needExp: 100,
+          lv: 0,
+          progress: 0,
+          age: 1,
+          maxAge: 100,
+          shengyuAge: 100,
+          parentId,
+        })
+        const init = () => {
+          id.value = 1;
+          p.ps = [id.value];
+          p.deathps = [];
+          const pp = createP();
+          p.pm = {
+            [pp.id]: pp
+          }
+        }
+        init();
+        const lvUp = (el) => {
+          if (el.progress === 9) {
+            if (Math.random() < rate(el.lv + 1, el.wuxing)) {
+              el.lv++
+              el.progress = 0;
+              const addNum = Math.floor(addAge[el.lv] * (el.tizhi / 40 / (100 / 40)));
+              el.shengyuAge += addNum;
+              el.maxAge += addNum;
+              if (Math.random() < el.lv / 8) {
+                const pp = createP(el.id);
+                p.ps.push(pp.id);
+                p.pm[pp.id] = pp
+              }
+              return true
+            } else {
+              const jianshao = Math.floor(Math.max(age[el.lv] / 10 * (101 - el.genggu) / 100 * (Math.random() / 2 + 0.5), 1));
+              el.shengyuAge -= jianshao;
+              return false;
+            }
+          } else {
+            if (Math.random() < rate(el.lv, el.wuxing)) {
+              el.progress++;
+              return true
+            } else {
+              const jianshao = Math.floor(Math.max(exp[el.lv] / 3 * (101 - el.genggu) / 100 * (Math.random() / 2 + 0.5), 1));
+              el.needExp += jianshao;
+              return false
+            }
+          }
+
+        }
+        const autoFlag = ref(false);
+        const toggleAuto = () => {
+          autoFlag.value = !autoFlag.value;
+          if (autoFlag.value) {
+            loop();
+          }
+        }
+        const loop = () => {
+          for (let i = 0; i < p.ps.length;) {
+            const el = p.pm[p.ps[i]];
+            el.needExp -= el.zizhi;
+            while (el.needExp <= 0) {
+              if (lvUp(el)) {
+                el.needExp += exp[el.lv];
+              }
+            }
+            el.age++;
+            el.shengyuAge--;
+            if (el.shengyuAge === 0) {
+              p.deathps.push(p.ps[i]);
+              p.ps.splice(i, 1);
+            } else {
+              i++;
+            }
+          }
+          year.value++;
+          if (p.ps.length === 0 && autoFlag.value) {
+            toggleAuto();
+          }
+          if (autoFlag.value) {
+            requestAnimationFrame(loop)
+          }
+        }
+        return {
+          autoFlag,
+          toggleAuto,
+          loop,
+          p,
+          year,
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+
+</html>

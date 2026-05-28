@@ -1,4 +1,4 @@
-const gl = getWebGLContext('webgl');
+const { gl, canvas } = getWebGLContext('webgl');
 
 const vertexSource = `
   attribute vec4 a_Position;
@@ -18,12 +18,21 @@ const fragmentSource = `
 const program = initShader(gl, vertexSource, fragmentSource);
 const aPosition = gl.getAttribLocation(program, 'a_Position');
 const aPointSize = gl.getAttribLocation(program, 'a_PointSize');
-console.log(aPosition);
-console.log(aPointSize);
 
-gl.vertexAttrib3f(aPosition, 0, 0, 0);
-gl.vertexAttrib1f(aPointSize, 20);
-console.log(aPosition);
+gl.vertexAttrib1f(aPointSize, 10);
+const points = [];
+
+canvas.addEventListener('click', e => {
+  const bcr = canvas.getBoundingClientRect();
+  const x = ((e.clientX - bcr.left) / canvas.clientWidth) * 2 - 1;
+  const y = 1 - ((e.clientY - bcr.top) / canvas.clientHeight) * 2;
+  points.push({ x, y });
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  points.forEach(({ x, y }) => {
+    gl.vertexAttrib3f(aPosition, x, y, 0);
+    gl.drawArrays(gl.POINTS, 0, 1);
+  });
+});
 
 gl.clearColor(0, 0, 0, 1);
 gl.clear(gl.COLOR_BUFFER_BIT);
